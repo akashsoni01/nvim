@@ -54,6 +54,21 @@
 
 ## Rust-Specific Workflows
 
+### 0) Build, Test, and Run (from project root)
+- Start Neovim in your Rust project root:
+  - `nvim .`
+- Inside Neovim, use these mapped shortcuts:
+  - Run app: `<leader>tr`
+  - Run nearest test: `<leader>tt`
+  - Run all tests: `<leader>ta`
+  - Run clippy: `<leader>tc` (great before commit)
+
+#### Typical safe flow (terminal)
+1. `cargo fmt`
+2. `cargo clippy --all-targets --all-features -- -D warnings`
+3. `cargo test`
+4. `cargo run`
+
 ### 1) Edit -> Diagnose -> Fix -> Format
 1. Open a Rust file (`.rs`)
 2. Wait for `rust-analyzer` diagnostics/virtual text

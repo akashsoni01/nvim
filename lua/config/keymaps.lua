@@ -2,9 +2,31 @@ local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
-map("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", vim.tbl_extend("force", opts, { desc = "Live grep" }))
+map("n", "<leader>fg", function()
+  local builtin = require("telescope.builtin")
+  if vim.fn.executable("rg") == 1 then
+    builtin.live_grep()
+  else
+    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
+    builtin.current_buffer_fuzzy_find()
+  end
+end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", vim.tbl_extend("force", opts, { desc = "Buffers" }))
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", vim.tbl_extend("force", opts, { desc = "Help tags" }))
+
+vim.api.nvim_create_user_command("FF", function()
+  require("telescope.builtin").find_files()
+end, { desc = "Telescope find files" })
+
+vim.api.nvim_create_user_command("FG", function()
+  local builtin = require("telescope.builtin")
+  if vim.fn.executable("rg") == 1 then
+    builtin.live_grep()
+  else
+    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
+    builtin.current_buffer_fuzzy_find()
+  end
+end, { desc = "Telescope live grep" })
 
 map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
 map("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
