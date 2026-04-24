@@ -25,6 +25,10 @@
 - `<leader>dc` - Continue/start debugger
 - `<leader>do` - Step over
 - `<leader>di` - Step into
+- `<leader>dO` - Step out
+- `<leader>dr` - Open DAP REPL
+- `<leader>de` - Eval variable/expression under cursor
+- `<leader>dx` - Terminate debug session
 
 ### Git
 - `<leader>gs` - Git status (Telescope)
@@ -38,8 +42,11 @@
 - `<leader>sx` - Close current split
 
 ### Terminal (open and use)
-- Open terminal in horizontal split: `:split | terminal`
-- Open terminal in vertical split: `:vsplit | terminal`
+- Open terminal in horizontal split: `<leader>th`
+- Open terminal in vertical split: `<leader>tv`
+- Manual commands (alternative):
+  - `:split | terminal`
+  - `:vsplit | terminal`
 - Use existing run mappings (opens terminal split automatically):
   - `<leader>tr` (`cargo run`)
   - `<leader>tc` (`cargo clippy --all-targets --all-features`)
@@ -82,8 +89,8 @@
   - Run clippy: `<leader>tc` (great before commit)
 
 #### Open terminal manually in project
-1. Horizontal terminal: `:split | terminal`
-2. Vertical terminal: `:vsplit | terminal`
+1. Horizontal terminal: `<leader>th`
+2. Vertical terminal: `<leader>tv`
 3. Return terminal to normal mode: `<C-\><C-n>`
 4. Close terminal split: `<leader>sx`
 
@@ -157,13 +164,13 @@
 - Step controls:
   - `<leader>do` step over
   - `<leader>di` step into
-  - `:lua require("dap").step_out()` step out
+  - `<leader>dO` step out
 - Open DAP REPL:
-  - `:lua require("dap").repl.open()`
+  - `<leader>dr`
 - Inspect expression under cursor:
-  - `:lua require("dapui").eval()`
+  - `<leader>de`
 - Stop session:
-  - `:lua require("dap").terminate()`
+  - `<leader>dx`
 
 #### How to see variable values (quick)
 1. Start debug and pause on a breakpoint (`<leader>db`, then `<leader>dc`).
