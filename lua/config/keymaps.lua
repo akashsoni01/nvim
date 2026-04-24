@@ -98,6 +98,7 @@ map("n", "<leader>ts", function()
   end
 end, vim.tbl_extend("force", opts, { desc = "Toggle test summary" }))
 map("n", "<leader>tc", "<cmd>split | terminal cargo clippy --all-targets --all-features<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo clippy" }))
+map("n", "<leader>tb", "<cmd>split | terminal cargo build<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo build" }))
 map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo run" }))
 
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))

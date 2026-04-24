@@ -49,6 +49,7 @@
 | Testing | `<leader>to` | Toggle neotest output panel |
 | Testing | `<leader>ts` | Toggle neotest summary panel |
 | Testing | `<leader>tc` | Run cargo clippy |
+| Testing | `<leader>tb` | Run cargo build |
 | Testing | `<leader>tr` | Run cargo run |
 | UI | `<leader>ub` | Toggle Coral / Light White theme |
 | UI | `<leader>ut` | Toggle transparency |
@@ -115,6 +116,7 @@
 - `<leader>to` - Toggle neotest output panel
 - `<leader>ts` - Toggle neotest summary panel
 - `<leader>tc` - Run `cargo clippy --all-targets --all-features`
+- `<leader>tb` - Run `cargo build`
 - `<leader>tr` - Run `cargo run`
 
 ### UI Toggles
@@ -142,6 +144,7 @@
   - Run nearest test: `<leader>tt`
   - Run all tests: `<leader>ta`
   - Run clippy: `<leader>tc` (great before commit)
+  - Build app: `<leader>tb`
 
 #### Open terminal manually in project
 1. Horizontal terminal: `<leader>th`
