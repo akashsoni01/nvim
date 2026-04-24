@@ -23,6 +23,7 @@
 ### Debugging (DAP)
 - `<leader>db` - Toggle breakpoint
 - `<leader>dc` - Continue/start debugger
+- `<leader>dn` - Jump to next breakpoint (continue without stepping)
 - `<leader>do` - Step over
 - `<leader>di` - Step into
 - `<leader>dO` - Step out
@@ -120,6 +121,44 @@
 
 ### 4) Debugging Rust Binary (Setup + Run + State)
 
+#### Debugging cheat sheet (table)
+
+| Goal | Shortcut / Command | What it does |
+| --- | --- | --- |
+| Install adapter on macOS | `./scripts/install-debug-adapter-macos.sh` | Installs/links `lldb-dap` using Xcode CLT or Homebrew llvm |
+| Install adapter on Linux | `./scripts/install-debug-adapter-linux.sh` | Installs `lldb-dap` from package manager or falls back to `codelldb` |
+| Install adapter on Termux | `./scripts/install-debug-adapter-termux.sh` | Installs `llvm` and links `lldb-dap` |
+| Verify adapter | `which lldb-dap || which codelldb` | Confirms debug adapter exists |
+| Build debug binary | `cargo build` | Creates `target/debug/<binary>` |
+| Start Neovim in project | `nvim .` | Opens project root so DAP uses correct workspace |
+| Toggle breakpoint | `<leader>db` | Add/remove breakpoint at current line |
+| Start debugger | `<leader>dc` | Starts debug session or continues execution |
+| Pick executable | `target/debug/<your-binary-name>` | Choose actual binary file, not `target/debug/` directory |
+| Jump to next breakpoint | `<leader>dn` | Continue without stepping into library code |
+| Step over line | `<leader>do` | Line-by-line execution in current function |
+| Step into function | `<leader>di` | Enter function call; may enter library code |
+| Step out | `<leader>dO` | Return from current function to caller |
+| Toggle debug screen | `<leader>du` | Show/hide DAP UI panels |
+| Inspect variable under cursor | `<leader>de` | Evaluate current variable/expression |
+| Open debug REPL | `<leader>dr` | Run expressions like `my_var` or `my_struct.field` |
+| Stop debugging | `<leader>dx` | Terminate debug session |
+
+| Debug UI panel | What to look for |
+| --- | --- |
+| `Scopes` | Local variables, function arguments, current values |
+| `Stacks` | Call stack / frames; selecting a frame changes visible variables |
+| `Watches` | Expressions you want to keep checking |
+| `Breakpoints` | Active breakpoint list |
+| `REPL` | Manual expression evaluation while paused |
+
+| Problem | Fix |
+| --- | --- |
+| Error: `target/debug/` is not valid executable | Select `target/debug/<binary-name>`, not the folder |
+| Variables missing or `<optimized out>` | Run `cargo build`, avoid release build while debugging |
+| Debugger enters `std`, `core`, `alloc`, `tokio`, etc. | Use `<leader>dO` to step out, then `<leader>do` or `<leader>dn` |
+| Nothing opens for debug state | Press `<leader>du` to toggle DAP UI |
+| Adapter missing | Run platform install script or `./scripts/vendor-plugins.sh` |
+
 #### One-time setup (install adapter)
 - macOS:
   - `./scripts/install-debug-adapter-macos.sh`
@@ -196,18 +235,25 @@
 
 #### Debug line-by-line vs step into functions
 - `<leader>dc` - Continue execution (or start debugger). Runs until next breakpoint.
-- `<leader>do` - Step over current line. Good for line-by-line flow in the same function.
-- `<leader>di` - Step into function call on current line. Use when you want internal function details.
-- `:lua require("dap").step_out()` - Step out of current function and return to caller.
+- `<leader>dn` - Jump from current breakpoint to next breakpoint without stepping through library code.
+- `<leader>do` - Step over current line. Use this for normal line-by-line debugging in your app code.
+- `<leader>di` - Step into function call on current line. This can enter dependency/library code.
+- `<leader>dO` - Step out of current function and return to caller.
+- If debugger goes inside `std`, `core`, `alloc`, `tokio`, etc.:
+  - press `<leader>dO` to leave that function
+  - then continue line-by-line with `<leader>do`
+  - avoid `<leader>di` unless you really want to inspect that function
+- LLDB is configured to avoid common Rust/library frames while stepping, but step-into can still enter libraries when source/debug info is available.
 
 #### Typical debug flow
 1. Set 1-3 breakpoints with `<leader>db`.
 2. Start/continue with `<leader>dc`.
 3. At a breakpoint:
    - Use `<leader>do` for line-by-line in current function.
+   - Use `<leader>dn` to jump directly to the next breakpoint.
    - Use `<leader>di` when a called function is suspicious.
-   - Use `:lua require("dap").step_out()` to return back quickly.
-4. Continue to next breakpoint with `<leader>dc`.
+   - Use `<leader>dO` to return back quickly if you entered a library or helper function.
+4. Continue to next breakpoint with `<leader>dn` or `<leader>dc`.
 
 #### Minimal run and debug example
 1. `cargo build`

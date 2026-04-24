@@ -335,6 +335,9 @@ return {
           cwd = "${workspaceFolder}",
           stopOnEntry = false,
           args = {},
+          initCommands = {
+            "settings set target.process.thread.step-avoid-regexp ^(std::|core::|alloc::|tokio::|mio::|polling::|parking_lot::|hashbrown::|serde::|anyhow::|thiserror::)",
+          },
         },
       }
 
