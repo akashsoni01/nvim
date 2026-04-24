@@ -37,6 +37,16 @@
 - `<leader>se` - Equalize split sizes
 - `<leader>sx` - Close current split
 
+### Terminal (open and use)
+- Open terminal in horizontal split: `:split | terminal`
+- Open terminal in vertical split: `:vsplit | terminal`
+- Use existing run mappings (opens terminal split automatically):
+  - `<leader>tr` (`cargo run`)
+  - `<leader>tc` (`cargo clippy --all-targets --all-features`)
+  - `<leader>ta` / `<leader>tt` (test runs)
+- Exit terminal insert mode to normal mode: `<C-\><C-n>`
+- Close current terminal split: `<leader>sx`
+
 ### Testing
 - `<leader>tt` - Run test under cursor (`cargo test <word-under-cursor>`)
 - `<leader>ta` - Run all tests (`cargo test`)
@@ -70,6 +80,12 @@
   - Run nearest test: `<leader>tt`
   - Run all tests: `<leader>ta`
   - Run clippy: `<leader>tc` (great before commit)
+
+#### Open terminal manually in project
+1. Horizontal terminal: `:split | terminal`
+2. Vertical terminal: `:vsplit | terminal`
+3. Return terminal to normal mode: `<C-\><C-n>`
+4. Close terminal split: `<leader>sx`
 
 #### Typical safe flow (terminal)
 1. `cargo fmt`
