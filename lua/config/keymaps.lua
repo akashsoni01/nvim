@@ -93,7 +93,7 @@ map("n", "<leader>sx", "<cmd>close<cr>", vim.tbl_extend("force", opts, { desc = 
 
 map("n", "<leader>ub", function()
   require("config.theme").toggle()
-end, vim.tbl_extend("force", opts, { desc = "Toggle Coral/B&W theme" }))
+end, vim.tbl_extend("force", opts, { desc = "Toggle Coral/Light theme" }))
 map("n", "<leader>ut", function()
   require("config.theme").toggle_transparency()
 end, vim.tbl_extend("force", opts, { desc = "Toggle transparency" }))

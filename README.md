@@ -3,7 +3,7 @@
 This config is a `lazy.nvim`-based Neovim setup focused on Rust development in Termux.
 
 ## Highlights
-- Coral theme as default with monochrome toggle
+- Coral theme as default with light white toggle
 - Rust LSP (`rust-analyzer`) + completion + snippets
 - Treesitter syntax highlighting and rustfmt on save
 - DAP debugging support for LLDB adapters
@@ -112,6 +112,6 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Test Summary | `<leader>ts` | Toggle test summary | See pass/fail overview |
 | Cargo Clippy | `<leader>tc` | Run clippy with all targets/features | Catch lint issues early |
 | Cargo Run | `<leader>tr` | Run Rust app | Quick manual verification |
-| Toggle Theme | `<leader>ub` | Coral <-> B&W | Pick visual comfort mode |
+| Toggle Theme | `<leader>ub` | Coral <-> Light White | Pick visual comfort mode |
 | Toggle Transparency | `<leader>ut` | Enable/disable transparent bg | Useful per terminal theme |
 | Toggle Inlay Hints | `<leader>uh` | Show/hide Rust inlay hints | Reduce visual noise when needed |

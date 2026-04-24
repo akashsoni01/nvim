@@ -17,13 +17,13 @@ local coral = {
   gradientEnd = "#ea580c",
 }
 
-local mono = {
-  bg = "#000000",
-  bgAlt = "#111111",
-  fg = "#ffffff",
-  fgSoft = "#d4d4d4",
-  border = "#7a7a7a",
-  accent = "#f5f5f5",
+local light = {
+  bg = "#ffffff",
+  bgAlt = "#f5f5f5",
+  fg = "#111111",
+  fgSoft = "#444444",
+  border = "#c8c8c8",
+  accent = "#000000",
 }
 
 M.mode = "coral"
@@ -59,29 +59,29 @@ local function apply_coral_syntax()
   set_hl("@comment", { fg = "#ea580c", italic = true })
 end
 
-local function apply_mono_syntax()
-  set_hl("Identifier", { fg = mono.fg })
-  set_hl("Function", { fg = mono.accent, bold = true })
-  set_hl("Statement", { fg = mono.fg, bold = true })
-  set_hl("Keyword", { fg = mono.fg, bold = true })
-  set_hl("Type", { fg = mono.fgSoft, bold = true })
-  set_hl("String", { fg = "#d4d4d4" })
-  set_hl("Constant", { fg = mono.fgSoft })
-  set_hl("Number", { fg = mono.fgSoft })
-  set_hl("Operator", { fg = mono.fg })
-  set_hl("Special", { fg = mono.fg })
-  set_hl("@keyword", { fg = mono.fg, bold = true })
-  set_hl("@type", { fg = mono.fgSoft, bold = true })
-  set_hl("@function", { fg = mono.accent, bold = true })
-  set_hl("@method", { fg = mono.accent, bold = true })
-  set_hl("@variable", { fg = mono.fg })
-  set_hl("@field", { fg = mono.fgSoft })
-  set_hl("@property", { fg = mono.fgSoft })
-  set_hl("@string", { fg = mono.fgSoft })
-  set_hl("@number", { fg = mono.fgSoft })
-  set_hl("@constant", { fg = mono.fgSoft })
-  set_hl("@operator", { fg = mono.fg })
-  set_hl("@comment", { fg = mono.fgSoft, italic = true })
+local function apply_light_syntax()
+  set_hl("Identifier", { fg = light.fg })
+  set_hl("Function", { fg = light.accent, bold = true })
+  set_hl("Statement", { fg = light.fg, bold = true })
+  set_hl("Keyword", { fg = light.fg, bold = true })
+  set_hl("Type", { fg = light.fgSoft, bold = true })
+  set_hl("String", { fg = "#525252" })
+  set_hl("Constant", { fg = light.fgSoft })
+  set_hl("Number", { fg = light.fgSoft })
+  set_hl("Operator", { fg = light.fg })
+  set_hl("Special", { fg = light.fg })
+  set_hl("@keyword", { fg = light.fg, bold = true })
+  set_hl("@type", { fg = light.fgSoft, bold = true })
+  set_hl("@function", { fg = light.accent, bold = true })
+  set_hl("@method", { fg = light.accent, bold = true })
+  set_hl("@variable", { fg = light.fg })
+  set_hl("@field", { fg = light.fgSoft })
+  set_hl("@property", { fg = light.fgSoft })
+  set_hl("@string", { fg = light.fgSoft })
+  set_hl("@number", { fg = light.fgSoft })
+  set_hl("@constant", { fg = light.fgSoft })
+  set_hl("@operator", { fg = light.fg })
+  set_hl("@comment", { fg = light.fgSoft, italic = true })
 end
 
 local function apply_transparency(enabled)
@@ -137,43 +137,43 @@ local function apply_coral()
   apply_transparency(M.transparent)
 end
 
-local function apply_mono()
-  M.mode = "mono"
-  M.palette = mono
-  vim.o.background = "dark"
+local function apply_light()
+  M.mode = "light"
+  M.palette = light
+  vim.o.background = "light"
 
-  set_hl("Normal", { fg = mono.fg, bg = mono.bg })
-  set_hl("NormalFloat", { fg = mono.fg, bg = mono.bgAlt })
-  set_hl("FloatBorder", { fg = mono.border, bg = mono.bgAlt })
-  set_hl("Comment", { fg = mono.fgSoft, italic = true })
-  set_hl("CursorLine", { bg = mono.bgAlt })
-  set_hl("CursorLineNr", { fg = mono.accent, bold = true })
-  set_hl("LineNr", { fg = mono.border })
-  set_hl("Visual", { bg = "#2f2f2f", fg = mono.fg })
-  set_hl("Search", { bg = "#5f5f5f", fg = mono.fg })
-  set_hl("IncSearch", { bg = mono.fg, fg = mono.bg })
-  set_hl("Pmenu", { bg = mono.bgAlt, fg = mono.fg })
-  set_hl("PmenuSel", { bg = "#404040", fg = mono.fg, bold = true })
-  set_hl("WinSeparator", { fg = mono.border })
-  set_hl("StatusLine", { bg = "#2a2a2a", fg = mono.fg, bold = true })
-  set_hl("StatusLineNC", { bg = mono.bgAlt, fg = mono.fgSoft })
-  set_hl("TabLineSel", { bg = mono.fg, fg = mono.bg, bold = true })
-  set_hl("TabLine", { bg = mono.bgAlt, fg = mono.fgSoft })
-  set_hl("WinBar", { bg = mono.bgAlt, fg = mono.fg, bold = true })
-  set_hl("WinBarNC", { bg = mono.bg, fg = mono.fgSoft })
+  set_hl("Normal", { fg = light.fg, bg = light.bg })
+  set_hl("NormalFloat", { fg = light.fg, bg = light.bgAlt })
+  set_hl("FloatBorder", { fg = light.border, bg = light.bgAlt })
+  set_hl("Comment", { fg = light.fgSoft, italic = true })
+  set_hl("CursorLine", { bg = "#f0f0f0" })
+  set_hl("CursorLineNr", { fg = light.accent, bold = true })
+  set_hl("LineNr", { fg = light.border })
+  set_hl("Visual", { bg = "#d9d9d9", fg = light.fg })
+  set_hl("Search", { bg = "#ffe6b0", fg = light.fg })
+  set_hl("IncSearch", { bg = "#ffd27a", fg = "#000000", bold = true })
+  set_hl("Pmenu", { bg = light.bgAlt, fg = light.fg })
+  set_hl("PmenuSel", { bg = "#e2e2e2", fg = light.fg, bold = true })
+  set_hl("WinSeparator", { fg = light.border })
+  set_hl("StatusLine", { bg = "#e8e8e8", fg = light.fg, bold = true })
+  set_hl("StatusLineNC", { bg = light.bgAlt, fg = light.fgSoft })
+  set_hl("TabLineSel", { bg = light.fg, fg = light.bg, bold = true })
+  set_hl("TabLine", { bg = light.bgAlt, fg = light.fgSoft })
+  set_hl("WinBar", { bg = light.bgAlt, fg = light.fg, bold = true })
+  set_hl("WinBarNC", { bg = light.bg, fg = light.fgSoft })
   set_hl("DiagnosticError", { fg = "#ff7b7b" })
-  set_hl("DiagnosticWarn", { fg = "#f5d88b" })
-  set_hl("DiagnosticInfo", { fg = mono.fg })
-  set_hl("DiagnosticHint", { fg = mono.fgSoft })
-  set_hl("MatchParen", { fg = mono.fg, bg = "#333333", bold = true })
-  set_hl("Title", { fg = mono.fg, bold = true })
-  set_hl("Directory", { fg = mono.fg, bold = true })
-  apply_mono_syntax()
+  set_hl("DiagnosticWarn", { fg = "#b45309" })
+  set_hl("DiagnosticInfo", { fg = light.fg })
+  set_hl("DiagnosticHint", { fg = light.fgSoft })
+  set_hl("MatchParen", { fg = light.fg, bg = "#d0d0d0", bold = true })
+  set_hl("Title", { fg = light.fg, bold = true })
+  set_hl("Directory", { fg = light.fg, bold = true })
+  apply_light_syntax()
 end
 
 function M.apply(mode)
-  if mode == "mono" then
-    apply_mono()
+  if mode == "light" or mode == "mono" then
+    apply_light()
   else
     apply_coral()
   end
@@ -186,7 +186,7 @@ end
 
 function M.toggle()
   if M.mode == "coral" then
-    M.apply("mono")
+    M.apply("light")
   else
     M.apply("coral")
   end

@@ -46,9 +46,17 @@
 - `<leader>tr` - Run `cargo run`
 
 ### UI Toggles
-- `<leader>ub` - Toggle Coral <-> B&W mode
+- `<leader>ub` - Toggle Coral <-> Light White mode
 - `<leader>ut` - Toggle transparency
 - `<leader>uh` - Toggle LSP inlay hints
+
+### Change Theme
+- Quick switch: press `<leader>ub` to toggle between Coral and Light White.
+- Command mode options:
+  - Toggle: `:lua require("config.theme").toggle()`
+  - Set Coral: `:lua require("config.theme").apply("coral")`
+  - Set Light White: `:lua require("config.theme").apply("light")`
+  - Backward-compatible alias: `:lua require("config.theme").apply("mono")`
 
 ---
 
