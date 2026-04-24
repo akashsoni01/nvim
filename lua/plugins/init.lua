@@ -14,7 +14,13 @@ return {
       indent = { enable = true },
     },
     config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
+      -- Support both old and new nvim-treesitter module layouts.
+      local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
+      if ok_configs then
+        configs.setup(opts)
+        return
+      end
+      require("nvim-treesitter").setup(opts)
     end,
   },
 
