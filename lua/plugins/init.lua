@@ -26,9 +26,7 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
-    opts = {
-      ensure_installed = { "rust_analyzer" },
-    },
+    opts = {},
   },
   {
     "neovim/nvim-lspconfig",

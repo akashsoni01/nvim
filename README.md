@@ -12,6 +12,15 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 ## Docs
 - Full shortcut + workflow guide: [`RUST_NEOVIM_CHEATSHEET.md`](./RUST_NEOVIM_CHEATSHEET.md)
 
+## Offline Mode (Vendor Plugins)
+- Run once while online:
+  - `bash ./scripts/vendor-plugins.sh`
+- This vendors `lazy.nvim` and plugin repos into:
+  - `vendor/lazy/lazy.nvim`
+  - `vendor/plugins/*`
+- After that, this config prefers local vendor paths automatically, so Neovim can start offline.
+- If you add new plugins later, run the vendor script again.
+
 ## Beginner: Open and Navigate a Project
 
 ### 1) Open Neovim in your project folder
