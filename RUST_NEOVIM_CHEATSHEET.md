@@ -94,13 +94,75 @@
 2. `<leader>tt` for focused test run
 3. `<leader>ta` for full suite before commit
 
-### 4) Debugging Rust Binary
-1. Build debug binary:
+### 4) Debugging Rust Binary (Setup + Run + State)
+
+#### One-time setup (install adapter)
+- macOS:
+  - `./scripts/install-debug-adapter-macos.sh`
+- Linux:
+  - `./scripts/install-debug-adapter-linux.sh`
+- Termux:
+  - `./scripts/install-debug-adapter-termux.sh`
+- Or run everything (plugins + adapter check/install):
+  - `./scripts/vendor-plugins.sh`
+
+#### Dependencies by platform
+- macOS:
+  - Xcode CLT (`xcrun`, `xcode-select`)
+  - optional Homebrew (`brew`) for llvm fallback
+- Linux:
+  - one package manager (`apt-get` / `dnf` / `pacman` / `zypper`)
+  - `sudo` (or run as root)
+  - fallback downloader tools: `curl`, `unzip`, `file`
+- Termux:
+  - `pkg` and `llvm`
+
+#### Verify adapter is available
+- `which lldb-dap || which codelldb`
+- Confirm local shim (used by this config):
+  - `ls -l ~/.config/nvim/bin/lldb-dap`
+
+#### Build and start debugging
+1. Build target first:
    - `cargo build`
-2. Start debugger:
+2. Open project root in Neovim:
+   - `nvim .`
+3. Set breakpoint(s):
+   - `<leader>db`
+4. Start/continue debugger:
    - `<leader>dc`
-3. When prompted, select executable in `target/debug/`
-4. Use step keys (`<leader>do`, `<leader>di`) and breakpoints (`<leader>db`)
+5. When prompted, choose a real binary file like:
+   - `target/debug/<your-crate-name>`
+   - not `target/debug/` (directory)
+
+#### See debugger state while paused
+- Variables/scopes/call stack:
+  - opens automatically with `nvim-dap-ui` after debugger starts
+- Step controls:
+  - `<leader>do` step over
+  - `<leader>di` step into
+  - `:lua require("dap").step_out()` step out
+- Open DAP REPL:
+  - `:lua require("dap").repl.open()`
+- Inspect expression under cursor:
+  - `:lua require("dapui").eval()`
+- Stop session:
+  - `:lua require("dap").terminate()`
+
+#### How to see variable values (quick)
+1. Start debug and pause on a breakpoint (`<leader>db`, then `<leader>dc`).
+2. Check left DAP UI panels:
+   - `Scopes` shows locals/arguments for current frame
+   - `Stacks` lets you switch call frames (variables update per frame)
+3. For one-off value under cursor:
+   - place cursor on variable and run `:lua require("dapui").eval()`
+4. For custom expressions in current context:
+   - `:lua require("dap").repl.open()`
+   - type expressions like `my_var`, `my_struct.field`, `vec.len()`
+5. If value is `<optimized out>` or missing:
+   - rebuild with debug info and lower optimization:
+   - `cargo build`
+   - prefer dev profile / avoid release while debugging
 
 #### Add breakpoints
 - Move cursor to the line you want to pause on.
@@ -169,11 +231,16 @@
   - `pkg install ripgrep`
 
 ### Debugger fails to launch
-- Install LLDB:
-  - `pkg install lldb`
+- Ensure binary is built:
+  - `cargo build`
+- If error says "not a valid executable", you selected a folder path.
+  - Pick exact binary file: `target/debug/<your-binary-name>`
 - Confirm adapter binary:
-  - `which lldb-dap`
-  - or `which codelldb`
+  - `which lldb-dap || which codelldb`
+- Run platform installer if missing:
+  - `./scripts/install-debug-adapter-macos.sh`
+  - `./scripts/install-debug-adapter-linux.sh`
+  - `./scripts/install-debug-adapter-termux.sh`
 
 ### Icons not rendering
 - Use a Nerd Font in your terminal app.

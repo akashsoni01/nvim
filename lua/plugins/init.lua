@@ -264,6 +264,31 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
+      local function is_executable_file(path)
+        return path ~= nil
+          and path ~= ""
+          and vim.fn.isdirectory(path) == 0
+          and vim.fn.filereadable(path) == 1
+          and vim.fn.executable(path) == 1
+      end
+
+      local function rust_binary_default()
+        local cwd = vim.fn.getcwd()
+        local project_name = vim.fn.fnamemodify(cwd, ":t")
+        local candidates = {
+          cwd .. "/target/debug/" .. project_name,
+          cwd .. "/target/debug/" .. project_name:gsub("%-", "_"),
+        }
+
+        for _, candidate in ipairs(candidates) do
+          if is_executable_file(candidate) then
+            return candidate
+          end
+        end
+
+        return cwd .. "/target/debug/" .. project_name
+      end
+
       local local_lldb_dap = vim.fn.stdpath("config") .. "/bin/lldb-dap"
       local candidates = {
         vim.fn.filereadable(local_lldb_dap) == 1 and local_lldb_dap or "",
@@ -286,7 +311,26 @@ return {
           type = "lldb",
           request = "launch",
           program = function()
-            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+            local selected = vim.fn.input("Path to executable: ", rust_binary_default(), "file")
+            if selected == nil or selected == "" then
+              return nil
+            end
+
+            local absolute = vim.fn.fnamemodify(selected, ":p")
+            if vim.fn.isdirectory(absolute) == 1 then
+              vim.notify("DAP launch cancelled: selected path is a directory, not a binary.", vim.log.levels.ERROR)
+              return nil
+            end
+
+            if not is_executable_file(absolute) then
+              vim.notify(
+                "DAP launch cancelled: selected file is not executable. Build first with `cargo build`.",
+                vim.log.levels.ERROR
+              )
+              return nil
+            end
+
+            return absolute
           end,
           cwd = "${workspaceFolder}",
           stopOnEntry = false,
