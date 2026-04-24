@@ -27,6 +27,7 @@
 - `<leader>di` - Step into
 - `<leader>dO` - Step out
 - `<leader>dr` - Open DAP REPL
+- `<leader>du` - Toggle debug UI screen (DAP UI)
 - `<leader>de` - Eval variable/expression under cursor
 - `<leader>dx` - Terminate debug session
 
@@ -161,6 +162,7 @@
 #### See debugger state while paused
 - Variables/scopes/call stack:
   - opens automatically with `nvim-dap-ui` after debugger starts
+  - toggle manually anytime: `<leader>du`
 - Step controls:
   - `<leader>do` step over
   - `<leader>di` step into
