@@ -108,6 +108,8 @@ map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc =
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
 map("n", "<leader>se", "<C-w>=", vim.tbl_extend("force", opts, { desc = "Equalize splits" }))
 map("n", "<leader>sx", "<cmd>close<cr>", vim.tbl_extend("force", opts, { desc = "Close split" }))
+map("n", "<leader>qa", "<cmd>wqa<cr>", vim.tbl_extend("force", opts, { desc = "Save all and quit" }))
+map("n", "<leader>qQ", "<cmd>qa!<cr>", vim.tbl_extend("force", opts, { desc = "Quit all without saving" }))
 map("n", "<leader>th", "<cmd>split | terminal<cr>", vim.tbl_extend("force", opts, { desc = "Terminal horizontal" }))
 map("n", "<leader>tv", "<cmd>vsplit | terminal<cr>", vim.tbl_extend("force", opts, { desc = "Terminal vertical" }))
 

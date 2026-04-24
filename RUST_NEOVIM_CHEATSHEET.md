@@ -3,6 +3,57 @@
 ## Leader Key
 - `Leader` = `Space`
 
+## All Shortkeys Table
+
+| Area | Shortcut | Action |
+| --- | --- | --- |
+| Telescope | `<leader>ff` | Find files |
+| Telescope | `<leader>fg` | Live grep in project |
+| Telescope | `<leader>fb` | List open buffers |
+| Telescope | `<leader>fh` | Help tags |
+| LSP | `gd` | Go to definition |
+| LSP | `gr` | Find references |
+| LSP | `K` | Hover documentation |
+| LSP | `<C-k>` | Signature help |
+| LSP | `<leader>ca` | Code actions |
+| LSP | `<leader>rn` | Rename symbol |
+| LSP | `<leader>fm` | Format current buffer |
+| Completion | `<C-Space>` | Open completion menu |
+| Completion | `<CR>` | Confirm selected completion |
+| Completion | `<Tab>` | Next completion item / snippet jump |
+| Completion | `<S-Tab>` | Previous completion item / snippet jump back |
+| Debug | `<leader>db` | Toggle breakpoint |
+| Debug | `<leader>dc` | Continue/start debugger |
+| Debug | `<leader>dn` | Jump to next breakpoint |
+| Debug | `<leader>do` | Step over |
+| Debug | `<leader>di` | Step into |
+| Debug | `<leader>dO` | Step out |
+| Debug | `<leader>dr` | Open DAP REPL |
+| Debug | `<leader>du` | Toggle debug UI screen |
+| Debug | `<leader>de` | Eval variable/expression under cursor |
+| Debug | `<leader>dx` | Terminate debug session |
+| Git | `<leader>gs` | Git status |
+| Git | `<leader>gl` | Git commits log |
+| Git | `<leader>gd` | Git diff |
+| Window | `<leader>sv` | Vertical split |
+| Window | `<leader>sh` | Horizontal split |
+| Window | `<leader>se` | Equalize split sizes |
+| Window | `<leader>sx` | Close current split |
+| Quit | `<leader>qa` | Save all buffers and quit all windows |
+| Quit | `<leader>qQ` | Quit all windows without saving |
+| Terminal | `<leader>th` | Open horizontal terminal split |
+| Terminal | `<leader>tv` | Open vertical terminal split |
+| Terminal | `<C-\><C-n>` | Exit terminal insert mode |
+| Testing | `<leader>tt` | Run test under cursor |
+| Testing | `<leader>ta` | Run all tests |
+| Testing | `<leader>to` | Toggle neotest output panel |
+| Testing | `<leader>ts` | Toggle neotest summary panel |
+| Testing | `<leader>tc` | Run cargo clippy |
+| Testing | `<leader>tr` | Run cargo run |
+| UI | `<leader>ub` | Toggle Coral / Light White theme |
+| UI | `<leader>ut` | Toggle transparency |
+| UI | `<leader>uh` | Toggle LSP inlay hints |
+
 ## Core Shortcuts
 
 ### Telescope / Navigation
@@ -42,6 +93,8 @@
 - `<leader>sh` - Horizontal split
 - `<leader>se` - Equalize split sizes
 - `<leader>sx` - Close current split
+- `<leader>qa` - Save all buffers and quit all windows (`:wqa`)
+- `<leader>qQ` - Quit all windows without saving (`:qa!`)
 
 ### Terminal (open and use)
 - Open terminal in horizontal split: `<leader>th`
