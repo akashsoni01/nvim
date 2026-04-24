@@ -36,7 +36,6 @@ return {
       "SmiteshP/nvim-navic",
     },
     config = function()
-      local lspconfig = require("lspconfig")
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
       local navic = require("nvim-navic")
 
@@ -52,7 +51,7 @@ return {
         vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
       end
 
-      lspconfig.rust_analyzer.setup({
+      local rust_analyzer_cfg = {
         capabilities = capabilities,
         on_attach = on_attach,
         settings = {
@@ -83,7 +82,16 @@ return {
             },
           },
         },
-      })
+      }
+
+      if vim.lsp.config and vim.lsp.enable then
+        vim.lsp.config("rust_analyzer", rust_analyzer_cfg)
+        vim.lsp.enable("rust_analyzer")
+      else
+        -- Fallback for older Neovim versions (< 0.11).
+        local lspconfig = require("lspconfig")
+        lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
+      end
     end,
   },
 
