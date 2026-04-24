@@ -163,36 +163,12 @@ return {
     "nvim-telescope/telescope.nvim",
     cmd = "Telescope",
     dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      local telescope = require("telescope")
-      local has_fd = vim.fn.executable("fd") == 1
-      local has_fdfind = vim.fn.executable("fdfind") == 1
-      local has_rg = vim.fn.executable("rg") == 1
-
-      local find_command = { "find", ".", "-type", "f" }
-      if has_fd then
-        find_command = { "fd", "--type", "f", "--hidden", "--exclude", ".git" }
-      elseif has_fdfind then
-        find_command = { "fdfind", "--type", "f", "--hidden", "--exclude", ".git" }
-      elseif has_rg then
-        find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" }
-      end
-
-      telescope.setup({
-        defaults = {
-          layout_strategy = "horizontal",
-          sorting_strategy = "ascending",
-          prompt_prefix = "   ",
-          selection_caret = " ",
-        },
-        pickers = {
-          find_files = {
-            find_command = find_command,
-            hidden = true,
-          },
-        },
-      })
-    end,
+    opts = {
+      defaults = {
+        layout_strategy = "horizontal",
+        sorting_strategy = "ascending",
+      },
+    },
   },
 
   {
