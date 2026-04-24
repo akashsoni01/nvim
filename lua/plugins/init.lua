@@ -264,7 +264,9 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
+      local local_lldb_dap = vim.fn.stdpath("config") .. "/bin/lldb-dap"
       local candidates = {
+        vim.fn.filereadable(local_lldb_dap) == 1 and local_lldb_dap or "",
         vim.fn.exepath("codelldb"),
         vim.fn.exepath("lldb-dap"),
         vim.fn.exepath("lldb-vscode"),
@@ -278,24 +280,25 @@ return {
         end
       end
 
+      dap.configurations.rust = {
+        {
+          name = "Launch Rust binary",
+          type = "lldb",
+          request = "launch",
+          program = function()
+            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+          end,
+          cwd = "${workspaceFolder}",
+          stopOnEntry = false,
+          args = {},
+        },
+      }
+
       if lldb_exec then
         dap.adapters.lldb = {
           type = "executable",
           command = lldb_exec,
           name = "lldb",
-        }
-        dap.configurations.rust = {
-          {
-            name = "Launch Rust binary",
-            type = "lldb",
-            request = "launch",
-            program = function()
-              return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
-            end,
-            cwd = "${workspaceFolder}",
-            stopOnEntry = false,
-            args = {},
-          },
         }
       else
         vim.notify("No LLDB adapter found (codelldb/lldb-dap/lldb-vscode). Rust DAP disabled.", vim.log.levels.WARN)
