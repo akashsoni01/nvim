@@ -132,7 +132,8 @@
 | Build debug binary | `cargo build` | Creates `target/debug/<binary>` |
 | Start Neovim in project | `nvim .` | Opens project root so DAP uses correct workspace |
 | Toggle breakpoint | `<leader>db` | Add/remove breakpoint at current line |
-| Start debugger | `<leader>dc` | Starts debug session or continues execution |
+| Start debugger | `<leader>dc` | Starts debug session; config stops on entry so you can step from program start |
+| Start debugger command | `:lua require("dap").continue()` | Same as `<leader>dc` |
 | Pick executable | `target/debug/<your-binary-name>` | Choose actual binary file, not `target/debug/` directory |
 | Jump to next breakpoint | `<leader>dn` | Continue without stepping into library code |
 | Step over line | `<leader>do` | Line-by-line execution in current function |
@@ -156,6 +157,7 @@
 | Error: `target/debug/` is not valid executable | Select `target/debug/<binary-name>`, not the folder |
 | Variables missing or `<optimized out>` | Run `cargo build`, avoid release build while debugging |
 | Debugger enters `std`, `core`, `alloc`, `tokio`, etc. | Use `<leader>dO` to step out, then `<leader>do` or `<leader>dn` |
+| Program runs directly without stopping | Add breakpoint with `<leader>db` on the exact assignment line, or restart Neovim so `stopOnEntry = true` loads |
 | Nothing opens for debug state | Press `<leader>du` to toggle DAP UI |
 | Adapter missing | Run platform install script or `./scripts/vendor-plugins.sh` |
 
@@ -194,9 +196,11 @@
    - `<leader>db`
 4. Start/continue debugger:
    - `<leader>dc`
+   - command form: `:lua require("dap").continue()`
 5. When prompted, choose a real binary file like:
    - `target/debug/<your-crate-name>`
    - not `target/debug/` (directory)
+6. The debugger now stops on entry. Press `<leader>do` to step line-by-line, or `<leader>dn` to continue to the next breakpoint.
 
 #### See debugger state while paused
 - Variables/scopes/call stack:
@@ -232,6 +236,7 @@
 - Move cursor to the line you want to pause on.
 - Press `<leader>db` to toggle a breakpoint on that line.
 - Press `<leader>db` again on the same line to remove it.
+- To stop on an assignment statement, put the cursor exactly on that assignment line and press `<leader>db` before `<leader>dc`.
 
 #### Debug line-by-line vs step into functions
 - `<leader>dc` - Continue execution (or start debugger). Runs until next breakpoint.
