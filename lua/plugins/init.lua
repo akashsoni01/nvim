@@ -284,21 +284,22 @@ return {
           command = lldb_exec,
           name = "lldb",
         }
+        dap.configurations.rust = {
+          {
+            name = "Launch Rust binary",
+            type = "lldb",
+            request = "launch",
+            program = function()
+              return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+            end,
+            cwd = "${workspaceFolder}",
+            stopOnEntry = false,
+            args = {},
+          },
+        }
+      else
+        vim.notify("No LLDB adapter found (codelldb/lldb-dap/lldb-vscode). Rust DAP disabled.", vim.log.levels.WARN)
       end
-
-      dap.configurations.rust = {
-        {
-          name = "Launch Rust binary",
-          type = "lldb",
-          request = "launch",
-          program = function()
-            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
-          end,
-          cwd = "${workspaceFolder}",
-          stopOnEntry = false,
-          args = {},
-        },
-      }
     end,
   },
   {
@@ -329,12 +330,18 @@ return {
       "rouge8/neotest-rust",
     },
     config = function()
+      local neotest_rust_opts = {
+        args = { "--no-capture" },
+      }
+
+      local ok_dap, dap = pcall(require, "dap")
+      if ok_dap and dap.adapters and dap.adapters.lldb then
+        neotest_rust_opts.dap_adapter = "lldb"
+      end
+
       require("neotest").setup({
         adapters = {
-          require("neotest-rust")({
-            dap_adapter = "lldb",
-            args = { "--no-capture" },
-          }),
+          require("neotest-rust")(neotest_rust_opts),
         },
       })
     end,
