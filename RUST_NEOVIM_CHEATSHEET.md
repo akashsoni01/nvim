@@ -102,6 +102,34 @@
 3. When prompted, select executable in `target/debug/`
 4. Use step keys (`<leader>do`, `<leader>di`) and breakpoints (`<leader>db`)
 
+#### Add breakpoints
+- Move cursor to the line you want to pause on.
+- Press `<leader>db` to toggle a breakpoint on that line.
+- Press `<leader>db` again on the same line to remove it.
+
+#### Debug line-by-line vs step into functions
+- `<leader>dc` - Continue execution (or start debugger). Runs until next breakpoint.
+- `<leader>do` - Step over current line. Good for line-by-line flow in the same function.
+- `<leader>di` - Step into function call on current line. Use when you want internal function details.
+- `:lua require("dap").step_out()` - Step out of current function and return to caller.
+
+#### Typical debug flow
+1. Set 1-3 breakpoints with `<leader>db`.
+2. Start/continue with `<leader>dc`.
+3. At a breakpoint:
+   - Use `<leader>do` for line-by-line in current function.
+   - Use `<leader>di` when a called function is suspicious.
+   - Use `:lua require("dap").step_out()` to return back quickly.
+4. Continue to next breakpoint with `<leader>dc`.
+
+#### Minimal run and debug example
+1. `cargo build`
+2. In Neovim open `src/main.rs`
+3. Put cursor on a target line and press `<leader>db`
+4. Press `<leader>dc`
+5. Select `target/debug/<your-binary-name>`
+6. Use `<leader>do` / `<leader>di` while paused
+
 ### 5) Cargo.toml Productivity
 1. Open `Cargo.toml`
 2. Use completion for crate names/versions
