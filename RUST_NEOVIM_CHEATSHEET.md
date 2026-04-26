@@ -80,6 +80,7 @@
 | File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
 | File type | `<leader>ftt` | Set buffer filetype: TOML (e.g. `Cargo.toml`) |
 | File type | `<leader>fty` | Set buffer filetype: YAML (`.yml` / `.yaml`) |
+| File type | `<leader>ftr` | Set buffer filetype: Rust (e.g. after `<leader>ftm`) |
 
 ## Core Shortcuts
 
@@ -98,11 +99,12 @@
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
 
-### File type (Markdown, TOML, YAML)
+### File type (Markdown, TOML, YAML, Rust)
 Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):
 - `<leader>ftm` - Set filetype to Markdown
 - `<leader>ftt` - Set filetype to TOML
 - `<leader>fty` - Set filetype to YAML (covers `.yml` and `.yaml`)
+- `<leader>ftr` - Set filetype back to Rust (after testing another `ft*` on a `.rs` buffer, or to fix detection)
 
 ### Debugging (DAP)
 - `<leader>db` - Toggle breakpoint

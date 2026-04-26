@@ -395,3 +395,6 @@ end, vim.tbl_extend("force", opts, { desc = "Set filetype: TOML" }))
 map("n", "<leader>fty", function()
   vim.bo.filetype = "yaml"
 end, vim.tbl_extend("force", opts, { desc = "Set filetype: YAML" }))
+map("n", "<leader>ftr", function()
+  vim.bo.filetype = "rust"
+end, vim.tbl_extend("force", opts, { desc = "Set filetype: Rust" }))
