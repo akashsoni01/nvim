@@ -81,6 +81,12 @@
 | File type | `<leader>ftt` | Set buffer filetype: TOML (e.g. `Cargo.toml`) |
 | File type | `<leader>fty` | Set buffer filetype: YAML (`.yml` / `.yaml`) |
 | File type | `<leader>ftr` | Set buffer filetype: Rust (e.g. after `<leader>ftm`) |
+| Grep/Replace (current file, **any** type) | `<leader>sr` | Find & replace in the **open file** only (literal `:%s/.../.../gc`; not terminal) |
+| Grep/Replace (`.rs` / `.toml` only) | `<leader>sf` | Same as `sr` but only if the buffer is **Rust or TOML** |
+| Grep/Replace (`.rs` / `.toml` only) | `<leader>sg` | **Find** in project: Telescope `live_grep` on `*.rs` + `*.toml` only (needs `rg`) |
+| Grep/Replace (`.rs` / `.toml` only) | `<leader>sR` | Find & **replace in project** (literal): all `*.rs` and `*.toml` under cwd (needs `rg`) |
+| Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
+| Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
 
 ## Core Shortcuts
 
@@ -105,6 +111,20 @@ Use when a buffer is plain text or the wrong syntax (extensionless scratch buffe
 - `<leader>ftt` - Set filetype to TOML
 - `<leader>fty` - Set filetype to YAML (covers `.yml` and `.yaml`)
 - `<leader>ftr` - Set filetype back to Rust (after testing another `ft*` on a `.rs` buffer, or to fix detection)
+
+### Find & replace in one file
+- **`<leader>sr`** (current buffer, **any** file) — Literal find & replace in **this file only**; runs `:%s/.../.../gc` (confirm each change with `y`/`n`). Use in normal editable buffers, not the terminal. **Readonly** buffers are blocked.
+
+- **`<leader>sf`** (Rust / TOML only) — Same flow as `sr`, but only if the buffer is **`.rs` / `Cargo.toml` / other `.toml`** (or `rust` / `toml` filetype).
+
+### Find & replace (project; Rust / TOML scope)
+The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) for **project** search/replace.
+- **`<leader>sg`** (project) — **Search** in the repo: Telescope **live_grep** with `rg` globs `*.rs` and `*.toml` only. Run Neovim from the **project root** (or the cwd you want to search). Requires **ripgrep** (`rg`).
+- **`<leader>sR`** (project) — **Replace** the literal search string with the replacement in **all** `*.rs` and `*.toml` files that contain a match. Uses `rg` to list files, then rewrites them on disk. **Reload** buffers in Neovim if you had those files open (`:e` or `:checktime`). Run from the **project root** so paths resolve correctly.
+
+- **`<leader>fA`** (project, **any** file) — **Search** the whole tree with Telescope `live_grep` and no extension filter. Same idea as **`<leader>fg`** (use whichever you remember). Needs **`rg`**.
+
+- **`<leader>sA`** (project, **any** file) — **Replace** a literal string in every file under cwd that `rg` reports as containing a match (not limited to `.rs`/`.toml`). Respects **`.gitignore`**. **Reload** open buffers after; use with care on large trees.
 
 ### Debugging (DAP)
 - `<leader>db` - Toggle breakpoint
