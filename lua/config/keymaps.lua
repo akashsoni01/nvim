@@ -1,6 +1,22 @@
 local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
+do
+  local gfc = require("config.guifont_cycle")
+  map("n", "<leader>f]", function()
+    gfc.cycle_style(1)
+  end, vim.tbl_extend("force", opts, { desc = "Font: next style (Averia; list below)" }))
+  map("n", "<leader>f[", function()
+    gfc.cycle_style(-1)
+  end, vim.tbl_extend("force", opts, { desc = "Font: previous style" }))
+  map("n", "<leader>f+", function()
+    gfc.cycle_size(1)
+  end, vim.tbl_extend("force", opts, { desc = "Font: size +1" }))
+  map("n", "<leader>f-", function()
+    gfc.cycle_size(-1)
+  end, vim.tbl_extend("force", opts, { desc = "Font: size -1" }))
+end
+
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
   local builtin = require("telescope.builtin")

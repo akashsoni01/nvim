@@ -21,5 +21,8 @@ opt.sidescrolloff = 8
 opt.cursorline = true
 opt.wrap = false
 
--- GUI clients can use this; terminal fallback remains external.
-opt.guifont = "Averia_Libre:h13,JetBrainsMono Nerd Font:h13"
+-- Live preview when typing :substitute in the command line (split window).
+opt.inccommand = "split"
+
+-- GUI: Averia Libre + JetBrains Nerd; cycle with <leader>f[ ] and size with <leader>f+ / <leader>f- (see keymaps).
+require("config.guifont_cycle").init_from_g()
