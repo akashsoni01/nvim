@@ -23,6 +23,10 @@ Swift: new package (copy into a terminal)
 
 For a library package:
   swift package init --type library
+
+If `swift` is not installed, from this Neovim config repo run:
+  bash ./scripts/install-swift.sh
+See: https://www.swift.org/install/
 ]]
 
 function M.print_help()

@@ -142,6 +142,13 @@ else
   echo "Warning: git worktree is not available. Worktree keymaps require a Git version with worktree support."
 fi
 
+if ! command -v swift >/dev/null 2>&1; then
+  echo
+  echo "Optional: install the Swift compiler (macOS, Linux, FreeBSD, Termux):"
+  echo "  bash $ROOT_DIR/scripts/install-swift.sh"
+  echo "  https://www.swift.org/install/"
+fi
+
 echo
 echo "Vendoring complete."
 echo "You can now run Neovim offline with local plugin sources."

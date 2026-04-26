@@ -1,5 +1,9 @@
 # Swift + Neovim Cheatsheet
 
+## Toolchain (all OSes)
+- From the config repo: `bash ./scripts/install-swift.sh` (macOS, Linux/WSL, FreeBSD, Termux; `--dry-run` to preview)
+- Or follow [swift.org/install](https://www.swift.org/install/)
+
 ## Leader
 - `Leader` = `Space`
 

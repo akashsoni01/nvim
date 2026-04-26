@@ -19,8 +19,22 @@ Edit `Sources/MyApp/MyApp.swift`. Inside Neovim you can run `:SwiftNewProject` t
 ## Requirements
 
 - **Swift** toolchain ([swift.org](https://www.swift.org/install/))
-- **SourceKit LSP**: on macOS often `xcrun sourcekit-lsp` (Xcode or CLT); on Linux, `sourcekit-lsp` on your `PATH`
+- **SourceKit LSP**: on macOS often `xcrun sourcekit-lsp` (Xcode or CLT); on Linux, `sourcekit-lsp` on your `PATH` (included with a normal Swift install)
 - **LLDB** for DAP: `lldb-dap` or `codelldb` (run `scripts/vendor-plugins.sh` to try a macOS `bin/lldb-dap` shim)
+
+### Install Swift (all OSes this repo supports)
+
+```bash
+bash ./scripts/install-swift.sh
+```
+
+- **macOS:** Homebrew `swift`, or use Xcode / Command Line Tools (script prints hints if `brew` is missing).
+- **Linux (incl. WSL):** Tries your distro’s package when safe (`swiftlang` on new Ubuntu, Fedora `swift-lang` / `swift`, Arch `swift`), then falls back to **Swiftly** from [swift.org](https://www.swift.org/install/linux/) (official).
+- **FreeBSD:** `pkg install swift` when available.
+- **Termux (Android):** `pkg install swift` when the package exists.
+- **Windows:** use **WSL2** and run the Linux path, or the native Windows installer from [swift.org](https://www.swift.org/install/) (not run by this shell script).
+
+`bash ./scripts/install-swift.sh --dry-run` shows what would run without installing.
 
 ## Highlights
 
