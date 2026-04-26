@@ -44,8 +44,14 @@ map("n", "<leader>dc", function()
   require("dap").continue()
 end, vim.tbl_extend("force", opts, { desc = "Debug continue" }))
 map("n", "<leader>dn", function()
-  require("dap").continue()
-end, vim.tbl_extend("force", opts, { desc = "Debug next breakpoint" }))
+  if vim.bo.filetype == "java" then
+    pcall(function()
+      require("jdtls").test_nearest_method()
+    end)
+  else
+    require("dap").continue()
+  end
+end, vim.tbl_extend("force", opts, { desc = "JDTLS: test nearest (java) or DAP continue" }))
 map("n", "<leader>do", function()
   require("dap").step_over()
 end, vim.tbl_extend("force", opts, { desc = "Debug step over" }))
@@ -74,8 +80,7 @@ map("n", "<leader>tt", function()
     neotest.run.run()
     return
   end
-  local test_name = vim.fn.expand("<cword>")
-  vim.cmd("split | terminal cargo test " .. test_name)
+  vim.cmd("split | terminal " .. require("config.java_build").shell_test_terminal())
 end, vim.tbl_extend("force", opts, { desc = "Run test under cursor" }))
 map("n", "<leader>ta", function()
   local ok, neotest = pcall(require, "neotest")
@@ -83,7 +88,7 @@ map("n", "<leader>ta", function()
     neotest.run.run(vim.fn.getcwd())
     return
   end
-  vim.cmd("split | terminal cargo test")
+  vim.cmd("split | terminal " .. require("config.java_build").shell_test_terminal())
 end, vim.tbl_extend("force", opts, { desc = "Run all tests" }))
 map("n", "<leader>to", function()
   local ok, neotest = pcall(require, "neotest")
@@ -97,9 +102,36 @@ map("n", "<leader>ts", function()
     neotest.summary.toggle()
   end
 end, vim.tbl_extend("force", opts, { desc = "Toggle test summary" }))
-map("n", "<leader>tc", "<cmd>split | terminal cargo clippy --all-targets --all-features<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo clippy" }))
-map("n", "<leader>tb", "<cmd>split | terminal cargo build<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo build" }))
-map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo run" }))
+map("n", "<leader>tc", function()
+  local cmd = require("config.java_build").shell_check()
+  vim.cmd("split | terminal " .. cmd)
+end, vim.tbl_extend("force", opts, { desc = "Maven verify / Gradle check" }))
+map("n", "<leader>tb", function()
+  local cmd = require("config.java_build").shell_compile()
+  vim.cmd("split | terminal " .. cmd)
+end, vim.tbl_extend("force", opts, { desc = "Compile (Maven/Gradle, skip tests)" }))
+map("n", "<leader>tr", function()
+  local cmd = require("config.java_build").shell_run()
+  vim.cmd("split | terminal " .. cmd)
+end, vim.tbl_extend("force", opts, { desc = "Run app (Gradle run / spring-boot:run / package)" }))
+map("n", "<leader>oi", function()
+  if vim.bo.filetype == "java" then
+    pcall(function()
+      require("jdtls").organize_imports()
+    end)
+  else
+    vim.notify("organize_imports: open a Java buffer", vim.log.levels.WARN)
+  end
+end, vim.tbl_extend("force", opts, { desc = "JDTLS: organize imports" }))
+map("n", "<leader>df", function()
+  if vim.bo.filetype == "java" then
+    pcall(function()
+      require("jdtls").test_class()
+    end)
+  else
+    vim.notify("JDTLS: open a Java buffer", vim.log.levels.WARN)
+  end
+end, vim.tbl_extend("force", opts, { desc = "JDTLS: run test class" }))
 
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))
@@ -395,6 +427,6 @@ end, vim.tbl_extend("force", opts, { desc = "Set filetype: TOML" }))
 map("n", "<leader>fty", function()
   vim.bo.filetype = "yaml"
 end, vim.tbl_extend("force", opts, { desc = "Set filetype: YAML" }))
-map("n", "<leader>ftr", function()
-  vim.bo.filetype = "rust"
-end, vim.tbl_extend("force", opts, { desc = "Set filetype: Rust" }))
+map("n", "<leader>ftj", function()
+  vim.bo.filetype = "java"
+end, vim.tbl_extend("force", opts, { desc = "Set filetype: Java" }))

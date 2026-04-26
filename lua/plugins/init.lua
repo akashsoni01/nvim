@@ -9,7 +9,7 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown", "yaml" },
+      ensure_installed = { "lua", "vim", "vimdoc", "java", "json", "markdown", "yaml", "xml" },
       highlight = { enable = true },
       indent = { enable = true },
     },
@@ -27,12 +27,23 @@ return {
   {
     "williamboman/mason.nvim",
     cmd = "Mason",
-    opts = {},
+    opts = {
+      ensure_installed = {
+        "jdtls",
+        "java-debug-adapter",
+        "java-test",
+      },
+    },
   },
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
-    opts = {},
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = { "jdtls" },
+        automatic_installation = true,
+      })
+    end,
   },
   {
     "neovim/nvim-lspconfig",
@@ -42,62 +53,7 @@ return {
       "SmiteshP/nvim-navic",
     },
     config = function()
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local navic = require("nvim-navic")
-
-      local on_attach = function(client, bufnr)
-        if client.server_capabilities.documentSymbolProvider then
-          navic.attach(client, bufnr)
-        end
-
-        if vim.lsp.inlay_hint and client.server_capabilities.inlayHintProvider then
-          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        end
-
-        vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
-      end
-
-      local rust_analyzer_cfg = {
-        capabilities = capabilities,
-        on_attach = on_attach,
-        settings = {
-          ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            checkOnSave = true,
-            check = { command = "clippy" },
-            procMacro = { enable = true },
-            completion = {
-              callable = { snippets = "fill_arguments" },
-            },
-            diagnostics = {
-              enable = true,
-            },
-            inlayHints = {
-              bindingModeHints = { enable = true },
-              closureReturnTypeHints = { enable = "always" },
-              lifetimeElisionHints = { enable = "skip_trivial" },
-              reborrowHints = { enable = "always" },
-            },
-            imports = {
-              granularity = { group = "module" },
-              prefix = "self",
-            },
-            assist = {
-              importEnforceGranularity = true,
-              importPrefix = "self",
-            },
-          },
-        },
-      }
-
-      if vim.lsp.config and vim.lsp.enable then
-        vim.lsp.config("rust_analyzer", rust_analyzer_cfg)
-        vim.lsp.enable("rust_analyzer")
-      else
-        -- Fallback for older Neovim versions (< 0.11).
-        local lspconfig = require("lspconfig")
-        lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
-      end
+      -- jdtls is started from ftplugin/java.lua via nvim-jdtls.
     end,
   },
 
@@ -151,24 +107,11 @@ return {
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
-          { name = "crates" },
           { name = "buffer" },
           { name = "path" },
         }),
       })
     end,
-  },
-
-  {
-    "saecki/crates.nvim",
-    event = { "BufRead Cargo.toml" },
-    dependencies = { "hrsh7th/nvim-cmp" },
-    opts = {
-      popup = { border = "rounded" },
-      completion = {
-        cmp = { enabled = true },
-      },
-    },
   },
 
   {
@@ -264,93 +207,23 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
-      local function is_executable_file(path)
-        return path ~= nil
-          and path ~= ""
-          and vim.fn.isdirectory(path) == 0
-          and vim.fn.filereadable(path) == 1
-          and vim.fn.executable(path) == 1
-      end
-
-      local function rust_binary_default()
-        local cwd = vim.fn.getcwd()
-        local project_name = vim.fn.fnamemodify(cwd, ":t")
-        local candidates = {
-          cwd .. "/target/debug/" .. project_name,
-          cwd .. "/target/debug/" .. project_name:gsub("%-", "_"),
-        }
-
-        for _, candidate in ipairs(candidates) do
-          if is_executable_file(candidate) then
-            return candidate
-          end
-        end
-
-        return cwd .. "/target/debug/" .. project_name
-      end
-
-      local local_lldb_dap = vim.fn.stdpath("config") .. "/bin/lldb-dap"
-      local candidates = {
-        vim.fn.filereadable(local_lldb_dap) == 1 and local_lldb_dap or "",
-        vim.fn.exepath("codelldb"),
-        vim.fn.exepath("lldb-dap"),
-        vim.fn.exepath("lldb-vscode"),
-      }
-
-      local lldb_exec = nil
-      for _, path in ipairs(candidates) do
-        if path ~= nil and path ~= "" then
-          lldb_exec = path
-          break
-        end
-      end
-
-      dap.configurations.rust = {
+      -- jdtls registers the "java" adapter when java-debug-adapter is bundled in ftplugin.
+      dap.configurations.java = dap.configurations.java or {}
+      vim.list_extend(dap.configurations.java, {
         {
-          name = "Launch Rust binary",
-          type = "lldb",
-          request = "launch",
-          program = function()
-            local selected = vim.fn.input("Path to executable: ", rust_binary_default(), "file")
-            if selected == nil or selected == "" then
-              return nil
-            end
-
-            local absolute = vim.fn.fnamemodify(selected, ":p")
-            if vim.fn.isdirectory(absolute) == 1 then
-              vim.notify("DAP launch cancelled: selected path is a directory, not a binary.", vim.log.levels.ERROR)
-              return nil
-            end
-
-            if not is_executable_file(absolute) then
-              vim.notify(
-                "DAP launch cancelled: selected file is not executable. Build first with `cargo build`.",
-                vim.log.levels.ERROR
-              )
-              return nil
-            end
-
-            return absolute
-          end,
-          cwd = "${workspaceFolder}",
-          stopOnEntry = true,
-          args = {},
-          initCommands = {
-            "settings set target.process.thread.step-avoid-regexp ^(std::|core::|alloc::|tokio::|mio::|polling::|parking_lot::|hashbrown::|serde::|anyhow::|thiserror::)",
-          },
+          type = "java",
+          request = "attach",
+          name = "Attach to remote (JDWP, port 5005)",
+          hostName = "127.0.0.1",
+          port = 5005,
         },
-      }
-
-      if lldb_exec then
-        dap.adapters.lldb = {
-          type = "executable",
-          command = lldb_exec,
-          name = "lldb",
-        }
-      else
-        vim.notify("No LLDB adapter found (codelldb/lldb-dap/lldb-vscode). Rust DAP disabled.", vim.log.levels.WARN)
-      end
+      })
     end,
+  },
+  {
+    "mfussenegger/nvim-jdtls",
+    ft = "java",
+    dependencies = { "mfussenegger/nvim-dap" },
   },
   {
     "rcarriga/nvim-dap-ui",
@@ -372,26 +245,25 @@ return {
   },
 
   {
+    "rcasia/neotest-java",
+    ft = "java",
+    dependencies = {
+      "mfussenegger/nvim-jdtls",
+      "mfussenegger/nvim-dap",
+    },
+  },
+  {
     "nvim-neotest/neotest",
     dependencies = {
       "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
       "antoinemadec/FixCursorHold.nvim",
-      "rouge8/neotest-rust",
+      "rcasia/neotest-java",
     },
     config = function()
-      local neotest_rust_opts = {
-        args = { "--no-capture" },
-      }
-
-      local ok_dap, dap = pcall(require, "dap")
-      if ok_dap and dap.adapters and dap.adapters.lldb then
-        neotest_rust_opts.dap_adapter = "lldb"
-      end
-
       require("neotest").setup({
         adapters = {
-          require("neotest-rust")(neotest_rust_opts),
+          require("neotest-java")({ incremental_build = true }),
         },
       })
     end,
