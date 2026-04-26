@@ -35,9 +35,13 @@
 | Git | `<leader>gs` | Git status |
 | Git | `<leader>gl` | Git commits log |
 | Git | `<leader>gd` | Git diff |
-| Git | `<leader>gwa` | Add git worktree |
+| Git | `<leader>gwc` | Create git worktree |
+| Git | `<leader>gwa` | Add git worktree alias |
+| Git | `<leader>gwb` | Create git worktree with new branch |
 | Git | `<leader>gwl` | List git worktrees |
-| Git | `<leader>gwr` | Remove git worktree |
+| Git | `<leader>gws` | Switch Neovim to a worktree |
+| Git | `<leader>gwd` | Delete git worktree |
+| Git | `<leader>gwr` | Remove git worktree alias |
 | Window | `<leader>sv` | Vertical split |
 | Window | `<leader>sh` | Horizontal split |
 | Window | `<leader>se` | Equalize split sizes |
@@ -91,9 +95,24 @@
 - `<leader>gs` - Git status (Telescope)
 - `<leader>gl` - Git commits log (Telescope)
 - `<leader>gd` - Git diff (Gitsigns)
-- `<leader>gwa` - Add a worktree with `git worktree add`
+- `<leader>gwc` - Create a worktree with `git worktree add <path> [branch]`
+- `<leader>gwa` - Alias for create/add worktree
+- `<leader>gwb` - Create a worktree and new branch with `git worktree add -b`
 - `<leader>gwl` - List worktrees with `git worktree list`
-- `<leader>gwr` - Remove a worktree with `git worktree remove`
+- `<leader>gws` - Switch Neovim's cwd to a selected worktree
+- `:GitWorktreeSwitch` - Command form of `<leader>gws`
+- `<leader>gwd` - Delete a worktree with `git worktree remove`
+- `<leader>gwr` - Alias for delete/remove worktree
+
+#### Git Worktree: What to Use When
+
+| Use case | Shortcut | Command pattern |
+| --- | --- | --- |
+| Work on an existing branch in a second folder | `<leader>gwc` | `git worktree add <path> <branch>` |
+| Create a fresh branch and checkout together | `<leader>gwb` | `git worktree add -b <new-branch> <path> [start-point]` |
+| Check all linked worktrees before switching/deleting | `<leader>gwl` | `git worktree list` |
+| Move this Neovim session to another worktree | `<leader>gws` | `:cd <selected-worktree>` |
+| Delete a finished worktree folder | `<leader>gwd` | `git worktree remove <path>` |
 
 ### Window / Split Management
 - `<leader>sv` - Vertical split

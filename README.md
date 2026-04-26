@@ -117,9 +117,11 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Git Status | `<leader>gs` | Telescope git status | See changed files quickly |
 | Git Commits | `<leader>gl` | Telescope commit history | Browse recent commits |
 | Git Diff | `<leader>gd` | Diff current file | Review current changes |
-| Git Worktree Add | `<leader>gwa` | Run `git worktree add` | Create another checkout for a branch |
+| Git Worktree Create | `<leader>gwc` | Run `git worktree add <path> [branch]` | Create another checkout for an existing branch or commit |
+| Git Worktree Branch | `<leader>gwb` | Run `git worktree add -b <branch> <path>` | Create a new branch and checkout together |
 | Git Worktree List | `<leader>gwl` | Run `git worktree list` | See all linked worktrees |
-| Git Worktree Remove | `<leader>gwr` | Run `git worktree remove` | Remove a worktree path after cleanup |
+| Git Worktree Switch | `<leader>gws` or `:GitWorktreeSwitch` | Change Neovim cwd to a selected worktree | Move this Neovim session to another checkout |
+| Git Worktree Delete | `<leader>gwd` | Run `git worktree remove <path>` | Delete a worktree path after cleanup |
 | Run Test | `<leader>tt` | Run nearest Rust test | Fast feedback loop |
 | Run All Tests | `<leader>ta` | Run full test suite | Use before commits |
 | Test Output | `<leader>to` | Toggle test output panel | Debug failed tests |
@@ -129,3 +131,15 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Toggle Theme | `<leader>ub` | Coral <-> Light White | Pick visual comfort mode |
 | Toggle Transparency | `<leader>ut` | Enable/disable transparent bg | Useful per terminal theme |
 | Toggle Inlay Hints | `<leader>uh` | Show/hide Rust inlay hints | Reduce visual noise when needed |
+
+## Git Worktree: What to Use When
+
+| Use case | Shortcut | Command pattern |
+|---|---|---|
+| Work on an existing branch in a second folder | `<leader>gwc` | `git worktree add <path> <branch>` |
+| Create a fresh branch and a worktree together | `<leader>gwb` | `git worktree add -b <new-branch> <path> [start-point]` |
+| Check which worktrees exist before switching or deleting | `<leader>gwl` | `git worktree list` |
+| Move Neovim to another existing worktree | `<leader>gws` | `:cd <selected-worktree>` |
+| Delete a finished worktree folder | `<leader>gwd` | `git worktree remove <path>` |
+
+Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also removes/deletes one.

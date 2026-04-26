@@ -113,7 +113,62 @@ local function git_worktree(args)
   vim.cmd("split | terminal git worktree " .. args)
 end
 
-map("n", "<leader>gwa", function()
+local function git_worktree_switch()
+  if vim.fn.executable("git") ~= 1 then
+    vim.notify("git is not installed or not on PATH.", vim.log.levels.ERROR)
+    return
+  end
+
+  local lines = vim.fn.systemlist({ "git", "worktree", "list", "--porcelain" })
+  if vim.v.shell_error ~= 0 then
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.ERROR)
+    return
+  end
+
+  local worktrees = {}
+  local current = nil
+  for _, line in ipairs(lines) do
+    local path = line:match("^worktree (.+)$")
+    if path then
+      if current then
+        table.insert(worktrees, current)
+      end
+      current = { path = path }
+    elseif current then
+      local branch = line:match("^branch refs/heads/(.+)$")
+      if branch then
+        current.branch = branch
+      end
+    end
+  end
+  if current then
+    table.insert(worktrees, current)
+  end
+
+  if #worktrees == 0 then
+    vim.notify("No git worktrees found.", vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(worktrees, {
+    prompt = "Switch to worktree:",
+    format_item = function(item)
+      if item.branch then
+        return item.branch .. " - " .. item.path
+      end
+      return item.path
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+
+    vim.cmd("cd " .. vim.fn.fnameescape(choice.path))
+    vim.notify("Switched worktree: " .. choice.path)
+  end)
+end
+
+local function git_worktree_create()
   local path = vim.fn.input("Worktree path: ", "", "dir")
   if path == "" then
     return
@@ -126,18 +181,49 @@ map("n", "<leader>gwa", function()
   end
 
   git_worktree(args)
-end, vim.tbl_extend("force", opts, { desc = "Git worktree add" }))
-map("n", "<leader>gwl", function()
-  git_worktree("list")
-end, vim.tbl_extend("force", opts, { desc = "Git worktree list" }))
-map("n", "<leader>gwr", function()
-  local path = vim.fn.input("Remove worktree path: ", "", "dir")
+end
+
+local function git_worktree_create_branch()
+  local path = vim.fn.input("Worktree path: ", "", "dir")
+  if path == "" then
+    return
+  end
+
+  local branch = vim.fn.input("New branch name: ")
+  if branch == "" then
+    vim.notify("Worktree branch name is required.", vim.log.levels.WARN)
+    return
+  end
+
+  local start_point = vim.fn.input("Start point (optional): ")
+  local args = "add -b " .. vim.fn.shellescape(branch) .. " " .. vim.fn.shellescape(path)
+  if start_point ~= "" then
+    args = args .. " " .. vim.fn.shellescape(start_point)
+  end
+
+  git_worktree(args)
+end
+
+local function git_worktree_delete()
+  local path = vim.fn.input("Delete worktree path: ", "", "dir")
   if path == "" then
     return
   end
 
   git_worktree("remove " .. vim.fn.shellescape(path))
-end, vim.tbl_extend("force", opts, { desc = "Git worktree remove" }))
+end
+
+map("n", "<leader>gwc", git_worktree_create, vim.tbl_extend("force", opts, { desc = "Git worktree create" }))
+map("n", "<leader>gwa", git_worktree_create, vim.tbl_extend("force", opts, { desc = "Git worktree add" }))
+map("n", "<leader>gwb", git_worktree_create_branch, vim.tbl_extend("force", opts, { desc = "Git worktree create branch" }))
+map("n", "<leader>gwl", function()
+  git_worktree("list")
+end, vim.tbl_extend("force", opts, { desc = "Git worktree list" }))
+map("n", "<leader>gws", git_worktree_switch, vim.tbl_extend("force", opts, { desc = "Git worktree switch" }))
+map("n", "<leader>gwd", git_worktree_delete, vim.tbl_extend("force", opts, { desc = "Git worktree delete" }))
+map("n", "<leader>gwr", git_worktree_delete, vim.tbl_extend("force", opts, { desc = "Git worktree remove" }))
+
+vim.api.nvim_create_user_command("GitWorktreeSwitch", git_worktree_switch, { desc = "Switch Neovim cwd to a git worktree" })
 
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
