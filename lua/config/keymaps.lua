@@ -116,6 +116,48 @@ local function git_terminal(args)
   vim.cmd("split | terminal git " .. args)
 end
 
+local function git_checkout_branch(branch)
+  if vim.fn.executable("git") ~= 1 then
+    vim.notify("git is not installed or not on PATH.", vim.log.levels.ERROR)
+    return
+  end
+
+  if branch and branch ~= "" then
+    git_terminal("checkout " .. vim.fn.shellescape(branch))
+    return
+  end
+
+  local lines = vim.fn.systemlist({
+    "git",
+    "for-each-ref",
+    "--format=%(refname:short)",
+    "refs/heads",
+    "refs/remotes",
+  })
+  if vim.v.shell_error ~= 0 then
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.ERROR)
+    return
+  end
+
+  local branches = {}
+  for _, line in ipairs(lines) do
+    if line ~= "" and not line:match("/HEAD$") then
+      table.insert(branches, line)
+    end
+  end
+
+  if #branches == 0 then
+    vim.notify("No git branches found.", vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(branches, { prompt = "Checkout branch:" }, function(choice)
+    if choice then
+      git_terminal("checkout " .. vim.fn.shellescape(choice))
+    end
+  end)
+end
+
 local function gitsigns_action(action)
   local ok, gitsigns = pcall(require, "gitsigns")
   if not ok then
@@ -162,6 +204,9 @@ end, vim.tbl_extend("force", opts, { desc = "Git stash list" }))
 map("n", "<leader>gA", function()
   git_terminal("stash apply")
 end, vim.tbl_extend("force", opts, { desc = "Git stash apply latest" }))
+map("n", "<leader>gco", function()
+  git_checkout_branch()
+end, vim.tbl_extend("force", opts, { desc = "Git checkout branch" }))
 map("n", "<leader>ghn", function()
   gitsigns_action("next_hunk")
 end, vim.tbl_extend("force", opts, { desc = "Git next hunk" }))
@@ -308,6 +353,9 @@ end, { desc = "Pull current branch with fast-forward only" })
 vim.api.nvim_create_user_command("GitPush", function()
   git_terminal("push")
 end, { desc = "Push current branch" })
+vim.api.nvim_create_user_command("GitCheckout", function(command)
+  git_checkout_branch(command.args)
+end, { nargs = "?", desc = "Checkout a git branch" })
 vim.api.nvim_create_user_command("GitStash", function()
   git_terminal("stash push -u")
 end, { desc = "Stash tracked and untracked changes" })

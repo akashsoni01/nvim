@@ -119,6 +119,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Git Diff | `<leader>gd` | Diff current file | Review current changes |
 | Git Branches | `<leader>gb` | Telescope git branches | Switch or inspect branches |
 | Git Buffer Commits | `<leader>gC` | Telescope commits for current file | See file-specific history |
+| Git Checkout | `<leader>gco` or `:GitCheckout [branch]` | Run `git checkout <branch>` | Switch the current repo to another branch |
 | Git Fetch | `<leader>gf` or `:GitFetch` | Run `git fetch --all --prune` | Update remote refs before branching |
 | Git Pull | `<leader>gpl` or `:GitPull` | Run `git pull --ff-only` | Update current branch safely |
 | Git Push | `<leader>gps` or `:GitPush` | Run `git push` | Push current branch |
@@ -162,6 +163,7 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 |---|---|---|
 | Browse changed files | `<leader>gs` | `Telescope git_status` |
 | Browse branches | `<leader>gb` | `Telescope git_branches` |
+| Switch branch in the current checkout | `<leader>gco` | `git checkout <branch>` |
 | Update remote branch info | `<leader>gf` | `git fetch --all --prune` |
 | Update your current branch | `<leader>gpl` | `git pull --ff-only` |
 | Push current branch | `<leader>gps` | `git push` |

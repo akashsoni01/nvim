@@ -37,6 +37,7 @@
 | Git | `<leader>gd` | Git diff |
 | Git | `<leader>gb` | Git branches |
 | Git | `<leader>gC` | Git commits for current buffer |
+| Git | `<leader>gco` | Git checkout branch |
 | Git | `<leader>gf` | Git fetch all remotes |
 | Git | `<leader>gpl` | Git pull fast-forward only |
 | Git | `<leader>gps` | Git push current branch |
@@ -112,6 +113,7 @@
 - `<leader>gd` - Git diff (Gitsigns)
 - `<leader>gb` - Git branches (Telescope)
 - `<leader>gC` - Current buffer commit history (Telescope)
+- `<leader>gco` - Checkout/switch branch with `git checkout <branch>`
 - `<leader>gf` - Fetch all remotes and prune deleted refs
 - `<leader>gpl` - Pull current branch with `--ff-only`
 - `<leader>gps` - Push current branch
@@ -124,6 +126,7 @@
 - `<leader>ghr` - Reset current hunk
 - `<leader>ghb` - Blame current line
 - `<leader>ghd` - Toggle deleted lines
+- `:GitCheckout [branch]` - Command form for checkout/switch branch
 - `:GitFetch` / `:GitPull` / `:GitPush` - Command forms for sync actions
 - `:GitStash` / `:GitStashList` - Command forms for stash actions
 - `<leader>gwc` - Create a worktree with `git worktree add <path> [branch]`
@@ -151,6 +154,7 @@
 | --- | --- | --- |
 | Browse changed files | `<leader>gs` | `Telescope git_status` |
 | Browse branches | `<leader>gb` | `Telescope git_branches` |
+| Switch branch in the current checkout | `<leader>gco` | `git checkout <branch>` |
 | Update remote branch info | `<leader>gf` | `git fetch --all --prune` |
 | Update your current branch | `<leader>gpl` | `git pull --ff-only` |
 | Push current branch | `<leader>gps` | `git push` |
