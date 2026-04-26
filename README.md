@@ -20,6 +20,8 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
   - `vendor/plugins/*`
 - After that, this config prefers local vendor paths automatically, so Neovim can start offline.
 - If you add new plugins later, run the vendor script again.
+- Check Git worktree support anytime with:
+  - `bash ./scripts/check-worktree.sh`
 
 ## Beginner: Open and Navigate a Project
 
@@ -115,6 +117,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Git Status | `<leader>gs` | Telescope git status | See changed files quickly |
 | Git Commits | `<leader>gl` | Telescope commit history | Browse recent commits |
 | Git Diff | `<leader>gd` | Diff current file | Review current changes |
+| Git Worktree Add | `<leader>gwa` | Run `git worktree add` | Create another checkout for a branch |
+| Git Worktree List | `<leader>gwl` | Run `git worktree list` | See all linked worktrees |
+| Git Worktree Remove | `<leader>gwr` | Run `git worktree remove` | Remove a worktree path after cleanup |
 | Run Test | `<leader>tt` | Run nearest Rust test | Fast feedback loop |
 | Run All Tests | `<leader>ta` | Run full test suite | Use before commits |
 | Test Output | `<leader>to` | Toggle test output panel | Debug failed tests |

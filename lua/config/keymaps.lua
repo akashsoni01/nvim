@@ -104,6 +104,40 @@ map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("fo
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))
 map("n", "<leader>gd", "<cmd>Gitsigns diffthis<cr>", vim.tbl_extend("force", opts, { desc = "Git diff" }))
+local function git_worktree(args)
+  if vim.fn.executable("git") ~= 1 then
+    vim.notify("git is not installed or not on PATH.", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd("split | terminal git worktree " .. args)
+end
+
+map("n", "<leader>gwa", function()
+  local path = vim.fn.input("Worktree path: ", "", "dir")
+  if path == "" then
+    return
+  end
+
+  local branch = vim.fn.input("Branch/commit (optional): ")
+  local args = "add " .. vim.fn.shellescape(path)
+  if branch ~= "" then
+    args = args .. " " .. vim.fn.shellescape(branch)
+  end
+
+  git_worktree(args)
+end, vim.tbl_extend("force", opts, { desc = "Git worktree add" }))
+map("n", "<leader>gwl", function()
+  git_worktree("list")
+end, vim.tbl_extend("force", opts, { desc = "Git worktree list" }))
+map("n", "<leader>gwr", function()
+  local path = vim.fn.input("Remove worktree path: ", "", "dir")
+  if path == "" then
+    return
+  end
+
+  git_worktree("remove " .. vim.fn.shellescape(path))
+end, vim.tbl_extend("force", opts, { desc = "Git worktree remove" }))
 
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))

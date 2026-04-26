@@ -35,6 +35,9 @@
 | Git | `<leader>gs` | Git status |
 | Git | `<leader>gl` | Git commits log |
 | Git | `<leader>gd` | Git diff |
+| Git | `<leader>gwa` | Add git worktree |
+| Git | `<leader>gwl` | List git worktrees |
+| Git | `<leader>gwr` | Remove git worktree |
 | Window | `<leader>sv` | Vertical split |
 | Window | `<leader>sh` | Horizontal split |
 | Window | `<leader>se` | Equalize split sizes |
@@ -88,6 +91,9 @@
 - `<leader>gs` - Git status (Telescope)
 - `<leader>gl` - Git commits log (Telescope)
 - `<leader>gd` - Git diff (Gitsigns)
+- `<leader>gwa` - Add a worktree with `git worktree add`
+- `<leader>gwl` - List worktrees with `git worktree list`
+- `<leader>gwr` - Remove a worktree with `git worktree remove`
 
 ### Window / Split Management
 - `<leader>sv` - Vertical split
@@ -408,3 +414,4 @@
 - `:Mason` - manage/install language servers and tools
 - `:Telescope` - browse pickers
 - `:checkhealth` - global Neovim health checks
+- `./scripts/check-worktree.sh` - verify `git worktree` support

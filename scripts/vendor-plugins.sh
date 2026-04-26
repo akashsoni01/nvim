@@ -140,5 +140,12 @@ ensure_debug_adapter() {
 ensure_debug_adapter
 
 echo
+if "$ROOT_DIR/scripts/check-worktree.sh"; then
+  echo "Git worktree check complete."
+else
+  echo "Warning: git worktree is not available. Worktree keymaps require a Git version with worktree support."
+fi
+
+echo
 echo "Vendoring complete."
 echo "You can now run Neovim offline with local plugin sources."
