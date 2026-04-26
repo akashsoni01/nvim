@@ -9,7 +9,7 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown" },
+      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown", "yaml" },
       highlight = { enable = true },
       indent = { enable = true },
     },

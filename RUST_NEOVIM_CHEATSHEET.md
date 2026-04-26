@@ -77,6 +77,9 @@
 | UI | `<leader>ub` | Toggle Coral / Light White theme |
 | UI | `<leader>ut` | Toggle transparency |
 | UI | `<leader>uh` | Toggle LSP inlay hints |
+| File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
+| File type | `<leader>ftt` | Set buffer filetype: TOML (e.g. `Cargo.toml`) |
+| File type | `<leader>fty` | Set buffer filetype: YAML (`.yml` / `.yaml`) |
 
 ## Core Shortcuts
 
@@ -94,6 +97,12 @@
 - `<leader>ca` - Code actions (imports/derives/impl assists)
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
+
+### File type (Markdown, TOML, YAML)
+Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):
+- `<leader>ftm` - Set filetype to Markdown
+- `<leader>ftt` - Set filetype to TOML
+- `<leader>fty` - Set filetype to YAML (covers `.yml` and `.yaml`)
 
 ### Debugging (DAP)
 - `<leader>db` - Toggle breakpoint

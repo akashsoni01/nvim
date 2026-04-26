@@ -384,3 +384,14 @@ map("n", "<leader>uh", function()
     vim.lsp.inlay_hint.enable(not enabled, { bufnr = 0 })
   end
 end, vim.tbl_extend("force", opts, { desc = "Toggle inlay hints" }))
+
+-- Set buffer filetype (mis-detected or extensionless buffers): ft = "file type"
+map("n", "<leader>ftm", function()
+  vim.bo.filetype = "markdown"
+end, vim.tbl_extend("force", opts, { desc = "Set filetype: Markdown" }))
+map("n", "<leader>ftt", function()
+  vim.bo.filetype = "toml"
+end, vim.tbl_extend("force", opts, { desc = "Set filetype: TOML" }))
+map("n", "<leader>fty", function()
+  vim.bo.filetype = "yaml"
+end, vim.tbl_extend("force", opts, { desc = "Set filetype: YAML" }))
