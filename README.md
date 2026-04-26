@@ -30,6 +30,52 @@ Run the script for your OS **before** relying on jdtls (or install any **JDK 17+
 
 The old `install-debug-adapter-*.sh` names still exist and **forward** to the `setup-java-*.sh` scripts (this config used to install LLDB for native debugging; **Java DAP uses Mason**, not those shims).
 
+## Run a small program with `javac` and `java` (no Maven/Gradle)
+
+Use this for quick scripts or homework-style apps when you do not need a build tool. You need a **JDK** so both `javac` and `java` are on your `PATH`.
+
+### Single file (default package)
+
+```bash
+mkdir ~/hello-javac && cd ~/hello-javac
+cat > Hello.java << 'EOF'
+public class Hello {
+    public static void main(String[] args) {
+        System.out.println("Hello");
+    }
+}
+EOF
+javac Hello.java          # produces Hello.class
+java Hello                # run the class (default package)
+```
+
+Edit with `nvim Hello.java`. If you use Neovim’s map **`<leader>th`**, you get a horizontal split with a terminal; run `javac Hello.java` and `java Hello` there.
+
+### With a `package` (nested folders)
+
+```bash
+mkdir -p src/com/example
+cat > src/com/example/Main.java << 'EOF'
+package com.example;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hi");
+    }
+}
+EOF
+cd src
+javac com/example/Main.java
+java com.example.Main
+```
+
+From `src/`, `java` needs the package-qualified name and the classpath must include the folder that contains the `com/` tree (here, the current directory after `cd src`).
+
+### Notes
+
+- **jdtls** gives the richest experience in a **Maven or Gradle** project; for a lone file or a tiny tree, you still get syntax highlighting and basic editing—some features may show “non-project file” style warnings until you import a real project.
+- For anything beyond a few classes, prefer **Maven** or **Gradle** (sections below) so dependencies and the classpath stay manageable.
+
 ## Start a new Java project (plain Maven or Gradle)
 
 ### Maven (quickstart archetype)
