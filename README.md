@@ -18,6 +18,92 @@ A `lazy.nvim`-based Neovim configuration for **Java** development (Maven/Gradle)
 - **`JAVA_HOME`** if your system expects it
 - A **Maven** (`pom.xml` / `mvnw`) or **Gradle** (`build.gradle`, `gradlew`) project for full LSP (single orphan `.java` files only get basic features)
 
+## New machine: JDK + scripts
+
+Run the script for your OS **before** relying on jdtls (or install any **JDK 17+** yourself and ensure `java` / `javac` and often **`JAVA_HOME`** are set). These only handle the **JVM on the system**; Neovim still needs **Mason** packages (see below).
+
+| OS | Command |
+| --- | --- |
+| macOS | `bash ./scripts/setup-java-macos.sh` |
+| Linux | `bash ./scripts/setup-java-linux.sh` |
+| Termux | `bash ./scripts/setup-java-termux.sh` |
+
+The old `install-debug-adapter-*.sh` names still exist and **forward** to the `setup-java-*.sh` scripts (this config used to install LLDB for native debugging; **Java DAP uses Mason**, not those shims).
+
+## Start a new Java project (plain Maven or Gradle)
+
+### Maven (quickstart archetype)
+
+Run this from a folder where the new project directory should be created (the archetype will create a subdirectory named `demo` here):
+
+```bash
+mvn -B archetype:generate \
+  -DarchetypeGroupId=org.apache.maven.archetypes \
+  -DarchetypeArtifactId=maven-archetype-quickstart \
+  -DarchetypeVersion=1.4 \
+  -DgroupId=com.example \
+  -DartifactId=demo \
+  -Dversion=1.0-SNAPSHOT \
+  -Dpackage=com.example
+cd demo
+nvim src/main/java/com/example/App.java
+```
+
+Change `groupId`, `artifactId`, and `package` to match your org. To add the **Maven Wrapper** later, see the [Apache Maven Wrapper](https://maven.apache.org/wrapper/) docs, then commit `mvnw` and `.mvn/`.
+
+### Gradle
+
+In an empty directory:
+
+```bash
+gradle init --type java-application
+# or: gradle init   # and pick "application" / Java when prompted
+nvim .
+```
+
+Open the generated `src/main/java/...` entry class. Prefer including **`gradlew`** in the repo (`gradle wrapper`) so CI and teammates use the same Gradle version.
+
+## Start a new Spring Boot project
+
+### Option A — [start.spring.io](https://start.spring.io) (easiest)
+
+Choose **Maven** or **Gradle**, **Java** version, **Spring Boot** version, and dependencies (e.g. **Spring Web**). Click **Generate**, unzip, then:
+
+```bash
+cd your-project
+./mvnw -q -DskipTests compile   # or ./gradlew classes
+nvim .
+```
+
+Open the `*Application.java` class under `src/main/java/...`.
+
+### Option B — `curl` (Maven zip)
+
+```bash
+mkdir spring-demo && cd spring-demo
+curl -L "https://start.spring.io/starter.zip" \
+  -d type=maven-project \
+  -d language=java \
+  -d name=demo \
+  -d groupId=com.example \
+  -d artifactId=demo \
+  -d javaVersion=17 \
+  -d dependencies=web,actuator \
+  -o starter.zip
+unzip -q starter.zip && rm starter.zip
+chmod +x mvnw 2>/dev/null || true
+./mvnw -q -DskipTests compile
+nvim .
+```
+
+Tweak `javaVersion`, `dependencies`, `artifactId`, etc. The main class path matches your `groupId` / `artifactId` (e.g. `com/example/demo/DemoApplication.java`).
+
+### Option C — Spring Boot CLI
+
+If you use the official CLI: `spring init --dependencies=web my-app && cd my-app` (see [Spring Boot CLI](https://docs.spring.io/spring-boot/docs/current/reference/html/cli.html)).
+
+Run the app from a terminal with **`./mvnw spring-boot:run`** or **`./gradlew bootRun`**, or use **`<leader>tr`** in Neovim when this config detects Spring in `pom.xml` / Gradle.
+
 ## First-time inside Neovim
 
 1. `:Mason` — ensure **jdtls**, **java-debug-adapter**, and **java-test** are installed.
@@ -42,7 +128,7 @@ A `lazy.nvim`-based Neovim configuration for **Java** development (Maven/Gradle)
 ## Cleanup / uninstall
 
 - Remove vendored sources: `bash ./scripts/remove-vendor.sh`
-- `bash ./scripts/uninstall-deps.sh` — removes older config-managed codelldb/lldb shims (optional; not required for Java DAP, which comes from Mason)
+- `bash ./scripts/uninstall-deps.sh` — removes **legacy** codelldb/lldb-dap shims under this repo’s `bin/` (optional; **Java DAP** comes from **Mason**). Read the script help for optionally resetting Mason’s install tree
 
 ## Beginner: open a project
 

@@ -1,5 +1,7 @@
 # Java + Neovim Cheatsheet
 
+**New / Spring Boot projects** — see [README.md](./README.md) (“New machine: JDK + scripts”, “Start a new Java project”, “Start a new Spring Boot project”).
+
 ## Leader
 
 - `Leader` = `Space`

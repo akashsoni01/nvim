@@ -19,8 +19,11 @@ for arg in "$@"; do
     -h|--help)
       echo "Usage: $0 [--yes] [--system]"
       echo
-      echo "Removes config-managed debug adapter shims and downloaded codelldb files."
-      echo "Use --system to also try uninstalling package-manager deps such as llvm/lldb."
+      echo "Removes legacy config-managed native debug shims (codelldb / lldb-dap copies under this"
+      echo "repo's bin/ and ~/.local/share/codelldb). Java debugging uses Mason inside Neovim instead."
+      echo "To reset Mason packages (jdtls, java-debug-adapter, java-test), remove:"
+      echo "  ~/.local/share/nvim/mason  (only if you intend a full reinstall; breaks all Mason tools)"
+      echo "Use --system to also try uninstalling package-manager lldb/llvm where this script supported that."
       exit 0
       ;;
     *)
@@ -52,7 +55,7 @@ remove_path() {
   fi
 }
 
-echo "This removes Neovim config-managed debug adapter files:"
+echo "This removes legacy Neovim config-managed native debug adapter files (not Mason / jdtls):"
 echo "  $BIN_DIR/lldb-dap"
 echo "  $BIN_DIR/codelldb"
 echo "  $BIN_DIR/lldb-vscode"
