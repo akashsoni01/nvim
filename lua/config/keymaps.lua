@@ -69,37 +69,25 @@ map("n", "<leader>dx", function()
 end, vim.tbl_extend("force", opts, { desc = "Debug terminate" }))
 
 map("n", "<leader>tt", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.run.run()
-    return
+  local w = vim.fn.expand("<cword>")
+  if w == "" then
+    vim.cmd("split | terminal swift test")
+  else
+    vim.cmd("split | terminal swift test --filter " .. vim.fn.shellescape(w))
   end
-  local test_name = vim.fn.expand("<cword>")
-  vim.cmd("split | terminal cargo test " .. test_name)
-end, vim.tbl_extend("force", opts, { desc = "Run test under cursor" }))
-map("n", "<leader>ta", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.run.run(vim.fn.getcwd())
-    return
-  end
-  vim.cmd("split | terminal cargo test")
-end, vim.tbl_extend("force", opts, { desc = "Run all tests" }))
-map("n", "<leader>to", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.output_panel.toggle()
-  end
-end, vim.tbl_extend("force", opts, { desc = "Toggle test output panel" }))
-map("n", "<leader>ts", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.summary.toggle()
-  end
-end, vim.tbl_extend("force", opts, { desc = "Toggle test summary" }))
-map("n", "<leader>tc", "<cmd>split | terminal cargo clippy --all-targets --all-features<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo clippy" }))
-map("n", "<leader>tb", "<cmd>split | terminal cargo build<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo build" }))
-map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo run" }))
+end, vim.tbl_extend("force", opts, { desc = "swift test (--filter <cword> if set)" }))
+
+map("n", "<leader>ta", "<cmd>split | terminal swift test<cr>", vim.tbl_extend("force", opts, { desc = "swift test (all)" }))
+
+map("n", "<leader>to", "<cmd>split | terminal swift test -v<cr>", vim.tbl_extend("force", opts, { desc = "swift test -v" }))
+
+map("n", "<leader>ts", "<cmd>split | terminal swift test --parallel<cr>", vim.tbl_extend("force", opts, { desc = "swift test --parallel" }))
+
+map("n", "<leader>tc", "<cmd>split | terminal swift package resolve<cr>", vim.tbl_extend("force", opts, { desc = "swift package resolve" }))
+
+map("n", "<leader>tb", "<cmd>split | terminal swift build<cr>", vim.tbl_extend("force", opts, { desc = "swift build" }))
+
+map("n", "<leader>tr", "<cmd>split | terminal swift run<cr>", vim.tbl_extend("force", opts, { desc = "swift run" }))
 
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))

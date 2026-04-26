@@ -1,4 +1,4 @@
-local group = vim.api.nvim_create_augroup("RustTermuxConfig", { clear = true })
+local group = vim.api.nvim_create_augroup("NvimDevConfig", { clear = true })
 
 vim.api.nvim_create_autocmd("ColorScheme", {
   group = group,
@@ -16,7 +16,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
 vim.api.nvim_create_autocmd("BufWritePre", {
   group = group,
-  pattern = "*.rs",
+  pattern = { "*.swift" },
   callback = function()
     vim.lsp.buf.format({ async = false })
   end,

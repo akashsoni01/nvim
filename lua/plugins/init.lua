@@ -9,7 +9,7 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown" },
+      ensure_installed = { "lua", "vim", "vimdoc", "swift", "json", "markdown", "yaml" },
       highlight = { enable = true },
       indent = { enable = true },
     },
@@ -57,46 +57,40 @@ return {
         vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
       end
 
-      local rust_analyzer_cfg = {
+      local util = require("lspconfig.util")
+
+      local function sourcekit_cmd()
+        if vim.fn.has("mac") == 1 and vim.fn.executable("xcrun") == 1 then
+          return { "xcrun", "sourcekit-lsp" }
+        end
+        return { "sourcekit-lsp" }
+      end
+
+      local sourcekit_cfg = {
         capabilities = capabilities,
         on_attach = on_attach,
-        settings = {
-          ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            checkOnSave = true,
-            check = { command = "clippy" },
-            procMacro = { enable = true },
-            completion = {
-              callable = { snippets = "fill_arguments" },
-            },
-            diagnostics = {
-              enable = true,
-            },
-            inlayHints = {
-              bindingModeHints = { enable = true },
-              closureReturnTypeHints = { enable = "always" },
-              lifetimeElisionHints = { enable = "skip_trivial" },
-              reborrowHints = { enable = "always" },
-            },
-            imports = {
-              granularity = { group = "module" },
-              prefix = "self",
-            },
-            assist = {
-              importEnforceGranularity = true,
-              importPrefix = "self",
-            },
-          },
-        },
+        cmd = sourcekit_cmd(),
+        filetypes = { "swift" },
+        single_file_support = true,
+        root_dir = function(fname)
+          return util.root_pattern(
+            "Package.swift",
+            "buildServer.json",
+            "compile_commands.json",
+            "contents.xcworkspacedata",
+            ".git",
+            "*.xcodeproj",
+            "*.xcworkspace"
+          )(fname) or util.find_git_ancestor(fname) or vim.fn.fnamemodify(fname, ":h")
+        end,
       }
 
       if vim.lsp.config and vim.lsp.enable then
-        vim.lsp.config("rust_analyzer", rust_analyzer_cfg)
-        vim.lsp.enable("rust_analyzer")
+        vim.lsp.config("sourcekit", sourcekit_cfg)
+        vim.lsp.enable("sourcekit")
       else
-        -- Fallback for older Neovim versions (< 0.11).
         local lspconfig = require("lspconfig")
-        lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
+        lspconfig.sourcekit.setup(sourcekit_cfg)
       end
     end,
   },
@@ -151,24 +145,11 @@ return {
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
-          { name = "crates" },
           { name = "buffer" },
           { name = "path" },
         }),
       })
     end,
-  },
-
-  {
-    "saecki/crates.nvim",
-    event = { "BufRead Cargo.toml" },
-    dependencies = { "hrsh7th/nvim-cmp" },
-    opts = {
-      popup = { border = "rounded" },
-      completion = {
-        cmp = { enabled = true },
-      },
-    },
   },
 
   {
@@ -272,23 +253,6 @@ return {
           and vim.fn.executable(path) == 1
       end
 
-      local function rust_binary_default()
-        local cwd = vim.fn.getcwd()
-        local project_name = vim.fn.fnamemodify(cwd, ":t")
-        local candidates = {
-          cwd .. "/target/debug/" .. project_name,
-          cwd .. "/target/debug/" .. project_name:gsub("%-", "_"),
-        }
-
-        for _, candidate in ipairs(candidates) do
-          if is_executable_file(candidate) then
-            return candidate
-          end
-        end
-
-        return cwd .. "/target/debug/" .. project_name
-      end
-
       local local_lldb_dap = vim.fn.stdpath("config") .. "/bin/lldb-dap"
       local candidates = {
         vim.fn.filereadable(local_lldb_dap) == 1 and local_lldb_dap or "",
@@ -305,39 +269,36 @@ return {
         end
       end
 
-      dap.configurations.rust = {
+      local function spm_debug_default()
+        local cwd = vim.fn.getcwd()
+        local project_name = vim.fn.fnamemodify(cwd, ":t")
+        return cwd .. "/.build/debug/" .. project_name
+      end
+
+      dap.configurations.swift = {
         {
-          name = "Launch Rust binary",
+          name = "Launch Swift (SPM debug)",
           type = "lldb",
           request = "launch",
           program = function()
-            local selected = vim.fn.input("Path to executable: ", rust_binary_default(), "file")
+            local selected = vim.fn.input("Path to executable: ", spm_debug_default(), "file")
             if selected == nil or selected == "" then
               return nil
             end
-
             local absolute = vim.fn.fnamemodify(selected, ":p")
             if vim.fn.isdirectory(absolute) == 1 then
-              vim.notify("DAP launch cancelled: selected path is a directory, not a binary.", vim.log.levels.ERROR)
+              vim.notify("DAP: path is a directory, not a binary. Build with: swift build", vim.log.levels.ERROR)
               return nil
             end
-
             if not is_executable_file(absolute) then
-              vim.notify(
-                "DAP launch cancelled: selected file is not executable. Build first with `cargo build`.",
-                vim.log.levels.ERROR
-              )
+              vim.notify("DAP: not executable. Build with: swift build", vim.log.levels.ERROR)
               return nil
             end
-
             return absolute
           end,
           cwd = "${workspaceFolder}",
           stopOnEntry = true,
           args = {},
-          initCommands = {
-            "settings set target.process.thread.step-avoid-regexp ^(std::|core::|alloc::|tokio::|mio::|polling::|parking_lot::|hashbrown::|serde::|anyhow::|thiserror::)",
-          },
         },
       }
 
@@ -348,7 +309,7 @@ return {
           name = "lldb",
         }
       else
-        vim.notify("No LLDB adapter found (codelldb/lldb-dap/lldb-vscode). Rust DAP disabled.", vim.log.levels.WARN)
+        vim.notify("No LLDB adapter (codelldb / lldb-dap / lldb-vscode). Debugging disabled until installed.", vim.log.levels.WARN)
       end
     end,
   },
@@ -368,32 +329,6 @@ return {
       dap.listeners.before.event_exited["dapui_config"] = function()
         dapui.close()
       end
-    end,
-  },
-
-  {
-    "nvim-neotest/neotest",
-    dependencies = {
-      "nvim-neotest/nvim-nio",
-      "nvim-lua/plenary.nvim",
-      "antoinemadec/FixCursorHold.nvim",
-      "rouge8/neotest-rust",
-    },
-    config = function()
-      local neotest_rust_opts = {
-        args = { "--no-capture" },
-      }
-
-      local ok_dap, dap = pcall(require, "dap")
-      if ok_dap and dap.adapters and dap.adapters.lldb then
-        neotest_rust_opts.dap_adapter = "lldb"
-      end
-
-      require("neotest").setup({
-        adapters = {
-          require("neotest-rust")(neotest_rust_opts),
-        },
-      })
     end,
   },
 
