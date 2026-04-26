@@ -117,6 +117,18 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Git Status | `<leader>gs` | Telescope git status | See changed files quickly |
 | Git Commits | `<leader>gl` | Telescope commit history | Browse recent commits |
 | Git Diff | `<leader>gd` | Diff current file | Review current changes |
+| Git Branches | `<leader>gb` | Telescope git branches | Switch or inspect branches |
+| Git Buffer Commits | `<leader>gC` | Telescope commits for current file | See file-specific history |
+| Git Fetch | `<leader>gf` or `:GitFetch` | Run `git fetch --all --prune` | Update remote refs before branching |
+| Git Pull | `<leader>gpl` or `:GitPull` | Run `git pull --ff-only` | Update current branch safely |
+| Git Push | `<leader>gps` or `:GitPush` | Run `git push` | Push current branch |
+| Git Stash | `<leader>gS` or `:GitStash` | Run `git stash push -u` | Save dirty work including untracked files |
+| Git Stash List | `<leader>gL` or `:GitStashList` | Run `git stash list` | Review saved stashes |
+| Git Stash Apply | `<leader>gA` | Run `git stash apply` | Reapply latest stash |
+| Git Hunk Preview | `<leader>ghp` | Preview current hunk | Inspect nearby changes inline |
+| Git Hunk Stage | `<leader>ghs` | Stage current hunk | Commit part of a file |
+| Git Hunk Reset | `<leader>ghr` | Reset current hunk | Discard one local hunk |
+| Git Hunk Blame | `<leader>ghb` | Blame current line | See who last changed a line |
 | Git Worktree Create | `<leader>gwc` | Run `git worktree add <path> [branch]` | Create another checkout for an existing branch or commit |
 | Git Worktree Branch | `<leader>gwb` | Run `git worktree add -b <branch> <path>` | Create a new branch and checkout together |
 | Git Worktree List | `<leader>gwl` | Run `git worktree list` | See all linked worktrees |
@@ -143,3 +155,17 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Delete a finished worktree folder | `<leader>gwd` | `git worktree remove <path>` |
 
 Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also removes/deletes one.
+
+## Git Shortcuts: What to Use When
+
+| Use case | Shortcut | Command pattern |
+|---|---|---|
+| Browse changed files | `<leader>gs` | `Telescope git_status` |
+| Browse branches | `<leader>gb` | `Telescope git_branches` |
+| Update remote branch info | `<leader>gf` | `git fetch --all --prune` |
+| Update your current branch | `<leader>gpl` | `git pull --ff-only` |
+| Push current branch | `<leader>gps` | `git push` |
+| Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
+| Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
+| Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
+| Check why a line changed | `<leader>ghb` | Gitsigns blame line |

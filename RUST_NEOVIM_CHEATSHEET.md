@@ -35,6 +35,21 @@
 | Git | `<leader>gs` | Git status |
 | Git | `<leader>gl` | Git commits log |
 | Git | `<leader>gd` | Git diff |
+| Git | `<leader>gb` | Git branches |
+| Git | `<leader>gC` | Git commits for current buffer |
+| Git | `<leader>gf` | Git fetch all remotes |
+| Git | `<leader>gpl` | Git pull fast-forward only |
+| Git | `<leader>gps` | Git push current branch |
+| Git | `<leader>gS` | Git stash including untracked files |
+| Git | `<leader>gL` | Git stash list |
+| Git | `<leader>gA` | Git stash apply latest |
+| Git | `<leader>ghn` | Next git hunk |
+| Git | `<leader>ghN` | Previous git hunk |
+| Git | `<leader>ghp` | Preview git hunk |
+| Git | `<leader>ghs` | Stage git hunk |
+| Git | `<leader>ghr` | Reset git hunk |
+| Git | `<leader>ghb` | Blame current line |
+| Git | `<leader>ghd` | Toggle deleted lines |
 | Git | `<leader>gwc` | Create git worktree |
 | Git | `<leader>gwa` | Add git worktree alias |
 | Git | `<leader>gwb` | Create git worktree with new branch |
@@ -95,6 +110,22 @@
 - `<leader>gs` - Git status (Telescope)
 - `<leader>gl` - Git commits log (Telescope)
 - `<leader>gd` - Git diff (Gitsigns)
+- `<leader>gb` - Git branches (Telescope)
+- `<leader>gC` - Current buffer commit history (Telescope)
+- `<leader>gf` - Fetch all remotes and prune deleted refs
+- `<leader>gpl` - Pull current branch with `--ff-only`
+- `<leader>gps` - Push current branch
+- `<leader>gS` - Stash tracked and untracked changes
+- `<leader>gL` - List stashes
+- `<leader>gA` - Apply latest stash
+- `<leader>ghn` / `<leader>ghN` - Next/previous hunk
+- `<leader>ghp` - Preview current hunk
+- `<leader>ghs` - Stage current hunk
+- `<leader>ghr` - Reset current hunk
+- `<leader>ghb` - Blame current line
+- `<leader>ghd` - Toggle deleted lines
+- `:GitFetch` / `:GitPull` / `:GitPush` - Command forms for sync actions
+- `:GitStash` / `:GitStashList` - Command forms for stash actions
 - `<leader>gwc` - Create a worktree with `git worktree add <path> [branch]`
 - `<leader>gwa` - Alias for create/add worktree
 - `<leader>gwb` - Create a worktree and new branch with `git worktree add -b`
@@ -113,6 +144,20 @@
 | Check all linked worktrees before switching/deleting | `<leader>gwl` | `git worktree list` |
 | Move this Neovim session to another worktree | `<leader>gws` | `:cd <selected-worktree>` |
 | Delete a finished worktree folder | `<leader>gwd` | `git worktree remove <path>` |
+
+#### Git Shortcuts: What to Use When
+
+| Use case | Shortcut | Command pattern |
+| --- | --- | --- |
+| Browse changed files | `<leader>gs` | `Telescope git_status` |
+| Browse branches | `<leader>gb` | `Telescope git_branches` |
+| Update remote branch info | `<leader>gf` | `git fetch --all --prune` |
+| Update your current branch | `<leader>gpl` | `git pull --ff-only` |
+| Push current branch | `<leader>gps` | `git push` |
+| Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
+| Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
+| Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
+| Check why a line changed | `<leader>ghb` | Gitsigns blame line |
 
 ### Window / Split Management
 - `<leader>sv` - Vertical split

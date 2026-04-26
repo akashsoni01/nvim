@@ -104,13 +104,88 @@ map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("fo
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))
 map("n", "<leader>gd", "<cmd>Gitsigns diffthis<cr>", vim.tbl_extend("force", opts, { desc = "Git diff" }))
-local function git_worktree(args)
+map("n", "<leader>gb", "<cmd>Telescope git_branches<cr>", vim.tbl_extend("force", opts, { desc = "Git branches" }))
+map("n", "<leader>gC", "<cmd>Telescope git_bcommits<cr>", vim.tbl_extend("force", opts, { desc = "Git buffer commits" }))
+
+local function git_terminal(args)
   if vim.fn.executable("git") ~= 1 then
     vim.notify("git is not installed or not on PATH.", vim.log.levels.ERROR)
     return
   end
 
-  vim.cmd("split | terminal git worktree " .. args)
+  vim.cmd("split | terminal git " .. args)
+end
+
+local function gitsigns_action(action)
+  local ok, gitsigns = pcall(require, "gitsigns")
+  if not ok then
+    vim.notify("gitsigns is not available for this buffer.", vim.log.levels.WARN)
+    return
+  end
+
+  if action == "next_hunk" then
+    if gitsigns.nav_hunk then
+      gitsigns.nav_hunk("next")
+    else
+      gitsigns.next_hunk()
+    end
+    return
+  end
+
+  if action == "prev_hunk" then
+    if gitsigns.nav_hunk then
+      gitsigns.nav_hunk("prev")
+    else
+      gitsigns.prev_hunk()
+    end
+    return
+  end
+
+  gitsigns[action]()
+end
+
+map("n", "<leader>gf", function()
+  git_terminal("fetch --all --prune")
+end, vim.tbl_extend("force", opts, { desc = "Git fetch all" }))
+map("n", "<leader>gpl", function()
+  git_terminal("pull --ff-only")
+end, vim.tbl_extend("force", opts, { desc = "Git pull fast-forward" }))
+map("n", "<leader>gps", function()
+  git_terminal("push")
+end, vim.tbl_extend("force", opts, { desc = "Git push" }))
+map("n", "<leader>gS", function()
+  git_terminal("stash push -u")
+end, vim.tbl_extend("force", opts, { desc = "Git stash include untracked" }))
+map("n", "<leader>gL", function()
+  git_terminal("stash list")
+end, vim.tbl_extend("force", opts, { desc = "Git stash list" }))
+map("n", "<leader>gA", function()
+  git_terminal("stash apply")
+end, vim.tbl_extend("force", opts, { desc = "Git stash apply latest" }))
+map("n", "<leader>ghn", function()
+  gitsigns_action("next_hunk")
+end, vim.tbl_extend("force", opts, { desc = "Git next hunk" }))
+map("n", "<leader>ghN", function()
+  gitsigns_action("prev_hunk")
+end, vim.tbl_extend("force", opts, { desc = "Git previous hunk" }))
+map("n", "<leader>ghp", function()
+  gitsigns_action("preview_hunk")
+end, vim.tbl_extend("force", opts, { desc = "Git preview hunk" }))
+map("n", "<leader>ghs", function()
+  gitsigns_action("stage_hunk")
+end, vim.tbl_extend("force", opts, { desc = "Git stage hunk" }))
+map("n", "<leader>ghr", function()
+  gitsigns_action("reset_hunk")
+end, vim.tbl_extend("force", opts, { desc = "Git reset hunk" }))
+map("n", "<leader>ghb", function()
+  gitsigns_action("blame_line")
+end, vim.tbl_extend("force", opts, { desc = "Git blame line" }))
+map("n", "<leader>ghd", function()
+  gitsigns_action("toggle_deleted")
+end, vim.tbl_extend("force", opts, { desc = "Git toggle deleted lines" }))
+
+local function git_worktree(args)
+  git_terminal("worktree " .. args)
 end
 
 local function git_worktree_switch()
@@ -224,6 +299,21 @@ map("n", "<leader>gwd", git_worktree_delete, vim.tbl_extend("force", opts, { des
 map("n", "<leader>gwr", git_worktree_delete, vim.tbl_extend("force", opts, { desc = "Git worktree remove" }))
 
 vim.api.nvim_create_user_command("GitWorktreeSwitch", git_worktree_switch, { desc = "Switch Neovim cwd to a git worktree" })
+vim.api.nvim_create_user_command("GitFetch", function()
+  git_terminal("fetch --all --prune")
+end, { desc = "Fetch all remotes and prune deleted refs" })
+vim.api.nvim_create_user_command("GitPull", function()
+  git_terminal("pull --ff-only")
+end, { desc = "Pull current branch with fast-forward only" })
+vim.api.nvim_create_user_command("GitPush", function()
+  git_terminal("push")
+end, { desc = "Push current branch" })
+vim.api.nvim_create_user_command("GitStash", function()
+  git_terminal("stash push -u")
+end, { desc = "Stash tracked and untracked changes" })
+vim.api.nvim_create_user_command("GitStashList", function()
+  git_terminal("stash list")
+end, { desc = "List git stashes" })
 
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
