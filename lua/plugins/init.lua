@@ -196,14 +196,6 @@ return {
           sorting_strategy = "ascending",
           prompt_prefix = "   ",
           selection_caret = " ",
-          -- Show file/result preview in grep, find_files, etc.
-          previewer = true,
-          layout_config = {
-            preview_cutoff = 1,
-            horizontal = {
-              preview_width = 0.5,
-            },
-          },
         },
         pickers = {
           find_files = {

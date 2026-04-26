@@ -77,10 +77,6 @@
 | UI | `<leader>ub` | Toggle Coral / Light White theme |
 | UI | `<leader>ut` | Toggle transparency |
 | UI | `<leader>uh` | Toggle LSP inlay hints |
-| GUI font (Averia Libre) | `<leader>f]` | Next font style in cycle (light → regular → bold → *-italic) |
-| GUI font (Averia Libre) | `<leader>f[` | Previous font style in cycle |
-| GUI font (Averia Libre) | `<leader>f+` | Increase GUI font size |
-| GUI font (Averia Libre) | `<leader>f-` | Decrease GUI font size |
 | File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
 | File type | `<leader>ftt` | Set buffer filetype: TOML (e.g. `Cargo.toml`) |
 | File type | `<leader>fty` | Set buffer filetype: YAML (`.yml` / `.yaml`) |
@@ -232,7 +228,6 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>ub` - Toggle Coral <-> Light White mode
 - `<leader>ut` - Toggle transparency
 - `<leader>uh` - Toggle LSP inlay hints
-- **GUI (Neovide) font (Averia Libre + JetBrains Nerd):** `<leader>f]` next style, `<leader>f[` previous, `<leader>f+` / `<leader>f-` size up/down
 
 ### Change Theme
 - Quick switch: press `<leader>ub` to toggle between Coral and Light White.
