@@ -20,8 +20,18 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
   - `vendor/plugins/*`
 - After that, this config prefers local vendor paths automatically, so Neovim can start offline.
 - If you add new plugins later, run the vendor script again.
+- Remove vendored plugin repos:
+  - `bash ./scripts/remove-vendor.sh`
 - Check Git worktree support anytime with:
   - `bash ./scripts/check-worktree.sh`
+
+## Cleanup / Uninstall Scripts
+- Remove local vendored plugin sources:
+  - `bash ./scripts/remove-vendor.sh`
+- Remove config-managed debug adapter shims and downloaded `codelldb` files:
+  - `bash ./scripts/uninstall-deps.sh`
+- Also try package-manager uninstall for `llvm`/`lldb`:
+  - `bash ./scripts/uninstall-deps.sh --system`
 
 ## Beginner: Open and Navigate a Project
 

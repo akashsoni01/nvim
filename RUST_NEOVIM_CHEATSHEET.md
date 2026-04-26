@@ -301,6 +301,14 @@
 - Or run everything (plugins + adapter check/install):
   - `./scripts/vendor-plugins.sh`
 
+#### Cleanup / uninstall
+- Remove vendored plugin repos:
+  - `./scripts/remove-vendor.sh`
+- Remove config-managed debug adapter shims and downloaded `codelldb` files:
+  - `./scripts/uninstall-deps.sh`
+- Also try package-manager uninstall for `llvm`/`lldb`:
+  - `./scripts/uninstall-deps.sh --system`
+
 #### Dependencies by platform
 - macOS:
   - Xcode CLT (`xcrun`, `xcode-select`)
@@ -483,3 +491,5 @@
 - `:Telescope` - browse pickers
 - `:checkhealth` - global Neovim health checks
 - `./scripts/check-worktree.sh` - verify `git worktree` support
+- `./scripts/remove-vendor.sh` - remove local vendored plugin repos
+- `./scripts/uninstall-deps.sh` - remove config-managed debug adapter files
