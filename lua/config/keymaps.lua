@@ -44,6 +44,43 @@ map("n", "<leader>fm", function()
   vim.lsp.buf.format({ async = true })
 end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
 
+local severity = vim.diagnostic.severity
+
+local function jump_diagnostic(direction, min_severity, max_severity)
+  local jump_opts = {
+    count = direction * vim.v.count1,
+    severity = { min = min_severity, max = max_severity or min_severity },
+    wrap = true,
+  }
+
+  if vim.diagnostic.jump then
+    vim.diagnostic.jump(jump_opts)
+    return
+  end
+
+  local goto_opts = { wrap = true, severity = jump_opts.severity }
+  for _ = 1, vim.v.count1 do
+    if direction > 0 then
+      vim.diagnostic.goto_next(goto_opts)
+    else
+      vim.diagnostic.goto_prev(goto_opts)
+    end
+  end
+end
+
+map("n", "<leader>le", function()
+  jump_diagnostic(1, severity.ERROR, severity.ERROR)
+end, vim.tbl_extend("force", opts, { desc = "Next compile error" }))
+map("n", "<leader>lE", function()
+  jump_diagnostic(-1, severity.ERROR, severity.ERROR)
+end, vim.tbl_extend("force", opts, { desc = "Previous compile error" }))
+map("n", "<leader>lw", function()
+  jump_diagnostic(1, severity.WARN, severity.WARN)
+end, vim.tbl_extend("force", opts, { desc = "Next warning" }))
+map("n", "<leader>lW", function()
+  jump_diagnostic(-1, severity.WARN, severity.WARN)
+end, vim.tbl_extend("force", opts, { desc = "Previous warning" }))
+
 map("n", "<leader>db", function()
   require("dap").toggle_breakpoint()
 end, vim.tbl_extend("force", opts, { desc = "Toggle breakpoint" }))

@@ -129,6 +129,10 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Code Action | `<leader>ca` | LSP fixes/actions | Auto-imports and quick fixes |
 | Rename Symbol | `<leader>rn` | Rename symbol project-wide | Safer than manual rename |
 | Format Buffer | `<leader>fm` | Format current file | Rustfmt also runs on save |
+| Next Error | `<leader>le` | Jump to next compile error | From `rust-analyzer` / LSP diagnostics |
+| Previous Error | `<leader>lE` | Jump to previous compile error | Use count like `3<leader>le` |
+| Next Warning | `<leader>lw` | Jump to next warning | Clippy and other WARN diagnostics |
+| Previous Warning | `<leader>lW` | Jump to previous warning | Wraps at end of file |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |
 | Debug Continue | `<leader>dc` | Continue/start debugger | Launches DAP session |
 | Step Over | `<leader>do` | Debug step over line | Skip entering function calls |

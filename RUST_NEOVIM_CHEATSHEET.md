@@ -19,6 +19,10 @@
 | LSP | `<leader>ca` | Code actions |
 | LSP | `<leader>rn` | Rename symbol |
 | LSP | `<leader>fm` | Format current buffer |
+| LSP | `<leader>le` | Next compile error |
+| LSP | `<leader>lE` | Previous compile error |
+| LSP | `<leader>lw` | Next warning |
+| LSP | `<leader>lW` | Previous warning |
 | Completion | `<C-Space>` | Open completion menu |
 | Completion | `<CR>` | Confirm selected completion |
 | Completion | `<Tab>` | Next completion item / snippet jump |
@@ -110,6 +114,10 @@
 - `<leader>ca` - Code actions (imports/derives/impl assists)
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
+- `<leader>le` - Next compile error (LSP ERROR severity)
+- `<leader>lE` - Previous compile error
+- `<leader>lw` - Next warning (LSP WARN severity)
+- `<leader>lW` - Previous warning
 
 ### File type (Markdown, TOML, YAML, Rust)
 Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):
