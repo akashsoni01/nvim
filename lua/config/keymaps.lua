@@ -126,22 +126,26 @@ map("n", "<leader>dx", function()
   require("dap").terminate()
 end, vim.tbl_extend("force", opts, { desc = "Debug terminate" }))
 
+local rust_test = require("config.rust_test")
+
 map("n", "<leader>tt", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.run.run()
-    return
-  end
   local test_name = vim.fn.expand("<cword>")
-  vim.cmd("split | terminal cargo test " .. test_name)
+  local terminal_fallback = function()
+    vim.cmd("split | terminal cargo test " .. vim.fn.shellescape(test_name))
+  end
+
+  rust_test.run_neotest(function()
+    require("neotest").run.run()
+  end, terminal_fallback)
 end, vim.tbl_extend("force", opts, { desc = "Run test under cursor" }))
 map("n", "<leader>ta", function()
-  local ok, neotest = pcall(require, "neotest")
-  if ok then
-    neotest.run.run(vim.fn.getcwd())
-    return
+  local terminal_fallback = function()
+    vim.cmd("split | terminal cargo test")
   end
-  vim.cmd("split | terminal cargo test")
+
+  rust_test.run_neotest(function()
+    require("neotest").run.run(vim.fn.getcwd())
+  end, terminal_fallback)
 end, vim.tbl_extend("force", opts, { desc = "Run all tests" }))
 map("n", "<leader>to", function()
   local ok, neotest = pcall(require, "neotest")

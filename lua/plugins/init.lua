@@ -218,12 +218,18 @@ return {
     event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
+      local identity = require("config.identity")
+
       local function lsp_name()
         local clients = vim.lsp.get_clients({ bufnr = 0 })
         if #clients == 0 then
           return "LSP:off"
         end
         return "LSP:" .. clients[1].name
+      end
+
+      local function copyright_label()
+        return identity.format_chrome_copyright_label(os.date("%Y"))
       end
 
       require("lualine").setup({
@@ -239,7 +245,7 @@ return {
           lualine_c = { lsp_name },
           lualine_x = { "diagnostics" },
           lualine_y = { "filetype" },
-          lualine_z = { "location", "progress" },
+          lualine_z = { copyright_label, "location", "progress" },
         },
       })
     end,
