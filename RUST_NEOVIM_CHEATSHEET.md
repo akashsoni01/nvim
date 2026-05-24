@@ -9,6 +9,7 @@
 | --- | --- | --- |
 | Telescope | `<leader>ff` | Find files |
 | Telescope | `<leader>fg` | Live grep in project |
+| Telescope | `<leader>fc` | Search text in current buffer |
 | Telescope | `<leader>fb` | List open buffers |
 | Telescope | `<leader>fh` | Help tags |
 | LSP | `gd` | Go to definition |
@@ -96,6 +97,7 @@
 ### Telescope / Navigation
 - `<leader>ff` - Find files
 - `<leader>fg` - Live grep in project
+- `<leader>fc` - Search text in current buffer
 - `<leader>fb` - List open buffers
 - `<leader>fh` - Help tags
 

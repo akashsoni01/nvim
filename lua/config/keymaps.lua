@@ -11,6 +11,9 @@ map("n", "<leader>fg", function()
     builtin.current_buffer_fuzzy_find()
   end
 end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
+map("n", "<leader>fc", function()
+  require("telescope.builtin").current_buffer_fuzzy_find()
+end, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", vim.tbl_extend("force", opts, { desc = "Buffers" }))
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", vim.tbl_extend("force", opts, { desc = "Help tags" }))
 
@@ -27,6 +30,10 @@ vim.api.nvim_create_user_command("FG", function()
     builtin.current_buffer_fuzzy_find()
   end
 end, { desc = "Telescope live grep" })
+
+vim.api.nvim_create_user_command("FC", function()
+  require("telescope.builtin").current_buffer_fuzzy_find()
+end, { desc = "Telescope search current buffer" })
 
 map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
 map("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))

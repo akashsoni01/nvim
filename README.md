@@ -44,6 +44,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 ### 2) Find and open files quickly
 - `<leader>ff` - Find files in project
 - `<leader>fg` - Search text in project (live grep)
+- `<leader>fc` - Search text in current file
 - `<leader>fb` - Switch between open buffers
 - `<leader>fh` - Search Neovim help tags
 
@@ -107,6 +108,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Command Mode | `:` | Enter command-line mode | Run Ex commands from here |
 | File Finder | `<leader>ff` | Telescope find files | Main way to open project files |
 | Live Grep | `<leader>fg` | Telescope text search | Search symbols across project |
+| Buffer Search | `<leader>fc` | Search text in current file | Fuzzy find in open buffer; no `rg` needed |
 | Find in `*.rs` / `*.toml` | `<leader>sg` | Telescope `live_grep` with `rg` globs | Project search only in Rust and TOML files (needs `rg`) |
 | Find in any file in project | `<leader>fA` or `<leader>fg` | Telescope `live_grep` (no ext filter) | Same behavior; all text files (needs `rg`; respects `.gitignore`) |
 | Replace in any file in project | `<leader>sA` | Literal string replace in every file `rg` lists | All matching files under cwd; needs `rg`; reload buffers; use with care |
