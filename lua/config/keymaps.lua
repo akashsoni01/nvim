@@ -363,6 +363,10 @@ vim.api.nvim_create_user_command("GitStashList", function()
   git_terminal("stash list")
 end, { desc = "List git stashes" })
 
+map("n", "<leader>yf", "<cmd>%yank<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
+map({ "n", "v" }, "<leader>p", '"+p', vim.tbl_extend("force", opts, { desc = "Paste from clipboard" }))
+map({ "n", "v" }, "<leader>P", '"+P', vim.tbl_extend("force", opts, { desc = "Paste from clipboard before cursor" }))
+
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
 map("n", "<leader>se", "<C-w>=", vim.tbl_extend("force", opts, { desc = "Equalize splits" }))
