@@ -427,6 +427,21 @@ vim.api.nvim_create_user_command("GitStashList", function()
 end, { desc = "List git stashes" })
 
 map("n", "<leader>yf", "<cmd>%yank<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
+map("n", "<leader>pf", function()
+  local clip = vim.fn.getreg("+")
+  if clip == "" then
+    vim.notify("System clipboard is empty.", vim.log.levels.WARN)
+    return
+  end
+
+  local lines = vim.split(clip, "\n", { plain = true })
+  if clip:sub(-1) == "\n" and lines[#lines] == "" then
+    table.remove(lines)
+  end
+
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+  vim.cmd("normal! gg")
+end, vim.tbl_extend("force", opts, { desc = "Paste full file from clipboard" }))
 map({ "n", "v" }, "<leader>p", '"+p', vim.tbl_extend("force", opts, { desc = "Paste from clipboard" }))
 map({ "n", "v" }, "<leader>P", '"+P', vim.tbl_extend("force", opts, { desc = "Paste from clipboard before cursor" }))
 
