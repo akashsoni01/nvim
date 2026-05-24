@@ -1,6 +1,157 @@
 local M = {}
 
 local severity = vim.diagnostic.severity
+local rust_test = require("config.rust_test")
+
+---@param levels table<string, boolean>
+---@return { filename: string, lnum: integer, col: integer, text: string, level: string }[]
+local function cargo_compiler_messages(root, levels)
+  if vim.fn.executable("cargo") ~= 1 then
+    return {}
+  end
+
+  vim.notify("Running cargo check…", vim.log.levels.INFO)
+  local result = vim.system(
+    { "cargo", "check", "--message-format=json", "-q" },
+    { cwd = root, text = true, stderr = true }
+  ):wait()
+
+  local items = {}
+  local seen = {}
+
+  for line in (result.stdout or ""):gmatch("[^\n]+") do
+    local ok, obj = pcall(vim.json.decode, line)
+    if ok and obj and obj.reason == "compiler-message" and obj.message then
+      local level = obj.message.level
+      if levels[level] then
+        local msg = vim.trim((obj.message.message or ""):gsub("\n%s*", " "))
+        local code = obj.message.code and obj.message.code.code
+        if code then
+          msg = string.format("[%s] %s", code, msg)
+        end
+
+        for _, span in ipairs(obj.message.spans or {}) do
+          if span.file_name and (span.is_primary or #obj.message.spans == 1) then
+            local key = string.format("%s:%d:%d:%s", span.file_name, span.line_start, span.column_start, msg)
+            if not seen[key] then
+              seen[key] = true
+              items[#items + 1] = {
+                filename = span.file_name,
+                lnum = span.line_start,
+                col = math.max(0, span.column_start - 1),
+                text = msg,
+                level = level,
+              }
+            end
+          end
+        end
+      end
+    end
+  end
+
+  table.sort(items, function(a, b)
+    if a.filename == b.filename then
+      if a.lnum == b.lnum then
+        return a.col < b.col
+      end
+      return a.lnum < b.lnum
+    end
+    return a.filename < b.filename
+  end)
+
+  return items
+end
+
+---@param sev integer
+---@return { filename: string, lnum: integer, col: integer, text: string, level: string }[]
+local function lsp_diagnostic_items(sev)
+  local items = {}
+  local seen = {}
+
+  for _, d in ipairs(vim.diagnostic.get(nil, { severity = { min = sev, max = sev } })) do
+    local path = vim.api.nvim_buf_get_name(d.bufnr)
+    if path ~= "" then
+      local key = string.format("%s:%d:%d:%s", path, d.lnum + 1, d.col, d.message)
+      if not seen[key] then
+        seen[key] = true
+        local level = sev == severity.ERROR and "error" or "warning"
+        items[#items + 1] = {
+          filename = path,
+          lnum = d.lnum + 1,
+          col = d.col,
+          text = d.message,
+          level = level,
+        }
+      end
+    end
+  end
+
+  return items
+end
+
+---@param kind "error"|"warning"
+local function collect_items(kind)
+  local levels = kind == "error" and { error = true } or { warning = true }
+  local sev = kind == "error" and severity.ERROR or severity.WARN
+
+  local items = {}
+  local seen = {}
+
+  local function add_list(list)
+    for _, item in ipairs(list) do
+      local key = string.format("%s:%d:%d:%s", item.filename, item.lnum, item.col, item.text)
+      if not seen[key] then
+        seen[key] = true
+        items[#items + 1] = item
+      end
+    end
+  end
+
+  add_list(lsp_diagnostic_items(sev))
+
+  local root = rust_test.project_root()
+  if root then
+    add_list(cargo_compiler_messages(root, levels))
+  end
+
+  table.sort(items, function(a, b)
+    if a.filename == b.filename then
+      if a.lnum == b.lnum then
+        return a.col < b.col
+      end
+      return a.lnum < b.lnum
+    end
+    return a.filename < b.filename
+  end)
+
+  return items
+end
+
+---@param kind "error"|"warning"
+function M.telescope_compile_issues(kind)
+  local items = collect_items(kind)
+  if #items == 0 then
+    vim.notify("No " .. kind .. "s found. Open a Rust project and run cargo check first.", vim.log.levels.INFO)
+    return
+  end
+
+  local qf = {}
+  for _, item in ipairs(items) do
+    qf[#qf + 1] = {
+      filename = item.filename,
+      lnum = item.lnum,
+      col = item.col + 1,
+      text = item.text,
+      type = item.level == "error" and "E" or "W",
+    }
+  end
+
+  vim.fn.setqflist(qf, "r")
+  require("telescope.builtin").quickfix({
+    prompt_title = kind == "error" and "Compile errors" or "Warnings",
+    show_line = true,
+  })
+end
 
 ---@param idx integer
 ---@param n integer
@@ -13,67 +164,27 @@ local function wrap_idx(idx, n)
   return idx + 1
 end
 
----@param sev integer vim.diagnostic.severity
----@return { bufnr: integer, path: string, diagnostic: vim.Diagnostic }[]
-local function files_with_diagnostics(sev)
-  local all = vim.diagnostic.get(nil, {
-    severity = { min = sev, max = sev },
-  })
-
-  local by_buf = {}
-  for _, d in ipairs(all) do
-    local bufnr = d.bufnr
-    local path = vim.api.nvim_buf_get_name(bufnr)
-    if path ~= "" then
-      local existing = by_buf[bufnr]
-      if not existing or d.lnum < existing.lnum or (d.lnum == existing.lnum and d.col < existing.col) then
-        by_buf[bufnr] = d
-      end
-    end
-  end
-
-  local items = {}
-  for bufnr, d in pairs(by_buf) do
-    items[#items + 1] = {
-      bufnr = bufnr,
-      path = vim.api.nvim_buf_get_name(bufnr),
-      diagnostic = d,
-    }
-  end
-
-  table.sort(items, function(a, b)
-    if a.path == b.path then
-      return a.diagnostic.lnum < b.diagnostic.lnum
-    end
-    return a.path < b.path
-  end)
-
-  return items
-end
-
----@param item { bufnr: integer, path: string, diagnostic: vim.Diagnostic }
+---@param item { filename: string, lnum: integer, col: integer }
 local function open_and_jump(item)
-  local d = item.diagnostic
-  vim.cmd("keepalt edit " .. vim.fn.fnameescape(item.path))
-  vim.api.nvim_win_set_cursor(0, { d.lnum + 1, d.col })
+  vim.cmd("keepalt edit " .. vim.fn.fnameescape(item.filename))
+  vim.api.nvim_win_set_cursor(0, { item.lnum, item.col })
   pcall(vim.cmd, "normal! zz")
 end
 
----@param direction integer 1 for next, -1 for previous
----@param sev integer vim.diagnostic.severity
-function M.jump_file(direction, sev)
-  local items = files_with_diagnostics(sev)
+---@param direction integer
+---@param kind "error"|"warning"
+function M.jump_file(direction, kind)
+  local items = collect_items(kind)
   local n = #items
   if n == 0 then
-    local label = sev == severity.ERROR and "error" or "warning"
-    vim.notify("No " .. label .. " files in diagnostics", vim.log.levels.INFO)
+    M.telescope_compile_issues(kind)
     return
   end
 
   local current_path = vim.api.nvim_buf_get_name(0)
   local current_idx = nil
   for i, item in ipairs(items) do
-    if item.bufnr == vim.api.nvim_get_current_buf() or item.path == current_path then
+    if item.filename == current_path then
       current_idx = i
       break
     end
@@ -87,7 +198,7 @@ function M.jump_file(direction, sev)
   elseif direction > 0 then
     target_idx = 1
     for i, item in ipairs(items) do
-      if item.path > current_path then
+      if item.filename > current_path then
         target_idx = wrap_idx(i + steps - 1, n)
         break
       end
@@ -95,7 +206,7 @@ function M.jump_file(direction, sev)
   else
     target_idx = n
     for i = n, 1, -1 do
-      if items[i].path < current_path then
+      if items[i].filename < current_path then
         target_idx = wrap_idx(i - (steps - 1), n)
         break
       end
