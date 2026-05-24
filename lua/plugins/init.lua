@@ -9,12 +9,18 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown" },
+      ensure_installed = { "lua", "vim", "vimdoc", "rust", "toml", "json", "markdown", "yaml" },
       highlight = { enable = true },
       indent = { enable = true },
     },
     config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
+      -- Support both old and new nvim-treesitter module layouts.
+      local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
+      if ok_configs then
+        configs.setup(opts)
+        return
+      end
+      require("nvim-treesitter").setup(opts)
     end,
   },
 
@@ -26,9 +32,7 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
-    opts = {
-      ensure_installed = { "rust_analyzer" },
-    },
+    opts = {},
   },
   {
     "neovim/nvim-lspconfig",
@@ -38,7 +42,6 @@ return {
       "SmiteshP/nvim-navic",
     },
     config = function()
-      local lspconfig = require("lspconfig")
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
       local navic = require("nvim-navic")
 
@@ -54,7 +57,7 @@ return {
         vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
       end
 
-      lspconfig.rust_analyzer.setup({
+      local rust_analyzer_cfg = {
         capabilities = capabilities,
         on_attach = on_attach,
         settings = {
@@ -85,7 +88,16 @@ return {
             },
           },
         },
-      })
+      }
+
+      if vim.lsp.config and vim.lsp.enable then
+        vim.lsp.config("rust_analyzer", rust_analyzer_cfg)
+        vim.lsp.enable("rust_analyzer")
+      else
+        -- Fallback for older Neovim versions (< 0.11).
+        local lspconfig = require("lspconfig")
+        lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
+      end
     end,
   },
 
@@ -182,12 +194,18 @@ return {
     event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
+      local identity = require("config.identity")
+
       local function lsp_name()
         local clients = vim.lsp.get_clients({ bufnr = 0 })
         if #clients == 0 then
           return "LSP:off"
         end
         return "LSP:" .. clients[1].name
+      end
+
+      local function copyright_label()
+        return identity.format_chrome_copyright_label(os.date("%Y"))
       end
 
       require("lualine").setup({
@@ -203,7 +221,7 @@ return {
           lualine_c = { lsp_name },
           lualine_x = { "diagnostics" },
           lualine_y = { "filetype" },
-          lualine_z = { "location", "progress" },
+          lualine_z = { copyright_label, "location", "progress" },
         },
       })
     end,
@@ -228,7 +246,34 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
+      local function is_executable_file(path)
+        return path ~= nil
+          and path ~= ""
+          and vim.fn.isdirectory(path) == 0
+          and vim.fn.filereadable(path) == 1
+          and vim.fn.executable(path) == 1
+      end
+
+      local function rust_binary_default()
+        local cwd = vim.fn.getcwd()
+        local project_name = vim.fn.fnamemodify(cwd, ":t")
+        local candidates = {
+          cwd .. "/target/debug/" .. project_name,
+          cwd .. "/target/debug/" .. project_name:gsub("%-", "_"),
+        }
+
+        for _, candidate in ipairs(candidates) do
+          if is_executable_file(candidate) then
+            return candidate
+          end
+        end
+
+        return cwd .. "/target/debug/" .. project_name
+      end
+
+      local local_lldb_dap = vim.fn.stdpath("config") .. "/bin/lldb-dap"
       local candidates = {
+        vim.fn.filereadable(local_lldb_dap) == 1 and local_lldb_dap or "",
         vim.fn.exepath("codelldb"),
         vim.fn.exepath("lldb-dap"),
         vim.fn.exepath("lldb-vscode"),
@@ -242,27 +287,51 @@ return {
         end
       end
 
-      if lldb_exec then
-        dap.adapters.lldb = {
-          type = "executable",
-          command = lldb_exec,
-          name = "lldb",
-        }
-      end
-
       dap.configurations.rust = {
         {
           name = "Launch Rust binary",
           type = "lldb",
           request = "launch",
           program = function()
-            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+            local selected = vim.fn.input("Path to executable: ", rust_binary_default(), "file")
+            if selected == nil or selected == "" then
+              return nil
+            end
+
+            local absolute = vim.fn.fnamemodify(selected, ":p")
+            if vim.fn.isdirectory(absolute) == 1 then
+              vim.notify("DAP launch cancelled: selected path is a directory, not a binary.", vim.log.levels.ERROR)
+              return nil
+            end
+
+            if not is_executable_file(absolute) then
+              vim.notify(
+                "DAP launch cancelled: selected file is not executable. Build first with `cargo build`.",
+                vim.log.levels.ERROR
+              )
+              return nil
+            end
+
+            return absolute
           end,
           cwd = "${workspaceFolder}",
-          stopOnEntry = false,
+          stopOnEntry = true,
           args = {},
+          initCommands = {
+            "settings set target.process.thread.step-avoid-regexp ^(std::|core::|alloc::|tokio::|mio::|polling::|parking_lot::|hashbrown::|serde::|anyhow::|thiserror::)",
+          },
         },
       }
+
+      if lldb_exec then
+        dap.adapters.lldb = {
+          type = "executable",
+          command = lldb_exec,
+          name = "lldb",
+        }
+      else
+        vim.notify("No LLDB adapter found (codelldb/lldb-dap/lldb-vscode). Rust DAP disabled.", vim.log.levels.WARN)
+      end
     end,
   },
   {
@@ -293,12 +362,18 @@ return {
       "rouge8/neotest-rust",
     },
     config = function()
+      local neotest_rust_opts = {
+        args = { "--no-capture" },
+      }
+
+      local ok_dap, dap = pcall(require, "dap")
+      if ok_dap and dap.adapters and dap.adapters.lldb then
+        neotest_rust_opts.dap_adapter = "lldb"
+      end
+
       require("neotest").setup({
         adapters = {
-          require("neotest-rust")({
-            dap_adapter = "lldb",
-            args = { "--no-capture" },
-          }),
+          require("neotest-rust")(neotest_rust_opts),
         },
       })
     end,
