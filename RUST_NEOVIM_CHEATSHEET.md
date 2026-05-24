@@ -23,9 +23,9 @@
 | LSP | `<leader>lE` | Previous compile error |
 | LSP | `<leader>lw` | Next warning |
 | LSP | `<leader>lW` | Previous warning |
-| LSP | `<leader>lfe` | Next file with compile error |
-| LSP | `<leader>lfE` | Previous file with compile error |
-| LSP | `<leader>lfw` | Next file with warning |
+| LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
+| LSP | `<leader>lfE` | Previous error file |
+| LSP | `<leader>lfw` | Telescope: all warnings (file:line) |
 | LSP | `<leader>lfW` | Previous file with warning |
 | Completion | `<C-Space>` | Open completion menu |
 | Completion | `<CR>` | Confirm selected completion |
@@ -122,12 +122,12 @@
 - `<leader>lE` - Previous compile error
 - `<leader>lw` - Next warning (LSP WARN severity)
 - `<leader>lW` - Previous warning
-- `<leader>lfe` - Next file with compile error (opens file, jumps to error line)
-- `<leader>lfE` - Previous file with compile error
-- `<leader>lfw` - Next file with warning
-- `<leader>lfW` - Previous file with warning
+- `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), each entry shows `path:line` and message; Enter to jump
+- `<leader>lfE` - Previous error file (from the same list)
+- `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP)
+- `<leader>lfW` - Previous warning file
 
-Use `<leader>le` / `<leader>lw` to move between diagnostics **in the current file**; use `<leader>lf*` to jump between **files** that have errors or warnings.
+Use `<leader>le` / `<leader>lw` for next/prev diagnostic **in the current file**. After `<leader>lfe`, pick a row in Telescope or use `:cn` / `:cp` in the quickfix list.
 
 ### File type (Markdown, TOML, YAML, Rust)
 Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):

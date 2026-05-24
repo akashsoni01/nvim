@@ -133,9 +133,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>le` |
 | Next Warning | `<leader>lw` | Jump to next warning in file | Clippy and other WARN diagnostics |
 | Previous Warning | `<leader>lW` | Jump to previous warning in file | Wraps at end of file |
-| Next Error File | `<leader>lfe` | Open next file with compile error | Jumps to first error line in that file |
-| Previous Error File | `<leader>lfE` | Open previous file with compile error | Cycles through all error files |
-| Next Warning File | `<leader>lfw` | Open next file with warning | e.g. unused imports in another file |
+| Next Error File | `<leader>lfe` | Telescope list of all compile errors | Runs `cargo check`; shows file:line + message |
+| Previous Error File | `<leader>lfE` | Jump to previous error file | After `lfe`, or uses cargo + LSP list |
+| Next Warning File | `<leader>lfw` | Telescope list of all warnings | Same as errors, filtered to warnings |
 | Previous Warning File | `<leader>lfW` | Open previous file with warning | Sorted by file path |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |
 | Debug Continue | `<leader>dc` | Continue/start debugger | Launches DAP session |
