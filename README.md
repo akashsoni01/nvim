@@ -129,10 +129,14 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Code Action | `<leader>ca` | LSP fixes/actions | Auto-imports and quick fixes |
 | Rename Symbol | `<leader>rn` | Rename symbol project-wide | Safer than manual rename |
 | Format Buffer | `<leader>fm` | Format current file | Rustfmt also runs on save |
-| Next Error | `<leader>le` | Jump to next compile error | From `rust-analyzer` / LSP diagnostics |
-| Previous Error | `<leader>lE` | Jump to previous compile error | Use count like `3<leader>le` |
-| Next Warning | `<leader>lw` | Jump to next warning | Clippy and other WARN diagnostics |
-| Previous Warning | `<leader>lW` | Jump to previous warning | Wraps at end of file |
+| Next Error | `<leader>le` | Jump to next compile error in file | Line-by-line in current buffer |
+| Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>le` |
+| Next Warning | `<leader>lw` | Jump to next warning in file | Clippy and other WARN diagnostics |
+| Previous Warning | `<leader>lW` | Jump to previous warning in file | Wraps at end of file |
+| Next Error File | `<leader>lfe` | Open next file with compile error | Jumps to first error line in that file |
+| Previous Error File | `<leader>lfE` | Open previous file with compile error | Cycles through all error files |
+| Next Warning File | `<leader>lfw` | Open next file with warning | e.g. unused imports in another file |
+| Previous Warning File | `<leader>lfW` | Open previous file with warning | Sorted by file path |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |
 | Debug Continue | `<leader>dc` | Continue/start debugger | Launches DAP session |
 | Step Over | `<leader>do` | Debug step over line | Skip entering function calls |

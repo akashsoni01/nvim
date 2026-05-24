@@ -45,6 +45,7 @@ map("n", "<leader>fm", function()
 end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
 
 local severity = vim.diagnostic.severity
+local diagnostic_nav = require("config.diagnostic_nav")
 
 local function jump_diagnostic(direction, min_severity, max_severity)
   local jump_opts = {
@@ -80,6 +81,19 @@ end, vim.tbl_extend("force", opts, { desc = "Next warning" }))
 map("n", "<leader>lW", function()
   jump_diagnostic(-1, severity.WARN, severity.WARN)
 end, vim.tbl_extend("force", opts, { desc = "Previous warning" }))
+
+map("n", "<leader>lfe", function()
+  diagnostic_nav.jump_file(1, severity.ERROR)
+end, vim.tbl_extend("force", opts, { desc = "Next error file" }))
+map("n", "<leader>lfE", function()
+  diagnostic_nav.jump_file(-1, severity.ERROR)
+end, vim.tbl_extend("force", opts, { desc = "Previous error file" }))
+map("n", "<leader>lfw", function()
+  diagnostic_nav.jump_file(1, severity.WARN)
+end, vim.tbl_extend("force", opts, { desc = "Next warning file" }))
+map("n", "<leader>lfW", function()
+  diagnostic_nav.jump_file(-1, severity.WARN)
+end, vim.tbl_extend("force", opts, { desc = "Previous warning file" }))
 
 map("n", "<leader>db", function()
   require("dap").toggle_breakpoint()
