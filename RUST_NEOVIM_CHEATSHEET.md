@@ -73,6 +73,7 @@
 | Testing | `<leader>to` | Toggle neotest output panel |
 | Testing | `<leader>ts` | Toggle neotest summary panel |
 | Testing | `<leader>tc` | Run cargo clippy |
+| Testing | `<leader>tf` | Run cargo fmt |
 | Testing | `<leader>tb` | Run cargo build |
 | Testing | `<leader>tr` | Run cargo run |
 | UI | `<leader>ub` | Toggle Coral / Light White theme |
@@ -216,6 +217,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - Use existing run mappings (opens terminal split automatically):
   - `<leader>tr` (`cargo run`)
   - `<leader>tc` (`cargo clippy --all-targets --all-features`)
+  - `<leader>tf` (`cargo fmt`)
   - `<leader>ta` / `<leader>tt` (test runs)
 - Exit terminal insert mode to normal mode: `<C-\><C-n>`
 - Close current terminal split: `<leader>sx`
@@ -226,6 +228,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>to` - Toggle neotest output panel
 - `<leader>ts` - Toggle neotest summary panel
 - `<leader>tc` - Run `cargo clippy --all-targets --all-features`
+- `<leader>tf` - Run `cargo fmt`
 - `<leader>tb` - Run `cargo build`
 - `<leader>tr` - Run `cargo run`
 
@@ -254,6 +257,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
   - Run nearest test: `<leader>tt`
   - Run all tests: `<leader>ta`
   - Run clippy: `<leader>tc` (great before commit)
+  - Run fmt: `<leader>tf` (format whole project)
   - Build app: `<leader>tb`
 
 #### Open terminal manually in project

@@ -159,6 +159,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Test Output | `<leader>to` | Toggle test output panel | Debug failed tests |
 | Test Summary | `<leader>ts` | Toggle test summary | See pass/fail overview |
 | Cargo Clippy | `<leader>tc` | Run clippy with all targets/features | Catch lint issues early |
+| Cargo Fmt | `<leader>tf` | Run `cargo fmt` on the project | Format whole crate before commit |
 | Cargo Run | `<leader>tr` | Run Rust app | Quick manual verification |
 | Toggle Theme | `<leader>ub` | Coral <-> Light White | Pick visual comfort mode |
 | Toggle Transparency | `<leader>ut` | Enable/disable transparent bg | Useful per terminal theme |
