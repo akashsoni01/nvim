@@ -102,6 +102,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Redo | `<C-r>` | Redo undone change | Opposite of undo |
 | Copy Line | `yy` | Yank (copy) line | Use count like `3yy` |
 | Copy Full File | `<leader>yf` | Yank entire file to clipboard | Native alt: `ggyG` |
+| Paste Full File | `<leader>pf` | Replace buffer with clipboard | Pair with `<leader>yf` |
 | Paste | `p` or `<leader>p` | Paste after cursor | `P` / `<leader>P` paste before cursor |
 | Delete Line | `dd` | Delete current line | Use count like `2dd` |
 | Change Word | `ciw` | Replace word under cursor | Very common refactor action |

@@ -98,6 +98,7 @@
 | Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
 | Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
 | Editing | `<leader>yf` | Yank full file to clipboard |
+| Editing | `<leader>pf` | Paste full file from clipboard |
 | Editing | `<leader>p` | Paste from system clipboard after cursor |
 | Editing | `<leader>P` | Paste from system clipboard before cursor |
 
@@ -531,7 +532,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 ### Editing
 - `ciw` change inner word
 - `di(` delete inside parentheses
-- `yy` yank line, `<leader>yf` yank full file, `p` or `<leader>p` paste after
+- `yy` yank line, `<leader>yf` yank full file, `<leader>pf` paste full file, `p` or `<leader>p` paste after
 - `u` undo, `<C-r>` redo
 - `.` repeat last change
 
