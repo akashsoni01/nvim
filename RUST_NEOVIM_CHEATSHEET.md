@@ -19,9 +19,9 @@
 | LSP | `<leader>ca` | Code actions |
 | LSP | `<leader>rn` | Rename symbol |
 | LSP | `<leader>fm` | Format current buffer |
-| LSP | `<leader>le` | Next compile error |
+| LSP | `<leader>len` | Next compile error |
 | LSP | `<leader>lE` | Previous compile error |
-| LSP | `<leader>lw` | Next warning |
+| LSP | `<leader>lwn` | Next warning |
 | LSP | `<leader>lW` | Previous warning |
 | LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
 | LSP | `<leader>lee` | Telescope: current LSP errors only |
@@ -122,18 +122,18 @@
 - `<leader>ca` - Code actions (imports/derives/impl assists)
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
-- `<leader>le` - Next compile error (LSP ERROR severity)
+- `<leader>len` - Next compile error (LSP ERROR severity)
 - `<leader>lE` - Previous compile error
-- `<leader>lw` - Next warning (LSP WARN severity)
+- `<leader>lwn` - Next warning (LSP WARN severity)
 - `<leader>lW` - Previous warning
 - `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), each entry shows `path:line` and message; Enter to jump
-- `<leader>lee` - **Telescope**: current LSP errors only; does **not** run `cargo check`
+- `<leader>lee` - **Telescope**: current LSP errors + last cached cargo errors; does **not** run `cargo check`
 - `<leader>lfE` - Previous error file (from the same list)
 - `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP)
-- `<leader>lww` - **Telescope**: current LSP warnings only; does **not** run `cargo check`
+- `<leader>lww` - **Telescope**: current LSP warnings + last cached cargo warnings; does **not** run `cargo check`
 - `<leader>lfW` - Previous warning file
 
-Use `<leader>le` / `<leader>lw` for next/prev diagnostic **in the current file**. Use `<leader>lee` / `<leader>lww` to list the current LSP diagnostics immediately. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet.
+Use `<leader>len` / `<leader>lwn` for next diagnostics **in the current file**, and `<leader>lE` / `<leader>lW` for previous diagnostics. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
 
 If you open a parent folder like `superdir/` with child crates such as `1/` (binary) and `2/` (library), fresh cargo diagnostics (`<leader>lfe` / `<leader>lfw`) run `cargo check` in each direct child crate that has a `Cargo.toml`.
 

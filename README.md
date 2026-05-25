@@ -131,15 +131,15 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Code Action | `<leader>ca` | LSP fixes/actions | Auto-imports and quick fixes |
 | Rename Symbol | `<leader>rn` | Rename symbol project-wide | Safer than manual rename |
 | Format Buffer | `<leader>fm` | Format current file | Rustfmt also runs on save |
-| Next Error | `<leader>le` | Jump to next compile error in file | Line-by-line in current buffer |
-| Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>le` |
-| Next Warning | `<leader>lw` | Jump to next warning in file | Clippy and other WARN diagnostics |
+| Next Error | `<leader>len` | Jump to next compile error in file | Line-by-line in current buffer |
+| Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>len` |
+| Next Warning | `<leader>lwn` | Jump to next warning in file | Clippy and other WARN diagnostics |
 | Previous Warning | `<leader>lW` | Jump to previous warning in file | Wraps at end of file |
 | Next Error File | `<leader>lfe` | Telescope list of all compile errors | Runs `cargo check`; shows file:line + message |
-| Current Error List | `<leader>lee` | Telescope list of current LSP errors | No new `cargo check` run |
+| Current Error List | `<leader>lee` | Telescope list of current/cached errors | Reuses last `lfe` cargo results; no new check |
 | Previous Error File | `<leader>lfE` | Jump to previous error file | After `lfe`, or uses cargo + LSP list |
 | Next Warning File | `<leader>lfw` | Telescope list of all warnings | Same as errors, filtered to warnings |
-| Current Warning List | `<leader>lww` | Telescope list of current LSP warnings | No new `cargo check` run |
+| Current Warning List | `<leader>lww` | Telescope list of current/cached warnings | Reuses last `lfw` cargo results; no new check |
 | Previous Warning File | `<leader>lfW` | Open previous file with warning | Sorted by file path |
 | Parent Rust Folder | `nvim .` from parent | Check direct child crates like `1/` and `2/` | Used by `<leader>lfe` / `<leader>lfw` |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |

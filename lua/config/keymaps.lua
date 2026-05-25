@@ -69,13 +69,13 @@ local function jump_diagnostic(direction, min_severity, max_severity)
   end
 end
 
-map("n", "<leader>le", function()
+map("n", "<leader>len", function()
   jump_diagnostic(1, severity.ERROR, severity.ERROR)
 end, vim.tbl_extend("force", opts, { desc = "Next compile error" }))
 map("n", "<leader>lE", function()
   jump_diagnostic(-1, severity.ERROR, severity.ERROR)
 end, vim.tbl_extend("force", opts, { desc = "Previous compile error" }))
-map("n", "<leader>lw", function()
+map("n", "<leader>lwn", function()
   jump_diagnostic(1, severity.WARN, severity.WARN)
 end, vim.tbl_extend("force", opts, { desc = "Next warning" }))
 map("n", "<leader>lW", function()

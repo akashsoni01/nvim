@@ -2,6 +2,10 @@ local M = {}
 
 local severity = vim.diagnostic.severity
 local rust_test = require("config.rust_test")
+local cached_cargo_items = {
+  error = {},
+  warning = {},
+}
 
 local function absolute_path(root, path)
   if path:sub(1, 1) == "/" then
@@ -131,10 +135,15 @@ local function collect_items(kind, opts)
   add_list(lsp_diagnostic_items(sev))
 
   if opts.run_cargo ~= false then
+    cached_cargo_items[kind] = {}
     local roots = rust_test.project_roots()
     for _, root in ipairs(roots) do
-      add_list(cargo_compiler_messages(root, levels))
+      local cargo_items = cargo_compiler_messages(root, levels)
+      vim.list_extend(cached_cargo_items[kind], cargo_items)
+      add_list(cargo_items)
     end
+  else
+    add_list(cached_cargo_items[kind])
   end
 
   table.sort(items, function(a, b)
@@ -156,7 +165,7 @@ function M.telescope_compile_issues(kind, opts)
   opts = opts or {}
   local items = collect_items(kind, opts)
   if #items == 0 then
-    local source = opts.run_cargo == false and "current LSP diagnostics" or "cargo check/LSP diagnostics"
+    local source = opts.run_cargo == false and "current LSP diagnostics or cached cargo check results" or "cargo check/LSP diagnostics"
     vim.notify("No " .. kind .. "s found in " .. source .. ".", vim.log.levels.INFO)
     return
   end
@@ -183,7 +192,7 @@ end
 function M.telescope_lsp_issues(kind)
   M.telescope_compile_issues(kind, {
     run_cargo = false,
-    prompt_title = kind == "error" and "Current LSP errors" or "Current LSP warnings",
+    prompt_title = kind == "error" and "Current/cached errors" or "Current/cached warnings",
   })
 end
 
