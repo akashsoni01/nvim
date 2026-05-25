@@ -1,7 +1,64 @@
 local M = {}
 
+local function cargo_root_from(path)
+  if not path or path == "" then
+    return nil
+  end
+
+  return vim.fs.root(path, "Cargo.toml")
+end
+
+local function child_cargo_roots(cwd)
+  local roots = {}
+  local ok, iter = pcall(vim.fs.dir, cwd)
+  if not ok or not iter then
+    return roots
+  end
+
+  for name, kind in iter do
+    if kind == "directory" then
+      local candidate = cwd .. "/" .. name
+      if vim.uv.fs_stat(candidate .. "/Cargo.toml") then
+        roots[#roots + 1] = candidate
+      end
+    end
+  end
+
+  table.sort(roots)
+  return roots
+end
+
+local function preferred_child_cargo_root(cwd)
+  local roots = child_cargo_roots(cwd)
+  if #roots == 0 then
+    return nil
+  end
+
+  if #roots == 1 then
+    return roots[1]
+  end
+
+  for _, needle in ipairs({ "binary", "bin", "main", "app" }) do
+    for _, root in ipairs(roots) do
+      local name = vim.fn.fnamemodify(root, ":t"):lower()
+      if name:find(needle, 1, true) then
+        return root
+      end
+    end
+  end
+
+  return roots[1]
+end
+
 function M.project_root()
-  return vim.fs.root(vim.fn.getcwd(), "Cargo.toml")
+  local buffer_path = vim.api.nvim_buf_get_name(0)
+  local buffer_root = cargo_root_from(buffer_path)
+  if buffer_root then
+    return buffer_root
+  end
+
+  local cwd = vim.fn.getcwd()
+  return cargo_root_from(cwd) or preferred_child_cargo_root(cwd)
 end
 
 function M.ensure_cargo()
@@ -12,7 +69,10 @@ function M.ensure_cargo()
 
   local root = M.project_root()
   if not root then
-    vim.notify("No Cargo.toml found. cd to your Rust project and run `nvim .`", vim.log.levels.ERROR)
+    vim.notify(
+      "No Cargo.toml found. Open a Rust crate, workspace, or parent folder containing a Cargo child project.",
+      vim.log.levels.ERROR
+    )
     return nil
   end
 

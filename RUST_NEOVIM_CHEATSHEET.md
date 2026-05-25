@@ -24,8 +24,10 @@
 | LSP | `<leader>lw` | Next warning |
 | LSP | `<leader>lW` | Previous warning |
 | LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
+| LSP | `<leader>lee` | Telescope: current LSP errors only |
 | LSP | `<leader>lfE` | Previous error file |
 | LSP | `<leader>lfw` | Telescope: all warnings (file:line) |
+| LSP | `<leader>lww` | Telescope: current LSP warnings only |
 | LSP | `<leader>lfW` | Previous file with warning |
 | Completion | `<C-Space>` | Open completion menu |
 | Completion | `<CR>` | Confirm selected completion |
@@ -125,11 +127,15 @@
 - `<leader>lw` - Next warning (LSP WARN severity)
 - `<leader>lW` - Previous warning
 - `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), each entry shows `path:line` and message; Enter to jump
+- `<leader>lee` - **Telescope**: current LSP errors only; does **not** run `cargo check`
 - `<leader>lfE` - Previous error file (from the same list)
 - `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP)
+- `<leader>lww` - **Telescope**: current LSP warnings only; does **not** run `cargo check`
 - `<leader>lfW` - Previous warning file
 
-Use `<leader>le` / `<leader>lw` for next/prev diagnostic **in the current file**. After `<leader>lfe`, pick a row in Telescope or use `:cn` / `:cp` in the quickfix list.
+Use `<leader>le` / `<leader>lw` for next/prev diagnostic **in the current file**. Use `<leader>lee` / `<leader>lww` to list the current LSP diagnostics immediately. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet.
+
+If you open a parent folder like `superdir/` with child crates such as `lib/` and `binary_main/`, cargo shortcuts prefer the binary/main child crate when there is no `Cargo.toml` in the parent folder.
 
 ### File type (Markdown, TOML, YAML, Rust)
 Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):

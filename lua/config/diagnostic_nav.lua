@@ -3,6 +3,14 @@ local M = {}
 local severity = vim.diagnostic.severity
 local rust_test = require("config.rust_test")
 
+local function absolute_path(root, path)
+  if path:sub(1, 1) == "/" then
+    return path
+  end
+
+  return vim.fs.normalize(root .. "/" .. path)
+end
+
 ---@param levels table<string, boolean>
 ---@return { filename: string, lnum: integer, col: integer, text: string, level: string }[]
 local function cargo_compiler_messages(root, levels)
@@ -32,11 +40,12 @@ local function cargo_compiler_messages(root, levels)
 
         for _, span in ipairs(obj.message.spans or {}) do
           if span.file_name and (span.is_primary or #obj.message.spans == 1) then
-            local key = string.format("%s:%d:%d:%s", span.file_name, span.line_start, span.column_start, msg)
+            local filename = absolute_path(root, span.file_name)
+            local key = string.format("%s:%d:%d:%s", filename, span.line_start, span.column_start, msg)
             if not seen[key] then
               seen[key] = true
               items[#items + 1] = {
-                filename = span.file_name,
+                filename = filename,
                 lnum = span.line_start,
                 col = math.max(0, span.column_start - 1),
                 text = msg,
@@ -90,7 +99,9 @@ local function lsp_diagnostic_items(sev)
 end
 
 ---@param kind "error"|"warning"
-local function collect_items(kind)
+---@param opts? { run_cargo?: boolean }
+local function collect_items(kind, opts)
+  opts = opts or {}
   local levels = kind == "error" and { error = true } or { warning = true }
   local sev = kind == "error" and severity.ERROR or severity.WARN
 
@@ -109,9 +120,11 @@ local function collect_items(kind)
 
   add_list(lsp_diagnostic_items(sev))
 
-  local root = rust_test.project_root()
-  if root then
-    add_list(cargo_compiler_messages(root, levels))
+  if opts.run_cargo ~= false then
+    local root = rust_test.project_root()
+    if root then
+      add_list(cargo_compiler_messages(root, levels))
+    end
   end
 
   table.sort(items, function(a, b)
@@ -128,10 +141,13 @@ local function collect_items(kind)
 end
 
 ---@param kind "error"|"warning"
-function M.telescope_compile_issues(kind)
-  local items = collect_items(kind)
+---@param opts? { run_cargo?: boolean, prompt_title?: string }
+function M.telescope_compile_issues(kind, opts)
+  opts = opts or {}
+  local items = collect_items(kind, opts)
   if #items == 0 then
-    vim.notify("No " .. kind .. "s found. Open a Rust project and run cargo check first.", vim.log.levels.INFO)
+    local source = opts.run_cargo == false and "current LSP diagnostics" or "cargo check/LSP diagnostics"
+    vim.notify("No " .. kind .. "s found in " .. source .. ".", vim.log.levels.INFO)
     return
   end
 
@@ -148,8 +164,16 @@ function M.telescope_compile_issues(kind)
 
   vim.fn.setqflist(qf, "r")
   require("telescope.builtin").quickfix({
-    prompt_title = kind == "error" and "Compile errors" or "Warnings",
+    prompt_title = opts.prompt_title or (kind == "error" and "Compile errors" or "Warnings"),
     show_line = true,
+  })
+end
+
+---@param kind "error"|"warning"
+function M.telescope_lsp_issues(kind)
+  M.telescope_compile_issues(kind, {
+    run_cargo = false,
+    prompt_title = kind == "error" and "Current LSP errors" or "Current LSP warnings",
   })
 end
 
