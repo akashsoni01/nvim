@@ -141,6 +141,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Next Warning File | `<leader>lfw` | Telescope list of all warnings | Same as errors, filtered to warnings |
 | Current Warning List | `<leader>lww` | Telescope list of current LSP warnings | No new `cargo check` run |
 | Previous Warning File | `<leader>lfW` | Open previous file with warning | Sorted by file path |
+| Parent Rust Folder | `nvim .` from parent | Check direct child crates like `1/` and `2/` | Used by `<leader>lfe` / `<leader>lfw` |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |
 | Debug Continue | `<leader>dc` | Continue/start debugger | Launches DAP session |
 | Step Over | `<leader>do` | Debug step over line | Skip entering function calls |

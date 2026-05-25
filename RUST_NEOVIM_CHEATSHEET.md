@@ -135,7 +135,7 @@
 
 Use `<leader>le` / `<leader>lw` for next/prev diagnostic **in the current file**. Use `<leader>lee` / `<leader>lww` to list the current LSP diagnostics immediately. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet.
 
-If you open a parent folder like `superdir/` with child crates such as `lib/` and `binary_main/`, cargo shortcuts prefer the binary/main child crate when there is no `Cargo.toml` in the parent folder.
+If you open a parent folder like `superdir/` with child crates such as `1/` (binary) and `2/` (library), fresh cargo diagnostics (`<leader>lfe` / `<leader>lfw`) run `cargo check` in each direct child crate that has a `Cargo.toml`.
 
 ### File type (Markdown, TOML, YAML, Rust)
 Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):

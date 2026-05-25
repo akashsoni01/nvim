@@ -20,7 +20,7 @@ local function cargo_compiler_messages(root, levels)
 
   vim.notify("Running cargo check…", vim.log.levels.INFO)
   local result = vim.system(
-    { "cargo", "check", "--message-format=json", "-q" },
+    { "cargo", "check", "--message-format=json" },
     { cwd = root, text = true, stderr = true }
   ):wait()
 
@@ -56,6 +56,16 @@ local function cargo_compiler_messages(root, levels)
         end
       end
     end
+  end
+
+  if result.code ~= 0 and #items == 0 and result.stderr and result.stderr ~= "" then
+    items[#items + 1] = {
+      filename = root .. "/Cargo.toml",
+      lnum = 1,
+      col = 0,
+      text = vim.trim(result.stderr:gsub("\n%s*", " ")),
+      level = "error",
+    }
   end
 
   table.sort(items, function(a, b)
@@ -121,8 +131,8 @@ local function collect_items(kind, opts)
   add_list(lsp_diagnostic_items(sev))
 
   if opts.run_cargo ~= false then
-    local root = rust_test.project_root()
-    if root then
+    local roots = rust_test.project_roots()
+    for _, root in ipairs(roots) do
       add_list(cargo_compiler_messages(root, levels))
     end
   end

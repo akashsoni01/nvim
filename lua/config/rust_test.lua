@@ -28,6 +28,8 @@ local function child_cargo_roots(cwd)
   return roots
 end
 
+M.child_cargo_roots = child_cargo_roots
+
 local function preferred_child_cargo_root(cwd)
   local roots = child_cargo_roots(cwd)
   if #roots == 0 then
@@ -50,15 +52,40 @@ local function preferred_child_cargo_root(cwd)
   return roots[1]
 end
 
-function M.project_root()
-  local buffer_path = vim.api.nvim_buf_get_name(0)
-  local buffer_root = cargo_root_from(buffer_path)
-  if buffer_root then
-    return buffer_root
+function M.project_roots()
+  local roots = {}
+  local seen = {}
+
+  local function add(root)
+    if root and not seen[root] then
+      seen[root] = true
+      roots[#roots + 1] = root
+    end
   end
 
+  local buffer_path = vim.api.nvim_buf_get_name(0)
+  add(cargo_root_from(buffer_path))
+
   local cwd = vim.fn.getcwd()
-  return cargo_root_from(cwd) or preferred_child_cargo_root(cwd)
+  local cwd_root = cargo_root_from(cwd)
+  if cwd_root then
+    add(cwd_root)
+  else
+    for _, root in ipairs(child_cargo_roots(cwd)) do
+      add(root)
+    end
+  end
+
+  return roots
+end
+
+function M.project_root()
+  local roots = M.project_roots()
+  if #roots > 0 then
+    return roots[1]
+  end
+
+  return preferred_child_cargo_root(vim.fn.getcwd())
 end
 
 function M.ensure_cargo()
