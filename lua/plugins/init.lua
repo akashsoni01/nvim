@@ -42,8 +42,10 @@ return {
       "SmiteshP/nvim-navic",
     },
     config = function()
+      local security = require("config.security")
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
       local navic = require("nvim-navic")
+      local rust_can_execute = security.rust_can_execute_project_code()
 
       local on_attach = function(client, bufnr)
         if client.server_capabilities.documentSymbolProvider then
@@ -63,9 +65,9 @@ return {
         settings = {
           ["rust-analyzer"] = {
             cargo = { allFeatures = true },
-            checkOnSave = true,
+            checkOnSave = rust_can_execute,
             check = { command = "clippy" },
-            procMacro = { enable = true },
+            procMacro = { enable = rust_can_execute },
             completion = {
               callable = { snippets = "fill_arguments" },
             },
@@ -89,6 +91,10 @@ return {
           },
         },
       }
+
+      if security.corporate_mode and not security.trusted_rust_project then
+        security.notify_corporate("rust-analyzer proc macros and check-on-save are disabled until NVIM_TRUST_RUST_PROJECT=1")
+      end
 
       if vim.lsp.config and vim.lsp.enable then
         vim.lsp.config("rust_analyzer", rust_analyzer_cfg)

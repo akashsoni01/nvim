@@ -1,8 +1,17 @@
+local security = require("config.security")
 local vendor_lazy = vim.fn.stdpath("config") .. "/vendor/lazy/lazy.nvim"
 local data_lazy = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
 local lazypath = vendor_lazy
 if not vim.uv.fs_stat(lazypath) then
+  if security.corporate_mode then
+    vim.notify(
+      "Corporate mode: vendored lazy.nvim is required. Run reviewed vendoring before starting Neovim.",
+      vim.log.levels.ERROR
+    )
+    return
+  end
+
   lazypath = data_lazy
   if not vim.uv.fs_stat(lazypath) then
     vim.notify(
@@ -22,6 +31,10 @@ local function with_vendor_dirs(spec)
     if vim.uv.fs_stat(vendor_dir) then
       return { dir = vendor_dir }
     end
+    if security.corporate_mode then
+      vim.notify("Corporate mode: missing vendored plugin " .. plugin_name, vim.log.levels.ERROR)
+      return { name = plugin_name, dir = vendor_dir, enabled = false }
+    end
     return spec
   end
 
@@ -37,6 +50,12 @@ local function with_vendor_dirs(spec)
     if vim.uv.fs_stat(vendor_dir) then
       copied.dir = vendor_dir
       copied[1] = nil
+    elseif security.corporate_mode then
+      vim.notify("Corporate mode: missing vendored plugin " .. plugin_name, vim.log.levels.ERROR)
+      copied.name = copied.name or plugin_name
+      copied.dir = vendor_dir
+      copied[1] = nil
+      copied.enabled = false
     end
   end
 
@@ -59,7 +78,8 @@ end
 require("lazy").setup(plugin_specs, {
   change_detection = { notify = false },
   checker = { enabled = false },
-  install = { colorscheme = { "habamax" } },
+  install = { colorscheme = { "habamax" }, missing = not security.corporate_mode },
+  rocks = { enabled = not security.corporate_mode },
   ui = {
     border = "rounded",
     backdrop = 100,

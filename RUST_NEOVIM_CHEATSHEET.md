@@ -3,6 +3,16 @@
 ## Leader Key
 - `Leader` = `Space`
 
+## Corporate Mode
+- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
+- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
+- Rust proc macros and check-on-save are disabled unless the repo is trusted:
+  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Vendor reviewed plugin commits from `lazy-lock.json`:
+  - `bash ./scripts/vendor-plugins.sh --locked`
+- Update to latest plugin commits only during review:
+  - `bash ./scripts/vendor-plugins.sh --latest`
+
 ## All Shortkeys Table
 
 | Area | Shortcut | Action |

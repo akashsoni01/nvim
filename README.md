@@ -19,11 +19,22 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
   - `vendor/lazy/lazy.nvim`
   - `vendor/plugins/*`
 - After that, this config prefers local vendor paths automatically, so Neovim can start offline.
+- The vendor script defaults to `--locked`: it checks out plugin commits from `lazy-lock.json`.
+- Use `bash ./scripts/vendor-plugins.sh --latest` only during an intentional plugin update/review window.
 - If you add new plugins later, run the vendor script again.
 - Remove vendored plugin repos:
   - `bash ./scripts/remove-vendor.sh`
 - Check Git worktree support anytime with:
   - `bash ./scripts/check-worktree.sh`
+
+## Corporate Mode
+- Start with:
+  - `NVIM_CORPORATE_MODE=1 nvim .`
+- Corporate mode requires vendored `lazy.nvim` and plugins; it does not fall back to downloaded lazy data or install missing plugins.
+- Rust project code execution is reduced by disabling `rust-analyzer` proc macros and check-on-save unless explicitly trusted:
+  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- For Linux `codelldb` fallback downloads in corporate mode, pin and verify the binary:
+  - `CODELLDB_URL=... CODELLDB_SHA256=... NVIM_CORPORATE_MODE=1 ./scripts/install-debug-adapter-linux.sh`
 
 ## Cleanup / Uninstall Scripts
 - Remove local vendored plugin sources:
