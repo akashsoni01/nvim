@@ -143,9 +143,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Rename Symbol | `<leader>rn` | Rename symbol project-wide | Safer than manual rename |
 | Format Buffer | `<leader>fm` | Format current file | Rustfmt also runs on save |
 | Next Error | `<leader>len` | Jump to next current/cached error | Opens full diagnostic float |
-| Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>len` |
+| Previous Error | `<leader>lep` | Jump to previous current/cached error | Opens full diagnostic float |
 | Next Warning | `<leader>lwn` | Jump to next current/cached warning | Opens full diagnostic float |
-| Previous Warning | `<leader>lW` | Jump to previous warning in file | Wraps at end of file |
+| Previous Warning | `<leader>lwp` | Jump to previous current/cached warning | Opens full diagnostic float |
 | Next Error File | `<leader>lfe` | Telescope list of all compile errors | Runs `cargo check`; full log in preview |
 | Current Error List | `<leader>lee` | Telescope list of current/cached errors | Reuses last `lfe`; full log in preview |
 | Previous Error File | `<leader>lfE` | Jump to previous error file | After `lfe`, or uses cargo + LSP list |

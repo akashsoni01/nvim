@@ -30,9 +30,9 @@
 | LSP | `<leader>rn` | Rename symbol |
 | LSP | `<leader>fm` | Format current buffer |
 | LSP | `<leader>len` | Next compile error |
-| LSP | `<leader>lE` | Previous compile error |
+| LSP | `<leader>lep` | Previous compile error |
 | LSP | `<leader>lwn` | Next warning |
-| LSP | `<leader>lW` | Previous warning |
+| LSP | `<leader>lwp` | Previous warning |
 | LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
 | LSP | `<leader>lee` | Telescope: current/cached errors with full log |
 | LSP | `<leader>lfE` | Previous error file |
@@ -133,9 +133,9 @@
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
 - `<leader>len` - Next current/cached compile error; opens the full diagnostic log near the cursor
-- `<leader>lE` - Previous compile error
+- `<leader>lep` - Previous current/cached compile error; opens the full diagnostic log near the cursor
 - `<leader>lwn` - Next current/cached warning; opens the full diagnostic log near the cursor
-- `<leader>lW` - Previous warning
+- `<leader>lwp` - Previous current/cached warning; opens the full diagnostic log near the cursor
 - `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
 - `<leader>lee` - **Telescope**: current LSP errors + last cached cargo errors; does **not** run `cargo check`
 - `<leader>lfE` - Previous error file (from the same list)
@@ -143,7 +143,7 @@
 - `<leader>lww` - **Telescope**: current LSP warnings + last cached cargo warnings; does **not** run `cargo check`
 - `<leader>lfW` - Previous warning file
 
-Use `<leader>len` / `<leader>lwn` for next current/cached diagnostics with a full diagnostic float, and `<leader>lE` / `<leader>lW` for previous live LSP diagnostics. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
+Use `<leader>len` / `<leader>lwn` for next current/cached diagnostics, and `<leader>lep` / `<leader>lwp` for previous current/cached diagnostics. These navigation keys open the full diagnostic float. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
 
 If you open a parent folder like `superdir/` with child crates such as `1/` (binary) and `2/` (library), fresh cargo diagnostics (`<leader>lfe` / `<leader>lfw`) run `cargo check` in each direct child crate that has a `Cargo.toml`.
 
