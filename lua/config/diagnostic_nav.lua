@@ -296,6 +296,57 @@ end
 
 ---@param direction integer
 ---@param kind "error"|"warning"
+function M.jump_issue(direction, kind)
+  local items = collect_items(kind, { run_cargo = false })
+  local n = #items
+  if n == 0 then
+    vim.notify("No " .. kind .. "s found in current LSP diagnostics or cached cargo check results.", vim.log.levels.INFO)
+    return
+  end
+
+  local current_path = vim.api.nvim_buf_get_name(0)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local current_lnum = cursor[1]
+  local current_col = cursor[2]
+  local target_idx = nil
+
+  if direction > 0 then
+    for i, item in ipairs(items) do
+      if item.filename > current_path
+        or (item.filename == current_path and item.lnum > current_lnum)
+        or (item.filename == current_path and item.lnum == current_lnum and item.col > current_col)
+      then
+        target_idx = i
+        break
+      end
+    end
+    target_idx = target_idx or 1
+  else
+    for i = n, 1, -1 do
+      local item = items[i]
+      if item.filename < current_path
+        or (item.filename == current_path and item.lnum < current_lnum)
+        or (item.filename == current_path and item.lnum == current_lnum and item.col < current_col)
+      then
+        target_idx = i
+        break
+      end
+    end
+    target_idx = target_idx or n
+  end
+
+  local steps = vim.v.count1
+  target_idx = wrap_idx(target_idx + direction * (steps - 1), n)
+
+  local item = items[target_idx]
+  open_and_jump(item)
+  vim.defer_fn(function()
+    show_issue_float(item)
+  end, 50)
+end
+
+---@param direction integer
+---@param kind "error"|"warning"
 function M.jump_file(direction, kind)
   local items = collect_items(kind)
   local n = #items

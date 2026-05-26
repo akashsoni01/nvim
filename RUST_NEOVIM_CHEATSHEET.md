@@ -132,9 +132,9 @@
 - `<leader>ca` - Code actions (imports/derives/impl assists)
 - `<leader>rn` - Rename symbol
 - `<leader>fm` - Format current buffer
-- `<leader>len` - Next compile error (LSP ERROR severity)
+- `<leader>len` - Next current/cached compile error; opens the full diagnostic log near the cursor
 - `<leader>lE` - Previous compile error
-- `<leader>lwn` - Next warning (LSP WARN severity)
+- `<leader>lwn` - Next current/cached warning; opens the full diagnostic log near the cursor
 - `<leader>lW` - Previous warning
 - `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
 - `<leader>lee` - **Telescope**: current LSP errors + last cached cargo errors; does **not** run `cargo check`
@@ -143,7 +143,7 @@
 - `<leader>lww` - **Telescope**: current LSP warnings + last cached cargo warnings; does **not** run `cargo check`
 - `<leader>lfW` - Previous warning file
 
-Use `<leader>len` / `<leader>lwn` for next diagnostics **in the current file**, and `<leader>lE` / `<leader>lW` for previous diagnostics. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
+Use `<leader>len` / `<leader>lwn` for next current/cached diagnostics with a full diagnostic float, and `<leader>lE` / `<leader>lW` for previous live LSP diagnostics. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
 
 If you open a parent folder like `superdir/` with child crates such as `1/` (binary) and `2/` (library), fresh cargo diagnostics (`<leader>lfe` / `<leader>lfw`) run `cargo check` in each direct child crate that has a `Cargo.toml`.
 
