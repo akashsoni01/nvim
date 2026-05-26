@@ -146,11 +146,11 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Previous Error | `<leader>lE` | Jump to previous compile error in file | Use count like `3<leader>len` |
 | Next Warning | `<leader>lwn` | Jump to next warning in file | Clippy and other WARN diagnostics |
 | Previous Warning | `<leader>lW` | Jump to previous warning in file | Wraps at end of file |
-| Next Error File | `<leader>lfe` | Telescope list of all compile errors | Runs `cargo check`; shows file:line + message |
-| Current Error List | `<leader>lee` | Telescope list of current/cached errors | Reuses last `lfe` cargo results; no new check |
+| Next Error File | `<leader>lfe` | Telescope list of all compile errors | Runs `cargo check`; full log in preview |
+| Current Error List | `<leader>lee` | Telescope list of current/cached errors | Reuses last `lfe`; full log in preview |
 | Previous Error File | `<leader>lfE` | Jump to previous error file | After `lfe`, or uses cargo + LSP list |
-| Next Warning File | `<leader>lfw` | Telescope list of all warnings | Same as errors, filtered to warnings |
-| Current Warning List | `<leader>lww` | Telescope list of current/cached warnings | Reuses last `lfw` cargo results; no new check |
+| Next Warning File | `<leader>lfw` | Telescope list of all warnings | Same as errors, full log in preview |
+| Current Warning List | `<leader>lww` | Telescope list of current/cached warnings | Reuses last `lfw`; full log in preview |
 | Previous Warning File | `<leader>lfW` | Open previous file with warning | Sorted by file path |
 | Parent Rust Folder | `nvim .` from parent | Check direct child crates like `1/` and `2/` | Used by `<leader>lfe` / `<leader>lfw` |
 | Toggle Breakpoint | `<leader>db` | Add/remove debugger breakpoint | Start debugging flow |

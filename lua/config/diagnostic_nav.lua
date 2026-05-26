@@ -16,7 +16,7 @@ local function absolute_path(root, path)
 end
 
 ---@param levels table<string, boolean>
----@return { filename: string, lnum: integer, col: integer, text: string, level: string }[]
+---@return { filename: string, lnum: integer, col: integer, text: string, detail: string, level: string }[]
 local function cargo_compiler_messages(root, levels)
   if vim.fn.executable("cargo") ~= 1 then
     return {}
@@ -41,6 +41,7 @@ local function cargo_compiler_messages(root, levels)
         if code then
           msg = string.format("[%s] %s", code, msg)
         end
+        local detail = obj.message.rendered or msg
 
         for _, span in ipairs(obj.message.spans or {}) do
           if span.file_name and (span.is_primary or #obj.message.spans == 1) then
@@ -53,6 +54,7 @@ local function cargo_compiler_messages(root, levels)
                 lnum = span.line_start,
                 col = math.max(0, span.column_start - 1),
                 text = msg,
+                detail = detail,
                 level = level,
               }
             end
@@ -68,6 +70,7 @@ local function cargo_compiler_messages(root, levels)
       lnum = 1,
       col = 0,
       text = vim.trim(result.stderr:gsub("\n%s*", " ")),
+      detail = result.stderr,
       level = "error",
     }
   end
@@ -86,7 +89,7 @@ local function cargo_compiler_messages(root, levels)
 end
 
 ---@param sev integer
----@return { filename: string, lnum: integer, col: integer, text: string, level: string }[]
+---@return { filename: string, lnum: integer, col: integer, text: string, detail: string, level: string }[]
 local function lsp_diagnostic_items(sev)
   local items = {}
   local seen = {}
@@ -103,6 +106,7 @@ local function lsp_diagnostic_items(sev)
           lnum = d.lnum + 1,
           col = d.col,
           text = d.message,
+          detail = d.message,
           level = level,
         }
       end
@@ -159,6 +163,47 @@ local function collect_items(kind, opts)
   return items
 end
 
+local function item_lines(item)
+  local rel = vim.fn.fnamemodify(item.filename, ":.")
+  local header = string.format("%s:%d:%d [%s]", rel, item.lnum, item.col + 1, item.level)
+  local lines = { header, string.rep("-", #header), "" }
+  vim.list_extend(lines, vim.split(item.detail or item.text, "\n", { plain = true }))
+  return lines
+end
+
+local function show_issue_float(item)
+  local lines = item_lines(item)
+  local width = 0
+  for _, line in ipairs(lines) do
+    width = math.max(width, vim.fn.strdisplaywidth(line))
+  end
+
+  width = math.min(math.max(width, 40), math.floor(vim.o.columns * 0.8))
+  local height = math.min(#lines, math.floor(vim.o.lines * 0.5))
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.bo[bufnr].buftype = "nofile"
+  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].filetype = "rust"
+
+  vim.api.nvim_open_win(bufnr, false, {
+    relative = "cursor",
+    row = 1,
+    col = 0,
+    width = width,
+    height = height,
+    border = "rounded",
+    style = "minimal",
+    title = " compile diagnostic ",
+  })
+end
+
+local function open_and_jump(item)
+  vim.cmd("keepalt edit " .. vim.fn.fnameescape(item.filename))
+  vim.api.nvim_win_set_cursor(0, { item.lnum, item.col })
+  pcall(vim.cmd, "normal! zz")
+end
+
 ---@param kind "error"|"warning"
 ---@param opts? { run_cargo?: boolean, prompt_title?: string }
 function M.telescope_compile_issues(kind, opts)
@@ -182,10 +227,52 @@ function M.telescope_compile_issues(kind, opts)
   end
 
   vim.fn.setqflist(qf, "r")
-  require("telescope.builtin").quickfix({
-    prompt_title = opts.prompt_title or (kind == "error" and "Compile errors" or "Warnings"),
-    show_line = true,
-  })
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+  local previewers = require("telescope.previewers")
+
+  pickers
+    .new({}, {
+      prompt_title = opts.prompt_title or (kind == "error" and "Compile errors" or "Warnings"),
+      finder = finders.new_table({
+        results = items,
+        entry_maker = function(item)
+          local rel = vim.fn.fnamemodify(item.filename, ":.")
+          local display = string.format("%s:%d:%d [%s] %s", rel, item.lnum, item.col + 1, item.level, item.text)
+          return {
+            value = item,
+            display = display,
+            ordinal = display .. "\n" .. (item.detail or item.text),
+            filename = item.filename,
+            lnum = item.lnum,
+            col = item.col + 1,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        title = "Full diagnostic",
+        define_preview = function(self, entry)
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, item_lines(entry.value))
+          vim.bo[self.state.bufnr].filetype = "rust"
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          local entry = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          open_and_jump(entry.value)
+          vim.defer_fn(function()
+            show_issue_float(entry.value)
+          end, 50)
+        end)
+        return true
+      end,
+    })
+    :find()
 end
 
 ---@param kind "error"|"warning"
@@ -205,13 +292,6 @@ local function wrap_idx(idx, n)
     idx = idx + n
   end
   return idx + 1
-end
-
----@param item { filename: string, lnum: integer, col: integer }
-local function open_and_jump(item)
-  vim.cmd("keepalt edit " .. vim.fn.fnameescape(item.filename))
-  vim.api.nvim_win_set_cursor(0, { item.lnum, item.col })
-  pcall(vim.cmd, "normal! zz")
 end
 
 ---@param direction integer

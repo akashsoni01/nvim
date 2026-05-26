@@ -34,10 +34,10 @@
 | LSP | `<leader>lwn` | Next warning |
 | LSP | `<leader>lW` | Previous warning |
 | LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
-| LSP | `<leader>lee` | Telescope: current LSP errors only |
+| LSP | `<leader>lee` | Telescope: current/cached errors with full log |
 | LSP | `<leader>lfE` | Previous error file |
 | LSP | `<leader>lfw` | Telescope: all warnings (file:line) |
-| LSP | `<leader>lww` | Telescope: current LSP warnings only |
+| LSP | `<leader>lww` | Telescope: current/cached warnings with full log |
 | LSP | `<leader>lfW` | Previous file with warning |
 | Completion | `<C-Space>` | Open completion menu |
 | Completion | `<CR>` | Confirm selected completion |
@@ -136,10 +136,10 @@
 - `<leader>lE` - Previous compile error
 - `<leader>lwn` - Next warning (LSP WARN severity)
 - `<leader>lW` - Previous warning
-- `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), each entry shows `path:line` and message; Enter to jump
+- `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
 - `<leader>lee` - **Telescope**: current LSP errors + last cached cargo errors; does **not** run `cargo check`
 - `<leader>lfE` - Previous error file (from the same list)
-- `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP)
+- `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
 - `<leader>lww` - **Telescope**: current LSP warnings + last cached cargo warnings; does **not** run `cargo check`
 - `<leader>lfW` - Previous warning file
 
