@@ -454,7 +454,7 @@ vim.api.nvim_create_user_command("GitStashList", function()
   git_terminal("stash list")
 end, { desc = "List git stashes" })
 
-map("n", "<leader>yf", "<cmd>%yank<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
+map("n", "<leader>yf", "<cmd>%yank +<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
 map("n", "<leader>pf", function()
   local clip = vim.fn.getreg("+")
   if clip == "" then
