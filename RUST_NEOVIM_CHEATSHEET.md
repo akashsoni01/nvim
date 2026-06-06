@@ -97,7 +97,7 @@
 | Testing | `<leader>tf` | Run cargo fmt |
 | Testing | `<leader>tb` | Run cargo build |
 | Testing | `<leader>tr` | Run cargo run |
-| UI | `<leader>ul` | Telescope theme picker (28 themes) |
+| UI | `<leader>ul` | Telescope theme picker (30 themes) |
 | UI | `<leader>ut` | Toggle transparency |
 | UI | `<leader>uh` | Toggle LSP inlay hints |
 | File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
@@ -276,7 +276,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>uh` - Toggle LSP inlay hints
 
 ### Change Theme
-- Press `<leader>ul` to open the Telescope theme picker (28 themes, fuzzy search, preview pane). List order: **all dark themes first**, then **all bright themes**.
+- Press `<leader>ul` to open the Telescope theme picker (30 themes, fuzzy search, preview pane). List order: **all dark themes first**, then **all bright themes**.
 - Move through results to **live-preview** each theme; press **Enter** to apply and **save as default** for future sessions.
 - `Esc` cancels and restores the theme you had when the picker opened.
 - Available palettes:
@@ -294,9 +294,10 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
   - **Dracula** — classic purple/pink dark + soft light
   - **Solarized** — Ethan Schoonover dark + light
   - **Xcode** — Apple-style dark + bright
+  - **Xcode2** — high-contrast for default macOS Terminal.app (black/white base)
 - Command mode:
   - Picker: `:lua require("config.theme").pick()`
-  - Direct apply: `:lua require("config.theme").apply("xcode_dark")` (aliases: `xcode`, `dracula`, `solarized`, `yellow`, `ocean`, `violet`, `mint`, `rose`, `slate`, `amber`, `cherry`, `arctic`, `forest`, `mono`)
+  - Direct apply: `:lua require("config.theme").apply("xcode2_dark")` (aliases: `xcode2`, `xcode`, `dracula`, `solarized`, `yellow`, `ocean`, `violet`, `mint`, `rose`, `slate`, `amber`, `cherry`, `arctic`, `forest`, `mono`)
 
 ---
 

@@ -42,22 +42,51 @@ local function set_hl(group, spec)
   vim.api.nvim_set_hl(0, group, spec)
 end
 
-local function apply_transparency(p, enabled)
+local function apply_transparency(p, enabled, background)
   if not enabled then
+    vim.o.winblend = 0
+    vim.o.pumblend = 0
     return
   end
 
+  local light = background == "light"
+  vim.o.winblend = light and 8 or 18
+  vim.o.pumblend = light and 8 or 18
+
+  -- Editor body: let the terminal background show through.
   set_hl("Normal", { fg = p.fg, bg = "none" })
   set_hl("NormalNC", { fg = p.fgMuted, bg = "none" })
-  set_hl("NormalFloat", { fg = p.fg, bg = "none" })
-  set_hl("FloatBorder", { fg = p.border, bg = "none" })
   set_hl("SignColumn", { bg = "none" })
   set_hl("EndOfBuffer", { bg = "none" })
-  set_hl("CursorLine", { bg = "none" })
-  set_hl("StatusLine", { bg = "none", fg = p.fg, bold = true })
-  set_hl("StatusLineNC", { bg = "none", fg = p.fgMuted })
-  set_hl("WinBar", { bg = "none", fg = p.fg, bold = true })
-  set_hl("WinBarNC", { bg = "none", fg = p.fgMuted })
+  set_hl("CursorLine", { bg = p.cursorLine })
+
+  -- Keep floats, menus, and Telescope readable on transparent terminals.
+  set_hl("NormalFloat", { fg = p.fg, bg = p.bgFloat })
+  set_hl("FloatBorder", { fg = p.border, bg = p.bgFloat })
+  set_hl("Pmenu", { bg = p.pmenu, fg = p.fg })
+  set_hl("PmenuSel", { bg = p.pmenuSel, fg = p.fg, bold = true })
+  set_hl("TelescopeNormal", { bg = p.bgFloat, fg = p.fg })
+  set_hl("TelescopeBorder", { fg = p.border, bg = p.bgFloat })
+  set_hl("TelescopePromptNormal", { bg = p.pmenu, fg = p.fg })
+  set_hl("TelescopePromptBorder", { fg = p.border, bg = p.pmenu })
+  set_hl("TelescopeResultsNormal", { bg = p.bgFloat, fg = p.fg })
+  set_hl("TelescopeResultsBorder", { fg = p.border, bg = p.bgFloat })
+  set_hl("TelescopePreviewNormal", { bg = p.bgAlt, fg = p.fg })
+  set_hl("TelescopePreviewBorder", { fg = p.border, bg = p.bgAlt })
+  set_hl("TelescopeSelection", { bg = p.pmenuSel, fg = p.fg, bold = true })
+  set_hl("TelescopeSelectionCaret", { fg = p.primaryBright, bold = true })
+
+  if light then
+    set_hl("StatusLine", { bg = p.status, fg = p.fg, bold = true })
+    set_hl("StatusLineNC", { bg = p.statusNc, fg = p.fgMuted })
+    set_hl("WinBar", { bg = p.tab, fg = p.fg, bold = true })
+    set_hl("WinBarNC", { bg = p.bgAlt, fg = p.fgMuted })
+  else
+    set_hl("StatusLine", { bg = "none", fg = p.fg, bold = true })
+    set_hl("StatusLineNC", { bg = "none", fg = p.fgMuted })
+    set_hl("WinBar", { bg = "none", fg = p.fg, bold = true })
+    set_hl("WinBarNC", { bg = "none", fg = p.fgMuted })
+  end
 end
 
 local function apply_syntax(p)
@@ -84,6 +113,8 @@ local function apply_syntax(p)
   set_hl("@constant", { fg = p.constant })
   set_hl("@operator", { fg = p.fg })
   set_hl("@comment", { fg = p.comment, italic = true })
+  set_hl("@variable.builtin", { fg = p.keyword, bold = true })
+  set_hl("@lsp.type.selfKeyword", { fg = p.keyword, bold = true })
 end
 
 local function apply_palette(p, background)
@@ -122,7 +153,7 @@ local function apply_palette(p, background)
   set_hl("Directory", { fg = p.primaryBright, bold = true })
 
   apply_syntax(p)
-  apply_transparency(p, M.transparent)
+  apply_transparency(p, M.transparent, background)
 end
 
 local themes = {
@@ -938,6 +969,64 @@ local themes = {
     type = "#3900a0",
     keyword = "#ad3da4",
   },
+  xcode2_dark = {
+    id = "xcode2_dark",
+    label = "Xcode2 Dark",
+    primary = "#00d084",
+    primaryBright = "#30e89d",
+    primarySoft = "#5ac8fa",
+    primaryDark = "#00a86b",
+    fg = "#ffffff",
+    fgMuted = "#c7c7c7",
+    bg = "#000000",
+    bgAlt = "#1a1a1a",
+    bgFloat = "#1a1a1a",
+    border = "#666666",
+    cursorLine = "#1f1f1f",
+    visual = "#333333",
+    status = "#1f1f1f",
+    statusNc = "#000000",
+    tabSel = "#00d084",
+    tab = "#1a1a1a",
+    pmenu = "#1a1a1a",
+    pmenuSel = "#333333",
+    lineNr = "#888888",
+    comment = "#888888",
+    string = "#ff9f0a",
+    number = "#ffd60a",
+    constant = "#bf5af2",
+    type = "#5ac8fa",
+    keyword = "#ff375f",
+  },
+  xcode2_light = {
+    id = "xcode2_light",
+    label = "Xcode2 Bright",
+    primary = "#007a3d",
+    primaryBright = "#008f47",
+    primarySoft = "#555555",
+    primaryDark = "#004f9e",
+    fg = "#000000",
+    fgMuted = "#444444",
+    bg = "#ffffff",
+    bgAlt = "#f2f2f2",
+    bgFloat = "#f2f2f2",
+    border = "#aaaaaa",
+    cursorLine = "#eeeeee",
+    visual = "#dddddd",
+    status = "#eeeeee",
+    statusNc = "#f2f2f2",
+    tabSel = "#004f9e",
+    tab = "#f2f2f2",
+    pmenu = "#f2f2f2",
+    pmenuSel = "#dddddd",
+    lineNr = "#888888",
+    comment = "#555555",
+    string = "#0017b8",
+    number = "#0017b8",
+    constant = "#5c2d91",
+    type = "#004f9e",
+    keyword = "#9b2393",
+  },
 }
 
 M.themes = themes
@@ -957,6 +1046,7 @@ local theme_families = {
   { dark = "dracula_dark", light = "dracula_light" },
   { dark = "solarized_dark", light = "solarized_light" },
   { dark = "xcode_dark", light = "xcode_light" },
+  { dark = "xcode2_dark", light = "xcode2_light" },
 }
 
 local cycle_order = {}
@@ -985,6 +1075,7 @@ local aliases = {
   solarized = "solarized_dark",
   solorized = "solarized_dark",
   xcode = "xcode_dark",
+  xcode2 = "xcode2_dark",
 }
 
 local function resolve_mode(mode)
@@ -1027,6 +1118,9 @@ function M.load_default()
   end
 
   M.default_mode = resolved
+  if type(decoded.transparent) == "boolean" then
+    M.transparent = decoded.transparent
+  end
   return resolved
 end
 
@@ -1040,7 +1134,7 @@ function M.save_default(mode)
   local path = default_mode_path()
   vim.fn.mkdir(vim.fs.dirname(path), "p")
 
-  local payload = vim.json.encode({ mode = resolved })
+  local payload = vim.json.encode({ mode = resolved, transparent = M.transparent })
   local fd = vim.uv.fs_open(path, "w", 420)
   if not fd then
     return false
@@ -1063,6 +1157,16 @@ end
 function M.toggle_transparency()
   M.transparent = not M.transparent
   M.apply(M.mode)
+  M.save_default(M.mode)
+end
+
+local function current_selection_index()
+  for index, mode in ipairs(cycle_order) do
+    if mode == M.mode then
+      return index
+    end
+  end
+  return 1
 end
 
 function M.list()
@@ -1108,9 +1212,14 @@ function M.pick()
     picker_results[#picker_results + 1] = { mode = mode, index = index }
   end
 
+  local active_palette = themes[M.mode] or themes.coral
+  local current_index = current_selection_index()
+
   pickers
     .new({}, {
-      prompt_title = "Select Theme",
+      prompt_title = string.format("Select Theme (%s)", active_palette.label),
+      default_selection_index = current_index,
+      sorting_strategy = "ascending",
       layout_strategy = "vertical",
       layout_config = {
         height = 0.65,
@@ -1200,7 +1309,10 @@ function M.pick()
           end,
         })
 
-        vim.schedule(preview_selection)
+        vim.defer_fn(function()
+          actions.center(prompt_bufnr)
+        end, 10)
+
         return true
       end,
     })

@@ -42,3 +42,4 @@ luac.out
 .DS_Store
 /vendor
 /bin
+.nvim-bin
