@@ -14,6 +14,8 @@ vscode_dir="$project/.vscode"
 vscode_settings="$vscode_dir/settings.json"
 cursor_ignore="$project/.cursorignore"
 cursor_indexing_ignore="$project/.cursorindexingignore"
+cursor_rules_dir="$project/.cursor/rules"
+cursor_rules_file="$cursor_rules_dir/neovim-only.mdc"
 search_ignore="$project/.ignore"
 neovim_marker="$project/.neovim-only"
 idea_dir="$project/.idea"
@@ -46,7 +48,38 @@ cat >"$vscode_settings" <<EOF
     "**/.vscode/**": false
   },
   "search.useIgnoreFiles": true,
-  "extensions.ignoreRecommendations": true
+  "extensions.ignoreRecommendations": true,
+  "chat.disableAIFeatures": true,
+  "chat.agent.enabled": false,
+  "chat.commandCenter.enabled": false,
+  "chat.useAgentsMdFile": false,
+  "chat.useClaudeMdFile": false,
+  "chat.useNestedAgentsMdFiles": false,
+  "github.copilot.enable": {
+    "*": false
+  },
+  "github.copilot.editor.enableAutoCompletions": false,
+  "github.copilot.editor.enableCodeActions": false,
+  "github.copilot.nextEditSuggestions.enabled": false,
+  "github.copilot.renameSuggestions.triggerAutomatically": false,
+  "github.copilot.chat.codesearch.enabled": false,
+  "editor.inlineSuggest.enabled": false,
+  "cursor.tab.enabled": false,
+  "cursor.completions.enabled": false,
+  "cursor.cpp.disabledLanguages": ["*"],
+  "cursor.aipreview.enabled": false,
+  "cursor.semanticSearch.includePullRequests": false,
+  "continue.enableTabAutocomplete": false,
+  "continue.telemetryEnabled": false,
+  "codeium.enableConfig": {
+    "*": false
+  },
+  "codeium.disableIndexing": true,
+  "codeium.enableCodeLens": false,
+  "codeium.enableSupercompletion": false,
+  "cody.autocomplete.enabled": false,
+  "cody.codebase.enabled": false,
+  "aws.toolkits.amazonq.shareContentWithAWS": false
 }
 EOF
 
@@ -62,9 +95,21 @@ write_ignore_file() {
 EOF
 }
 
-write_ignore_file "$cursor_ignore" "Block Cursor AI and indexing from reading project files."
-write_ignore_file "$cursor_indexing_ignore" "Exclude project files from Cursor codebase indexing."
-write_ignore_file "$search_ignore" "Exclude project files from VS Code/Cursor search and quick open."
+write_ignore_file "$cursor_ignore" "Hard block for Cursor Tab, Agent, Inline Edit, @mentions, and semantic search."
+write_ignore_file "$cursor_indexing_ignore" "Exclude project files from Cursor codebase embeddings and @codebase search."
+write_ignore_file "$search_ignore" "Exclude project files from VS Code/Cursor ripgrep search and quick open."
+
+mkdir -p "$cursor_rules_dir"
+cat >"$cursor_rules_file" <<EOF
+---
+description: $MARKER
+alwaysApply: true
+---
+
+# $MARKER
+
+This workspace is Neovim-only. Do not index, search, read, edit, or suggest changes to project source files.
+EOF
 
 cat >"$neovim_marker" <<EOF
 $MARKER
@@ -99,6 +144,7 @@ echo "Marked as Neovim-only: $project"
 echo "  - $vscode_settings"
 echo "  - $cursor_ignore"
 echo "  - $cursor_indexing_ignore"
+echo "  - $cursor_rules_file"
 echo "  - $search_ignore"
 echo "  - $neovim_marker"
 if [[ -f "$jetbrains_misc" ]]; then

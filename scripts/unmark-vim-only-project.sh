@@ -14,6 +14,7 @@ vscode_dir="$project/.vscode"
 vscode_settings="$vscode_dir/settings.json"
 cursor_ignore="$project/.cursorignore"
 cursor_indexing_ignore="$project/.cursorindexingignore"
+cursor_rules_file="$project/.cursor/rules/neovim-only.mdc"
 search_ignore="$project/.ignore"
 neovim_marker="$project/.neovim-only"
 jetbrains_misc="$project/.idea/misc.xml"
@@ -60,6 +61,24 @@ for ignore_file in "$cursor_ignore" "$cursor_indexing_ignore" "$search_ignore"; 
     echo "Skipped (custom ignore file): $ignore_file"
   fi
 done
+
+if has_marker "$cursor_rules_file"; then
+  rm -f "$cursor_rules_file"
+  removed=$((removed + 1))
+  echo "Removed: $cursor_rules_file"
+
+  if [[ -d "$project/.cursor/rules" ]] && [[ -z "$(ls -A "$project/.cursor/rules")" ]]; then
+    rmdir "$project/.cursor/rules"
+    echo "Removed empty directory: $project/.cursor/rules"
+  fi
+  if [[ -d "$project/.cursor" ]] && [[ -z "$(ls -A "$project/.cursor")" ]]; then
+    rmdir "$project/.cursor"
+    echo "Removed empty directory: $project/.cursor"
+  fi
+elif [[ -f "$cursor_rules_file" ]]; then
+  skipped=$((skipped + 1))
+  echo "Skipped (custom Cursor rule): $cursor_rules_file"
+fi
 
 if is_vim_only_neovim_marker "$neovim_marker"; then
   rm -f "$neovim_marker"
