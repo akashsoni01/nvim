@@ -88,6 +88,29 @@ function M.project_root()
   return preferred_child_cargo_root(vim.fn.getcwd())
 end
 
+function M.project_root_for(path)
+  if not path or path == "" then
+    return M.project_root()
+  end
+
+  local root = cargo_root_from(path)
+  if root then
+    return root
+  end
+
+  local dir = vim.fs.dirname(path)
+  while dir and dir ~= "/" do
+    for _, child in ipairs(child_cargo_roots(dir)) do
+      if path:find(child, 1, true) == 1 then
+        return child
+      end
+    end
+    dir = vim.fs.dirname(dir)
+  end
+
+  return M.project_root()
+end
+
 function M.ensure_cargo()
   if vim.fn.executable("cargo") ~= 1 then
     vim.notify("cargo is not installed or not on PATH.", vim.log.levels.ERROR)

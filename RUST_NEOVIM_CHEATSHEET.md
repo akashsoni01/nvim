@@ -97,6 +97,8 @@
 | Testing | `<leader>tb` | Run cargo build |
 | Testing | `<leader>tr` | Run cargo run |
 | UI | `<leader>ub` | Toggle Coral / Light White theme |
+| UI | `<leader>uy` | Toggle Yellow dark / Yellow bright theme |
+| UI | `<leader>un` | Cycle all themes (Coral, Yellow, Ocean, Violet, Mint, Rose) |
 | UI | `<leader>ut` | Toggle transparency |
 | UI | `<leader>uh` | Toggle LSP inlay hints |
 | File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
@@ -274,12 +276,20 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>uh` - Toggle LSP inlay hints
 
 ### Change Theme
-- Quick switch: press `<leader>ub` to toggle between Coral and Light White.
+- Quick switch: `<leader>ub` (Coral ↔ Light), `<leader>uy` (Yellow dark ↔ bright), `<leader>un` (cycle everything).
+- Available palettes (each has dark + bright except Coral/Light pair):
+  - **Coral** / **Light** — orange dark + clean white
+  - **Yellow** — gold dark + warm cream
+  - **Ocean** — teal dark + seafoam bright
+  - **Violet** — cosmic purple dark + lavender bright
+  - **Mint** — emerald dark + fresh green bright
+  - **Rose** — sakura pink dark + blush bright
 - Command mode options:
-  - Toggle: `:lua require("config.theme").toggle()`
-  - Set Coral: `:lua require("config.theme").apply("coral")`
-  - Set Light White: `:lua require("config.theme").apply("light")`
-  - Backward-compatible alias: `:lua require("config.theme").apply("mono")`
+  - Toggle Coral/Light: `:lua require("config.theme").toggle()`
+  - Toggle Yellow dark/bright: `:lua require("config.theme").toggle_yellow()`
+  - Cycle all: `:lua require("config.theme").cycle()`
+  - Set any: `:lua require("config.theme").apply("ocean_dark")` (also `violet_light`, `mint_dark`, `rose_light`, etc.)
+  - Short aliases: `yellow`, `ocean`, `violet`, `mint`, `rose` map to their dark variants; `mono` = light
 
 ---
 
@@ -502,13 +512,18 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 
 ## Termux Troubleshooting
 
-### `rust-analyzer` not working
+### `rust-analyzer` not working (`gd` / `K` do nothing)
 - Verify install:
   - `pkg install rust`
   - `rustup component add rust-analyzer`
 - In Neovim:
-  - `:Mason` and ensure `rust_analyzer` is present
-  - `:LspInfo` to verify attached client
+  - `:Mason` and ensure `rust_analyzer` is present (auto-installed on startup when online)
+  - `:LspInfo` — should show `rust_analyzer` attached to `.rs` buffers
+  - `:checkhealth vim.lsp` for startup errors
+- Project root:
+  - Open a file **inside** a crate (`Cargo.toml` folder), or a parent folder with child crates (`1/`, `2/`)
+  - If filetype is wrong, use `<leader>ftr` to set Rust
+- Wait a few seconds after opening a file — `rust-analyzer` indexes before `gd` / `K` return docs
 
 ### Formatter not running
 - Check `rustfmt`:

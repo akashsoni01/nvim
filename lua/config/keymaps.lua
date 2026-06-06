@@ -35,9 +35,30 @@ vim.api.nvim_create_user_command("FC", function()
   require("telescope.builtin").current_buffer_fuzzy_find()
 end, { desc = "Telescope search current buffer" })
 
-map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
-map("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
-map("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover docs" }))
+local lsp = require("config.lsp")
+
+map(
+  "n",
+  "gd",
+  lsp.lsp_action(function()
+    vim.lsp.buf.definition({ border = "rounded" })
+  end, "Go to definition"),
+  vim.tbl_extend("force", opts, { desc = "Go to definition" })
+)
+map(
+  "n",
+  "gr",
+  lsp.lsp_action(vim.lsp.buf.references, "Find references"),
+  vim.tbl_extend("force", opts, { desc = "References" })
+)
+map(
+  "n",
+  "K",
+  lsp.lsp_action(function()
+    vim.lsp.buf.hover({ border = "rounded", focusable = false })
+  end, "Hover docs"),
+  vim.tbl_extend("force", opts, { desc = "Hover docs" })
+)
 map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
 map("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
 map("n", "<leader>fm", function()
@@ -490,6 +511,12 @@ map("n", "<leader>tv", "<cmd>vsplit | terminal<cr>", vim.tbl_extend("force", opt
 map("n", "<leader>ub", function()
   require("config.theme").toggle()
 end, vim.tbl_extend("force", opts, { desc = "Toggle Coral/Light theme" }))
+map("n", "<leader>uy", function()
+  require("config.theme").toggle_yellow()
+end, vim.tbl_extend("force", opts, { desc = "Toggle Yellow dark/bright theme" }))
+map("n", "<leader>un", function()
+  require("config.theme").cycle()
+end, vim.tbl_extend("force", opts, { desc = "Cycle all themes" }))
 map("n", "<leader>ut", function()
   require("config.theme").toggle_transparency()
 end, vim.tbl_extend("force", opts, { desc = "Toggle transparency" }))

@@ -26,16 +26,28 @@ return {
 
   {
     "williamboman/mason.nvim",
+    lazy = false,
+    priority = 100,
     cmd = "Mason",
     opts = {},
+    config = function(_, opts)
+      require("mason").setup(opts)
+    end,
   },
   {
     "williamboman/mason-lspconfig.nvim",
+    lazy = false,
     dependencies = { "williamboman/mason.nvim" },
-    opts = {},
+    opts = {
+      ensure_installed = { "rust_analyzer" },
+    },
+    config = function(_, opts)
+      require("mason-lspconfig").setup(opts)
+    end,
   },
   {
     "neovim/nvim-lspconfig",
+    lazy = false,
     dependencies = {
       "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
@@ -43,52 +55,31 @@ return {
     },
     config = function()
       local security = require("config.security")
+      local lsp = require("config.lsp")
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local navic = require("nvim-navic")
       local rust_can_execute = security.rust_can_execute_project_code()
+      local cmd = lsp.rust_analyzer_cmd()
 
-      local on_attach = function(client, bufnr)
-        if client.server_capabilities.documentSymbolProvider then
-          navic.attach(client, bufnr)
-        end
-
-        if vim.lsp.inlay_hint and client.server_capabilities.inlayHintProvider then
-          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        end
-
-        vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
+      if not cmd then
+        vim.notify(
+          "rust-analyzer not found. Run :Mason to install it, or `rustup component add rust-analyzer`.",
+          vim.log.levels.ERROR
+        )
       end
 
+      lsp.setup_handlers()
+      lsp.setup_autocmds()
+
       local rust_analyzer_cfg = {
+        cmd = cmd,
         capabilities = capabilities,
-        on_attach = on_attach,
+        on_attach = lsp.on_attach,
+        root_dir = function(bufnr)
+          local path = vim.api.nvim_buf_get_name(bufnr)
+          return lsp.rust_analyzer_root_dir(path)
+        end,
         settings = {
-          ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            checkOnSave = rust_can_execute,
-            check = { command = "clippy" },
-            procMacro = { enable = rust_can_execute },
-            completion = {
-              callable = { snippets = "fill_arguments" },
-            },
-            diagnostics = {
-              enable = true,
-            },
-            inlayHints = {
-              bindingModeHints = { enable = true },
-              closureReturnTypeHints = { enable = "always" },
-              lifetimeElisionHints = { enable = "skip_trivial" },
-              reborrowHints = { enable = "always" },
-            },
-            imports = {
-              granularity = { group = "module" },
-              prefix = "self",
-            },
-            assist = {
-              importEnforceGranularity = true,
-              importPrefix = "self",
-            },
-          },
+          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
         },
       }
 
@@ -102,6 +93,9 @@ return {
       else
         -- Fallback for older Neovim versions (< 0.11).
         local lspconfig = require("lspconfig")
+        rust_analyzer_cfg.settings = {
+          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
+        }
         lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
       end
     end,
