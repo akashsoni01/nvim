@@ -14,14 +14,12 @@ Usage: nvim [nvim args...]
 
 Examples:
   nvim .
-  NVIM_VIM_ONLY=1 nvim .
   NVIM_VIM_ONLY=0 nvim ~/code/my-workspace
 
 Environment:
-  NVIM_VIM_ONLY=1   Stop Cursor/VS Code/JetBrains indexing for the workspace/crate root
-  NVIM_VIM_ONLY=0   Restore IDE indexing for the workspace/crate root
-
-Plain \`nvim .\` does not change IDE indexing.
+  (default)       Mark workspace as Neovim-only and stash IDE/LLM files on enter
+  NVIM_VIM_ONLY=0 Restore IDE indexing for the workspace/crate root
+  NVIM_VIM_ONLY=1 Same as default (explicit mark)
 
 Install once on any machine:
   ${CONFIG_DIR}/scripts/install-nvim-wrapper.sh

@@ -16,7 +16,6 @@ Usage: $0 [--dry-run]
 
 Installs a universal nvim wrapper so these work on any machine:
   nvim .
-  NVIM_VIM_ONLY=1 nvim .
   NVIM_VIM_ONLY=0 nvim .
 
 Uses a shell function (reliable even when Homebrew/pyenv reorder PATH).
@@ -173,5 +172,5 @@ if ! $dry_run; then
   echo ""
   echo "Restart your shell, then run:"
   echo "  type nvim"
-  echo "  NVIM_VIM_ONLY=1 nvim ."
+  echo "  nvim ."
 fi

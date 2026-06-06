@@ -39,14 +39,15 @@ function M.workspace_root(start_dir)
   return nearest_crate or vim.fn.getcwd()
 end
 
-local function run_script(script_name, root)
+local function run_script(script_name, ...)
   local script = script_path(script_name)
   if vim.fn.filereadable(script) ~= 1 then
     vim.notify("Missing script: " .. script, vim.log.levels.ERROR)
     return false
   end
 
-  local result = vim.system({ "bash", script, root }, { text = true }):wait()
+  local cmd = { "bash", script, ... }
+  local result = vim.system(cmd, { text = true }):wait()
   if result.code ~= 0 then
     local message = (result.stderr or result.stdout or "unknown error"):gsub("%s+$", "")
     vim.notify(message, vim.log.levels.ERROR)
@@ -61,6 +62,17 @@ local function run_script(script_name, root)
   return true
 end
 
+function M.is_vim_only_project(dir)
+  local root = M.workspace_root(dir)
+  local script = script_path("vim-only-stash.sh")
+  if vim.fn.filereadable(script) ~= 1 then
+    return false
+  end
+
+  local result = vim.system({ "bash", script, "is-vim-only", root }, { text = true }):wait()
+  return result.code == 0
+end
+
 function M.mark(dir)
   local root = M.workspace_root(dir)
   return run_script("mark-vim-only-project.sh", root)
@@ -69,6 +81,16 @@ end
 function M.unmark(dir)
   local root = M.workspace_root(dir)
   return run_script("unmark-vim-only-project.sh", root)
+end
+
+function M.stash_ide_markers(dir)
+  local root = M.workspace_root(dir)
+  return run_script("vim-only-stash.sh", "stash", root)
+end
+
+function M.restore_ide_markers(dir)
+  local root = M.workspace_root(dir)
+  return run_script("vim-only-stash.sh", "restore", root)
 end
 
 local function parse_vim_only_env()
@@ -90,16 +112,20 @@ end
 
 function M.handle_startup_env()
   local vim_only = parse_vim_only_env()
-  if vim_only == true then
-    M.mark()
-  elseif vim_only == false then
+  if vim_only == false then
     M.unmark()
+    return
+  end
+
+  if not M.is_vim_only_project() then
+    M.mark()
   end
 end
 
 function M.setup()
   vim.api.nvim_create_user_command("VimOnlyMark", function()
     M.mark()
+    M.stash_ide_markers()
   end, { desc = "Stop IDE indexing for the workspace root" })
 
   vim.api.nvim_create_user_command("VimOnlyReset", function()
@@ -110,6 +136,13 @@ function M.setup()
     once = true,
     callback = function()
       M.handle_startup_env()
+      M.stash_ide_markers()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      M.restore_ide_markers()
     end,
   })
 end

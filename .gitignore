@@ -43,3 +43,4 @@ luac.out
 /vendor
 /bin
 .nvim-bin
+.vim-only-stash
