@@ -1,8 +1,13 @@
 local M = {}
 
 M.mode = "coral"
+M.default_mode = "coral"
 M.palette = {}
 M.transparent = false
+
+local function default_mode_path()
+  return vim.fn.stdpath("data") .. "/nvim-theme-default.json"
+end
 
 ---@class ThemePalette
 ---@field id string
@@ -469,6 +474,412 @@ local themes = {
     type = "#9f1239",
     keyword = "#4c0519",
   },
+  slate_dark = {
+    id = "slate_dark",
+    label = "Slate Dark",
+    primary = "#94a3b8",
+    primaryBright = "#cbd5e1",
+    primarySoft = "#e2e8f0",
+    primaryDark = "#64748b",
+    fg = "#e2e8f0",
+    fgMuted = "#94a3b8",
+    bg = "#0b1120",
+    bgAlt = "#080d18",
+    bgFloat = "#111827",
+    border = "#475569",
+    cursorLine = "#1e293b",
+    visual = "#334155",
+    status = "#334155",
+    statusNc = "#1e293b",
+    tabSel = "#64748b",
+    tab = "#111827",
+    pmenu = "#111827",
+    pmenuSel = "#334155",
+    lineNr = "#475569",
+    comment = "#64748b",
+    string = "#7dd3fc",
+    number = "#38bdf8",
+    constant = "#60a5fa",
+    type = "#cbd5e1",
+    keyword = "#94a3b8",
+  },
+  slate_light = {
+    id = "slate_light",
+    label = "Slate Bright",
+    primary = "#334155",
+    primaryBright = "#475569",
+    primarySoft = "#cbd5e1",
+    primaryDark = "#1e293b",
+    fg = "#0f172a",
+    fgMuted = "#475569",
+    bg = "#f8fafc",
+    bgAlt = "#f1f5f9",
+    bgFloat = "#f1f5f9",
+    border = "#cbd5e1",
+    cursorLine = "#e2e8f0",
+    visual = "#cbd5e1",
+    status = "#e2e8f0",
+    statusNc = "#f1f5f9",
+    tabSel = "#334155",
+    tab = "#f1f5f9",
+    pmenu = "#f1f5f9",
+    pmenuSel = "#cbd5e1",
+    lineNr = "#cbd5e1",
+    comment = "#64748b",
+    string = "#0369a1",
+    number = "#0284c7",
+    constant = "#334155",
+    type = "#475569",
+    keyword = "#0f172a",
+  },
+  amber_dark = {
+    id = "amber_dark",
+    label = "Amber Dark",
+    primary = "#f59e0b",
+    primaryBright = "#fbbf24",
+    primarySoft = "#fcd34d",
+    primaryDark = "#d97706",
+    fg = "#fef3c7",
+    fgMuted = "#fde68a",
+    bg = "#1c1208",
+    bgAlt = "#140d06",
+    bgFloat = "#261a0c",
+    border = "#b45309",
+    cursorLine = "#302010",
+    visual = "#78350f",
+    status = "#b45309",
+    statusNc = "#713f12",
+    tabSel = "#d97706",
+    tab = "#261a0c",
+    pmenu = "#261a0c",
+    pmenuSel = "#92400e",
+    lineNr = "#92400e",
+    comment = "#d97706",
+    string = "#fb923c",
+    number = "#f59e0b",
+    constant = "#ea580c",
+    type = "#fcd34d",
+    keyword = "#fbbf24",
+  },
+  amber_light = {
+    id = "amber_light",
+    label = "Amber Bright",
+    primary = "#b45309",
+    primaryBright = "#d97706",
+    primarySoft = "#fde68a",
+    primaryDark = "#92400e",
+    fg = "#292524",
+    fgMuted = "#78716c",
+    bg = "#fffaf0",
+    bgAlt = "#ffedd5",
+    bgFloat = "#ffedd5",
+    border = "#fdba74",
+    cursorLine = "#fed7aa",
+    visual = "#fdba74",
+    status = "#fed7aa",
+    statusNc = "#ffedd5",
+    tabSel = "#b45309",
+    tab = "#ffedd5",
+    pmenu = "#ffedd5",
+    pmenuSel = "#fdba74",
+    lineNr = "#fdba74",
+    comment = "#78716c",
+    string = "#c2410c",
+    number = "#ea580c",
+    constant = "#b45309",
+    type = "#78716c",
+    keyword = "#292524",
+  },
+  cherry_dark = {
+    id = "cherry_dark",
+    label = "Cherry Dark",
+    primary = "#ef4444",
+    primaryBright = "#f87171",
+    primarySoft = "#fca5a5",
+    primaryDark = "#dc2626",
+    fg = "#fee2e2",
+    fgMuted = "#fca5a5",
+    bg = "#160808",
+    bgAlt = "#100505",
+    bgFloat = "#220c0c",
+    border = "#991b1b",
+    cursorLine = "#2d1010",
+    visual = "#7f1d1d",
+    status = "#991b1b",
+    statusNc = "#7f1d1d",
+    tabSel = "#dc2626",
+    tab = "#220c0c",
+    pmenu = "#220c0c",
+    pmenuSel = "#991b1b",
+    lineNr = "#991b1b",
+    comment = "#f87171",
+    string = "#fb7185",
+    number = "#ef4444",
+    constant = "#dc2626",
+    type = "#fca5a5",
+    keyword = "#f87171",
+  },
+  cherry_light = {
+    id = "cherry_light",
+    label = "Cherry Bright",
+    primary = "#b91c1c",
+    primaryBright = "#dc2626",
+    primarySoft = "#fca5a5",
+    primaryDark = "#991b1b",
+    fg = "#450a0a",
+    fgMuted = "#7f1d1d",
+    bg = "#fef2f2",
+    bgAlt = "#fee2e2",
+    bgFloat = "#fee2e2",
+    border = "#fca5a5",
+    cursorLine = "#fecaca",
+    visual = "#fca5a5",
+    status = "#fecaca",
+    statusNc = "#fee2e2",
+    tabSel = "#b91c1c",
+    tab = "#fee2e2",
+    pmenu = "#fee2e2",
+    pmenuSel = "#fca5a5",
+    lineNr = "#fca5a5",
+    comment = "#7f1d1d",
+    string = "#be123c",
+    number = "#dc2626",
+    constant = "#b91c1c",
+    type = "#7f1d1d",
+    keyword = "#450a0a",
+  },
+  arctic_dark = {
+    id = "arctic_dark",
+    label = "Arctic Dark",
+    primary = "#60a5fa",
+    primaryBright = "#93c5fd",
+    primarySoft = "#bfdbfe",
+    primaryDark = "#3b82f6",
+    fg = "#dbeafe",
+    fgMuted = "#bfdbfe",
+    bg = "#060d18",
+    bgAlt = "#040a12",
+    bgFloat = "#0c1828",
+    border = "#1d4ed8",
+    cursorLine = "#0f1f38",
+    visual = "#1e3a8a",
+    status = "#1d4ed8",
+    statusNc = "#1e3a8a",
+    tabSel = "#3b82f6",
+    tab = "#0c1828",
+    pmenu = "#0c1828",
+    pmenuSel = "#1d4ed8",
+    lineNr = "#1d4ed8",
+    comment = "#60a5fa",
+    string = "#7dd3fc",
+    number = "#38bdf8",
+    constant = "#2563eb",
+    type = "#93c5fd",
+    keyword = "#3b82f6",
+  },
+  arctic_light = {
+    id = "arctic_light",
+    label = "Arctic Bright",
+    primary = "#1d4ed8",
+    primaryBright = "#2563eb",
+    primarySoft = "#bfdbfe",
+    primaryDark = "#1e40af",
+    fg = "#0c1a3a",
+    fgMuted = "#1e3a8a",
+    bg = "#f0f7ff",
+    bgAlt = "#dbeafe",
+    bgFloat = "#dbeafe",
+    border = "#93c5fd",
+    cursorLine = "#bfdbfe",
+    visual = "#bfdbfe",
+    status = "#bfdbfe",
+    statusNc = "#dbeafe",
+    tabSel = "#1d4ed8",
+    tab = "#dbeafe",
+    pmenu = "#dbeafe",
+    pmenuSel = "#bfdbfe",
+    lineNr = "#93c5fd",
+    comment = "#1e3a8a",
+    string = "#0369a1",
+    number = "#0284c7",
+    constant = "#1d4ed8",
+    type = "#1e3a8a",
+    keyword = "#0c1a3a",
+  },
+  forest_dark = {
+    id = "forest_dark",
+    label = "Forest Dark",
+    primary = "#4ade80",
+    primaryBright = "#86efac",
+    primarySoft = "#bbf7d0",
+    primaryDark = "#22c55e",
+    fg = "#dcfce7",
+    fgMuted = "#bbf7d0",
+    bg = "#061208",
+    bgAlt = "#040d06",
+    bgFloat = "#0c1a10",
+    border = "#166534",
+    cursorLine = "#0f2418",
+    visual = "#14532d",
+    status = "#166534",
+    statusNc = "#14532d",
+    tabSel = "#22c55e",
+    tab = "#0c1a10",
+    pmenu = "#0c1a10",
+    pmenuSel = "#166534",
+    lineNr = "#166534",
+    comment = "#4ade80",
+    string = "#6ee7b7",
+    number = "#34d399",
+    constant = "#16a34a",
+    type = "#86efac",
+    keyword = "#22c55e",
+  },
+  forest_light = {
+    id = "forest_light",
+    label = "Forest Bright",
+    primary = "#166534",
+    primaryBright = "#15803d",
+    primarySoft = "#bbf7d0",
+    primaryDark = "#14532d",
+    fg = "#052e16",
+    fgMuted = "#166534",
+    bg = "#f4faf6",
+    bgAlt = "#e8f5ec",
+    bgFloat = "#e8f5ec",
+    border = "#86efac",
+    cursorLine = "#d1fae5",
+    visual = "#bbf7d0",
+    status = "#d1fae5",
+    statusNc = "#e8f5ec",
+    tabSel = "#166534",
+    tab = "#e8f5ec",
+    pmenu = "#e8f5ec",
+    pmenuSel = "#bbf7d0",
+    lineNr = "#86efac",
+    comment = "#166534",
+    string = "#15803d",
+    number = "#16a34a",
+    constant = "#166534",
+    type = "#166534",
+    keyword = "#052e16",
+  },
+  dracula_dark = {
+    id = "dracula_dark",
+    label = "Dracula Dark",
+    primary = "#bd93f9",
+    primaryBright = "#ff79c6",
+    primarySoft = "#8be9fd",
+    primaryDark = "#6272a4",
+    fg = "#f8f8f2",
+    fgMuted = "#bfbfb5",
+    bg = "#282a36",
+    bgAlt = "#21222c",
+    bgFloat = "#343746",
+    border = "#6272a4",
+    cursorLine = "#313341",
+    visual = "#44475a",
+    status = "#44475a",
+    statusNc = "#343746",
+    tabSel = "#bd93f9",
+    tab = "#343746",
+    pmenu = "#343746",
+    pmenuSel = "#44475a",
+    lineNr = "#6272a4",
+    comment = "#6272a4",
+    string = "#f1fa8c",
+    number = "#bd93f9",
+    constant = "#ffb86c",
+    type = "#8be9fd",
+    keyword = "#ff79c6",
+  },
+  dracula_light = {
+    id = "dracula_light",
+    label = "Dracula Light",
+    primary = "#7c6fae",
+    primaryBright = "#d56baa",
+    primarySoft = "#3aa7c8",
+    primaryDark = "#5b6b8a",
+    fg = "#282a36",
+    fgMuted = "#5b6078",
+    bg = "#f8f8f2",
+    bgAlt = "#eff0eb",
+    bgFloat = "#eff0eb",
+    border = "#c4c5c9",
+    cursorLine = "#e4e5e0",
+    visual = "#d8d9d4",
+    status = "#e4e5e0",
+    statusNc = "#eff0eb",
+    tabSel = "#7c6fae",
+    tab = "#eff0eb",
+    pmenu = "#eff0eb",
+    pmenuSel = "#d8d9d4",
+    lineNr = "#9aa0b4",
+    comment = "#5b6b8a",
+    string = "#8a7f2e",
+    number = "#7c6fae",
+    constant = "#b8742f",
+    type = "#2f8fad",
+    keyword = "#c24f93",
+  },
+  solarized_dark = {
+    id = "solarized_dark",
+    label = "Solarized Dark",
+    primary = "#268bd2",
+    primaryBright = "#2aa198",
+    primarySoft = "#93a2a1",
+    primaryDark = "#586e75",
+    fg = "#839496",
+    fgMuted = "#657b83",
+    bg = "#002b36",
+    bgAlt = "#00252f",
+    bgFloat = "#073642",
+    border = "#586e75",
+    cursorLine = "#073642",
+    visual = "#073642",
+    status = "#073642",
+    statusNc = "#002b36",
+    tabSel = "#268bd2",
+    tab = "#073642",
+    pmenu = "#073642",
+    pmenuSel = "#586e75",
+    lineNr = "#586e75",
+    comment = "#586e75",
+    string = "#2aa198",
+    number = "#d33682",
+    constant = "#cb4b16",
+    type = "#b58900",
+    keyword = "#859900",
+  },
+  solarized_light = {
+    id = "solarized_light",
+    label = "Solarized Light",
+    primary = "#268bd2",
+    primaryBright = "#2aa198",
+    primarySoft = "#93a2a1",
+    primaryDark = "#657b83",
+    fg = "#657b83",
+    fgMuted = "#839496",
+    bg = "#fdf6e3",
+    bgAlt = "#eee8d5",
+    bgFloat = "#eee8d5",
+    border = "#93a2a1",
+    cursorLine = "#eee8d5",
+    visual = "#e3dcc8",
+    status = "#eee8d5",
+    statusNc = "#fdf6e3",
+    tabSel = "#268bd2",
+    tab = "#eee8d5",
+    pmenu = "#eee8d5",
+    pmenuSel = "#e3dcc8",
+    lineNr = "#93a2a1",
+    comment = "#93a2a1",
+    string = "#2aa198",
+    number = "#d33682",
+    constant = "#cb4b16",
+    type = "#b58900",
+    keyword = "#859900",
+  },
 }
 
 M.themes = themes
@@ -486,6 +897,20 @@ local cycle_order = {
   "mint_light",
   "rose_dark",
   "rose_light",
+  "slate_dark",
+  "slate_light",
+  "amber_dark",
+  "amber_light",
+  "cherry_dark",
+  "cherry_light",
+  "arctic_dark",
+  "arctic_light",
+  "forest_dark",
+  "forest_light",
+  "dracula_dark",
+  "dracula_light",
+  "solarized_dark",
+  "solarized_light",
 }
 
 local aliases = {
@@ -496,6 +921,15 @@ local aliases = {
   violet = "violet_dark",
   mint = "mint_dark",
   rose = "rose_dark",
+  slate = "slate_dark",
+  amber = "amber_dark",
+  cherry = "cherry_dark",
+  arctic = "arctic_dark",
+  forest = "forest_dark",
+  dracula = "dracula_dark",
+  drequla = "dracula_dark",
+  solarized = "solarized_dark",
+  solorized = "solarized_dark",
 }
 
 local function resolve_mode(mode)
@@ -521,47 +955,193 @@ function M.apply(mode)
   vim.cmd("redrawstatus!")
 end
 
+function M.load_default()
+  local path = default_mode_path()
+  if not vim.uv.fs_stat(path) then
+    return M.default_mode
+  end
+
+  local ok, decoded = pcall(vim.json.decode, table.concat(vim.fn.readfile(path), "\n"))
+  if not ok or type(decoded) ~= "table" or type(decoded.mode) ~= "string" then
+    return M.default_mode
+  end
+
+  local resolved = resolve_mode(decoded.mode)
+  if not themes[resolved] then
+    return M.default_mode
+  end
+
+  M.default_mode = resolved
+  return resolved
+end
+
+function M.save_default(mode)
+  local resolved = resolve_mode(mode)
+  if not themes[resolved] then
+    return false
+  end
+
+  M.default_mode = resolved
+  local path = default_mode_path()
+  vim.fn.mkdir(vim.fs.dirname(path), "p")
+
+  local payload = vim.json.encode({ mode = resolved })
+  local fd = vim.uv.fs_open(path, "w", 420)
+  if not fd then
+    return false
+  end
+
+  vim.uv.fs_write(fd, payload)
+  vim.uv.fs_close(fd)
+  return true
+end
+
+function M.set_default(mode)
+  M.save_default(mode)
+  M.apply(mode)
+end
+
+function M.apply_default()
+  M.apply(M.load_default())
+end
+
 function M.toggle_transparency()
   M.transparent = not M.transparent
   M.apply(M.mode)
 end
 
-function M.toggle()
-  if M.mode == "coral" then
-    M.apply("light")
-  else
-    M.apply("coral")
-  end
-end
-
-function M.toggle_yellow()
-  if M.mode == "yellow_light" then
-    M.apply("yellow_dark")
-  elseif M.mode == "yellow_dark" then
-    M.apply("yellow_light")
-  else
-    M.apply("yellow_dark")
-  end
-end
-
-function M.cycle()
-  local current = M.mode
-  local next_mode = cycle_order[1]
-
-  for index, mode in ipairs(cycle_order) do
-    if mode == current then
-      next_mode = cycle_order[(index % #cycle_order) + 1]
-      break
-    end
-  end
-
-  M.apply(next_mode)
-  local palette = themes[next_mode]
-  vim.notify("Theme: " .. (palette and palette.label or next_mode), vim.log.levels.INFO)
-end
-
 function M.list()
   return cycle_order
+end
+
+function M.setup()
+  vim.api.nvim_create_user_command("Theme", function()
+    M.pick()
+  end, { desc = "Select theme with Telescope" })
+end
+
+local function ensure_telescope()
+  local ok_lazy, lazy = pcall(require, "lazy")
+  if ok_lazy then
+    lazy.load({ plugins = { "telescope.nvim" } })
+  end
+
+  local ok, _ = pcall(require, "telescope.pickers")
+  if not ok then
+    vim.notify("Telescope is not available. Run :Telescope or vendor plugins first.", vim.log.levels.ERROR)
+    return false
+  end
+
+  return true
+end
+
+function M.pick()
+  if not ensure_telescope() then
+    return
+  end
+
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+  local previewers = require("telescope.previewers")
+
+  pickers
+    .new({}, {
+      prompt_title = "Select Theme",
+      layout_strategy = "vertical",
+      layout_config = {
+        height = 0.55,
+        prompt_position = "top",
+        preview_cutoff = 20,
+      },
+      finder = finders.new_table({
+        results = cycle_order,
+        entry_maker = function(mode)
+          local palette = themes[mode]
+          local marker = mode == M.mode and "● " or "  "
+          local variant = background_for(mode) == "light" and "bright" or "dark"
+          return {
+            value = mode,
+            display = string.format("%s%s (%s)", marker, palette.label, variant),
+            ordinal = palette.label .. " " .. mode .. " " .. variant,
+            palette = palette,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        title = "Theme preview",
+        define_preview = function(self, entry)
+          local palette = entry.palette
+          local lines = {
+            palette.label,
+            "",
+            "Mode:      " .. entry.value,
+            "Variant:   " .. (background_for(entry.value) == "light" and "bright" or "dark"),
+            "Background " .. palette.bg,
+            "Foreground " .. palette.fg,
+            "Primary    " .. palette.primary,
+            "Accent     " .. palette.primaryBright,
+          }
+          if entry.value == M.mode then
+            lines[#lines + 1] = ""
+            lines[#lines + 1] = "Currently active"
+          end
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+          vim.bo[self.state.bufnr].filetype = "markdown"
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr)
+        local saved_mode = M.mode
+        local confirmed = false
+
+        local function preview_selection()
+          local entry = action_state.get_selected_entry()
+          if entry then
+            M.apply(entry.value)
+          end
+        end
+
+        local function preview_on_move(action)
+          action:enhance({
+            post = function()
+              preview_selection()
+            end,
+          })
+        end
+
+        preview_on_move(actions.move_selection_next)
+        preview_on_move(actions.move_selection_previous)
+        preview_on_move(actions.move_selection_better)
+        preview_on_move(actions.move_selection_worse)
+
+        actions.select_default:replace(function()
+          local entry = action_state.get_selected_entry()
+          confirmed = true
+          actions.close(prompt_bufnr)
+          if entry then
+            M.set_default(entry.value)
+            vim.notify("Default theme: " .. entry.palette.label, vim.log.levels.INFO)
+          end
+        end)
+
+        actions.close:enhance({
+          post = function()
+            if not confirmed then
+              vim.schedule(function()
+                M.apply(saved_mode)
+              end)
+            end
+          end,
+        })
+
+        vim.schedule(preview_selection)
+        return true
+      end,
+    })
+    :find()
 end
 
 -- Default palette for startup consumers.

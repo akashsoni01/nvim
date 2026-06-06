@@ -174,6 +174,16 @@ return {
   {
     "nvim-telescope/telescope.nvim",
     cmd = "Telescope",
+    module = "telescope",
+    keys = {
+      {
+        "<leader>ul",
+        function()
+          require("config.theme").pick()
+        end,
+        desc = "Select theme",
+      },
+    },
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       defaults = {
@@ -181,6 +191,9 @@ return {
         sorting_strategy = "ascending",
       },
     },
+    config = function(_, opts)
+      require("telescope").setup(opts)
+    end,
   },
 
   {
@@ -411,7 +424,7 @@ return {
     priority = 1000,
     config = function()
       vim.cmd.colorscheme("tokyonight-moon")
-      require("config.theme").apply("coral")
+      require("config.theme").apply_default()
     end,
   },
 }
