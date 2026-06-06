@@ -40,10 +40,26 @@ local lsp = require("config.lsp")
 map(
   "n",
   "gd",
-  lsp.lsp_action(function()
-    vim.lsp.buf.definition({ border = "rounded" })
-  end, "Go to definition"),
-  vim.tbl_extend("force", opts, { desc = "Go to definition" })
+  lsp.lsp_action(lsp.jump_definition, "Jump to definition"),
+  vim.tbl_extend("force", opts, { desc = "Jump to definition" })
+)
+map(
+  "n",
+  "gpd",
+  lsp.lsp_action(lsp.show_definition, "Show definition"),
+  vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
+)
+map(
+  "n",
+  "<leader>ld",
+  lsp.lsp_action(lsp.jump_definition, "Jump to definition"),
+  vim.tbl_extend("force", opts, { desc = "Jump to definition" })
+)
+map(
+  "n",
+  "<leader>lD",
+  lsp.lsp_action(lsp.show_definition, "Show definition"),
+  vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
 )
 map(
   "n",

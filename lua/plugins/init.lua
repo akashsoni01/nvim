@@ -69,6 +69,7 @@ return {
 
       lsp.setup_handlers()
       lsp.setup_autocmds()
+      lsp.setup_commands()
 
       local rust_analyzer_cfg = {
         cmd = cmd,

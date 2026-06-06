@@ -239,4 +239,64 @@ function M.lsp_action(fn, label)
   end
 end
 
+function M.jump_definition()
+  vim.lsp.buf.definition()
+end
+
+function M.show_definition()
+  vim.lsp.buf.definition({
+    on_list = function(what)
+      if not what.items or #what.items == 0 then
+        vim.notify("No definition found", vim.log.levels.WARN)
+        return
+      end
+
+      if #what.items > 1 then
+        vim.fn.setloclist(0, {}, " ", what)
+        vim.cmd.lopen()
+        return
+      end
+
+      local item = what.items[1]
+      local target_bufnr = vim.fn.bufadd(item.filename)
+      vim.fn.bufload(target_bufnr)
+
+      local encoding = "utf-8"
+      if what.context and what.context.bufnr then
+        local clients = vim.lsp.get_clients({ bufnr = what.context.bufnr })
+        if clients[1] then
+          encoding = clients[1].offset_encoding
+        end
+      end
+
+      local location = {
+        uri = vim.uri_from_bufnr(target_bufnr),
+        range = {
+          start = { line = item.lnum - 1, character = item.col - 1 },
+          ["end"] = {
+            line = (item.end_lnum or item.lnum) - 1,
+            character = (item.end_col or item.col) - 1,
+          },
+        },
+      }
+
+      vim.lsp.util.show_document(location, encoding, {
+        focus = false,
+        border = "rounded",
+        reuse_win = true,
+      })
+    end,
+  })
+end
+
+function M.setup_commands()
+  vim.api.nvim_create_user_command("JumpDefinition", function()
+    M.lsp_action(M.jump_definition, "Jump to definition")()
+  end, { desc = "Jump to symbol definition" })
+
+  vim.api.nvim_create_user_command("ShowDefinition", function()
+    M.show_definition()
+  end, { desc = "Show symbol definition in a float" })
+end
+
 return M

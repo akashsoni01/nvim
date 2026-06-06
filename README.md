@@ -73,7 +73,8 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 - Move between splits with `Ctrl-w` then `h/j/k/l`
 
 ### 5) Navigate Rust code with LSP
-- `gd` - Go to definition
+- `gd` / `<leader>ld` - Jump to definition
+- `gpd` / `<leader>lD` - Show definition (peek)
 - `gr` - Find references
 - `K` - Hover documentation
 - `<leader>rn` - Rename symbol project-wide
@@ -135,7 +136,8 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Equalize Splits | `<leader>se` | Make split sizes equal | Fix uneven layout quickly |
 | Close Split | `<leader>sx` | Close current split | Safe cleanup |
 | Split Navigation | `<C-w> h/j/k/l` | Move between windows | Core multi-pane workflow |
-| Go to Definition | `gd` | Jump to symbol definition | Use constantly in Rust code |
+| Jump to Definition | `gd` / `<leader>ld` | Jump to symbol definition | Use constantly in Rust code |
+| Show Definition | `gpd` / `<leader>lD` | Peek definition in float | Stay in place, press `q` to close |
 | References | `gr` | Show symbol references | Great for safe refactors |
 | Hover Docs | `K` | Show docs for symbol | API info without leaving file |
 | Signature Help | `<C-k>` | Show function parameters | Helpful while typing calls |

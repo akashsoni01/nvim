@@ -22,7 +22,8 @@
 | Telescope | `<leader>fc` | Search text in current buffer |
 | Telescope | `<leader>fb` | List open buffers |
 | Telescope | `<leader>fh` | Help tags |
-| LSP | `gd` | Go to definition |
+| LSP | `gd` / `<leader>ld` | Jump to definition |
+| LSP | `gpd` / `<leader>lD` | Show definition (peek float, stay in place) |
 | LSP | `gr` | Find references |
 | LSP | `K` | Hover documentation |
 | LSP | `<C-k>` | Signature help |
@@ -125,7 +126,8 @@
 - `<leader>fh` - Help tags
 
 ### LSP
-- `gd` - Go to definition
+- `gd` / `<leader>ld` - Jump to definition
+- `gpd` / `<leader>lD` - Show definition (peek float)
 - `gr` - Find references
 - `K` - Hover documentation
 - `<C-k>` - Signature help (function params)
