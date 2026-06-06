@@ -1126,7 +1126,7 @@ function M.pick()
           local variant = background_for(mode) == "light" and "bright" or "dark"
           return {
             value = mode,
-            display = string.format("%s%s (%s)", marker, palette.label, variant),
+            display = string.format("%2d %s%s (%s)", item.index, marker, palette.label, variant),
             ordinal = string.format("%03d %s %s %s", item.index, palette.label, mode, variant),
             palette = palette,
             index = item.index,

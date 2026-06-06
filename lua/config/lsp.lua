@@ -2,17 +2,50 @@ local M = {}
 
 local rust_test = require("config.rust_test")
 
+local function cmd_works(cmd)
+  local result = vim.system(vim.list_extend(cmd, { "--version" }), { text = true }):wait()
+  return result.code == 0
+end
+
 local function rust_analyzer_cmd()
   local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
-  if vim.fn.executable(mason_bin) == 1 then
+  if vim.fn.executable(mason_bin) == 1 and cmd_works({ mason_bin }) then
     return { mason_bin }
   end
 
-  if vim.fn.executable("rust-analyzer") == 1 then
+  if vim.fn.executable("rust-analyzer") == 1 and cmd_works({ "rust-analyzer" }) then
     return { "rust-analyzer" }
   end
 
   return nil
+end
+
+function M.start_rust_analyzer(bufnr)
+  bufnr = bufnr or 0
+  local cmd = rust_analyzer_cmd()
+  if not cmd then
+    return false
+  end
+
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  local root = M.rust_analyzer_root_dir(path)
+  if not root then
+    return false
+  end
+
+  local security = require("config.security")
+  vim.lsp.start({
+    name = "rust_analyzer",
+    root_dir = root,
+    cmd = cmd,
+    capabilities = require("cmp_nvim_lsp").default_capabilities(),
+    on_attach = M.on_attach,
+    settings = {
+      ["rust-analyzer"] = M.rust_analyzer_settings(path, security.rust_can_execute_project_code()),
+    },
+  })
+
+  return true
 end
 
 function M.rust_analyzer_cmd()
@@ -175,11 +208,15 @@ function M.setup_autocmds()
           return
         end
 
+        if M.start_rust_analyzer(bufnr) then
+          return
+        end
+
         warned_missing_client[bufnr] = true
         local path = vim.api.nvim_buf_get_name(bufnr)
         local root = M.rust_analyzer_root_dir(path)
         local hint = root
-          and ("Expected root: " .. root .. ". Run :LspInfo and :checkhealth vim.lsp.")
+          and ("Expected root: " .. root .. ". Run :Mason or `rustup component add rust-analyzer`, then :LspInfo.")
           or "Open a file inside a Cargo project (or parent folder with child crates)."
         vim.notify("rust-analyzer did not attach. " .. hint, vim.log.levels.WARN)
       end, 2000)

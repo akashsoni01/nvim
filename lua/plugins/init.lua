@@ -74,9 +74,13 @@ return {
         cmd = cmd,
         capabilities = capabilities,
         on_attach = lsp.on_attach,
-        root_dir = function(bufnr)
+        root_markers = { "Cargo.toml", "rust-toolchain.toml", "rust-project.json" },
+        root_dir = function(bufnr, on_dir)
           local path = vim.api.nvim_buf_get_name(bufnr)
-          return lsp.rust_analyzer_root_dir(path)
+          local root = lsp.rust_analyzer_root_dir(path)
+          if root then
+            on_dir(root)
+          end
         end,
         settings = {
           ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),

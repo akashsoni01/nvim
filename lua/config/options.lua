@@ -62,7 +62,7 @@ local function configure_linux_clipboard()
 end
 
 opt.number = true
-opt.relativenumber = true
+opt.relativenumber = false
 opt.mouse = "a"
 opt.clipboard = "unnamedplus"
 opt.expandtab = true
