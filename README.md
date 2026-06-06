@@ -3,7 +3,7 @@
 This config is a `lazy.nvim`-based Neovim setup focused on Rust development in Termux.
 
 ## Highlights
-- Coral default + 13 color families — pick with `<leader>ul` (26 themes: dark + bright each)
+- Coral default + 14 color families — pick with `<leader>ul` (28 themes: all dark, then all bright)
 - Rust LSP (`rust-analyzer`) + completion + snippets
 - Treesitter syntax highlighting and rustfmt on save
 - DAP debugging support for LLDB adapters
@@ -185,7 +185,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Cargo Clippy | `<leader>tc` | Run clippy with all targets/features | Catch lint issues early |
 | Cargo Fmt | `<leader>tf` | Run `cargo fmt` on the project | Format whole crate before commit |
 | Cargo Run | `<leader>tr` | Run Rust app | Quick manual verification |
-| Select Theme | `<leader>ul` | Telescope picker for all 26 themes | Includes Dracula and Solarized dark/light |
+| Select Theme | `<leader>ul` | Telescope picker for all 28 themes | Dark block first, bright block second |
 | Toggle Transparency | `<leader>ut` | Enable/disable transparent bg | Useful per terminal theme |
 | Toggle Inlay Hints | `<leader>uh` | Show/hide Rust inlay hints | Reduce visual noise when needed |
 

@@ -880,38 +880,92 @@ local themes = {
     type = "#b58900",
     keyword = "#859900",
   },
+  xcode_dark = {
+    id = "xcode_dark",
+    label = "Xcode Dark",
+    primary = "#67b7a4",
+    primaryBright = "#78c2b3",
+    primarySoft = "#acccf1",
+    primaryDark = "#7f8c98",
+    fg = "#dfdfe0",
+    fgMuted = "#a8a8ae",
+    bg = "#1f1f24",
+    bgAlt = "#18181c",
+    bgFloat = "#292a30",
+    border = "#48484f",
+    cursorLine = "#292a30",
+    visual = "#3a3a40",
+    status = "#292a30",
+    statusNc = "#1f1f24",
+    tabSel = "#67b7a4",
+    tab = "#292a30",
+    pmenu = "#292a30",
+    pmenuSel = "#48484f",
+    lineNr = "#7f8c98",
+    comment = "#7f8c98",
+    string = "#fd8f6f",
+    number = "#d9c97c",
+    constant = "#ce93ff",
+    type = "#acccf1",
+    keyword = "#ff7ab2",
+  },
+  xcode_light = {
+    id = "xcode_light",
+    label = "Xcode Bright",
+    primary = "#146e4b",
+    primaryBright = "#1b8a5c",
+    primarySoft = "#536579",
+    primaryDark = "#0b4f79",
+    fg = "#262626",
+    fgMuted = "#536579",
+    bg = "#ffffff",
+    bgAlt = "#f5f5f7",
+    bgFloat = "#f5f5f7",
+    border = "#d1d1d6",
+    cursorLine = "#f0f0f5",
+    visual = "#e5e5ea",
+    status = "#f0f0f5",
+    statusNc = "#f5f5f7",
+    tabSel = "#0b4f79",
+    tab = "#f5f5f7",
+    pmenu = "#f5f5f7",
+    pmenuSel = "#e5e5ea",
+    lineNr = "#aeaeb2",
+    comment = "#536579",
+    string = "#272ad8",
+    number = "#272ad8",
+    constant = "#3900a0",
+    type = "#3900a0",
+    keyword = "#ad3da4",
+  },
 }
 
 M.themes = themes
 
-local cycle_order = {
-  "coral",
-  "light",
-  "yellow_dark",
-  "yellow_light",
-  "ocean_dark",
-  "ocean_light",
-  "violet_dark",
-  "violet_light",
-  "mint_dark",
-  "mint_light",
-  "rose_dark",
-  "rose_light",
-  "slate_dark",
-  "slate_light",
-  "amber_dark",
-  "amber_light",
-  "cherry_dark",
-  "cherry_light",
-  "arctic_dark",
-  "arctic_light",
-  "forest_dark",
-  "forest_light",
-  "dracula_dark",
-  "dracula_light",
-  "solarized_dark",
-  "solarized_light",
+local theme_families = {
+  { dark = "coral", light = "light" },
+  { dark = "yellow_dark", light = "yellow_light" },
+  { dark = "ocean_dark", light = "ocean_light" },
+  { dark = "violet_dark", light = "violet_light" },
+  { dark = "mint_dark", light = "mint_light" },
+  { dark = "rose_dark", light = "rose_light" },
+  { dark = "slate_dark", light = "slate_light" },
+  { dark = "amber_dark", light = "amber_light" },
+  { dark = "cherry_dark", light = "cherry_light" },
+  { dark = "arctic_dark", light = "arctic_light" },
+  { dark = "forest_dark", light = "forest_light" },
+  { dark = "dracula_dark", light = "dracula_light" },
+  { dark = "solarized_dark", light = "solarized_light" },
+  { dark = "xcode_dark", light = "xcode_light" },
 }
+
+local cycle_order = {}
+for _, family in ipairs(theme_families) do
+  cycle_order[#cycle_order + 1] = family.dark
+end
+for _, family in ipairs(theme_families) do
+  cycle_order[#cycle_order + 1] = family.light
+end
 
 local aliases = {
   mono = "light",
@@ -930,6 +984,7 @@ local aliases = {
   drequla = "dracula_dark",
   solarized = "solarized_dark",
   solorized = "solarized_dark",
+  xcode = "xcode_dark",
 }
 
 local function resolve_mode(mode)
@@ -1046,31 +1101,39 @@ function M.pick()
   local actions = require("telescope.actions")
   local action_state = require("telescope.actions.state")
   local previewers = require("telescope.previewers")
+  local sorters = require("telescope.sorters")
+
+  local picker_results = {}
+  for index, mode in ipairs(cycle_order) do
+    picker_results[#picker_results + 1] = { mode = mode, index = index }
+  end
 
   pickers
     .new({}, {
       prompt_title = "Select Theme",
       layout_strategy = "vertical",
       layout_config = {
-        height = 0.55,
+        height = 0.65,
         prompt_position = "top",
         preview_cutoff = 20,
       },
       finder = finders.new_table({
-        results = cycle_order,
-        entry_maker = function(mode)
+        results = picker_results,
+        entry_maker = function(item)
+          local mode = item.mode
           local palette = themes[mode]
           local marker = mode == M.mode and "● " or "  "
           local variant = background_for(mode) == "light" and "bright" or "dark"
           return {
             value = mode,
             display = string.format("%s%s (%s)", marker, palette.label, variant),
-            ordinal = palette.label .. " " .. mode .. " " .. variant,
+            ordinal = string.format("%03d %s %s %s", item.index, palette.label, mode, variant),
             palette = palette,
+            index = item.index,
           }
         end,
       }),
-      sorter = conf.generic_sorter({}),
+      sorter = sorters.get_generic_fuzzy_sorter({}),
       previewer = previewers.new_buffer_previewer({
         title = "Theme preview",
         define_preview = function(self, entry)
