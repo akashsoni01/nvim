@@ -27,6 +27,174 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
   - `bash ./scripts/remove-vendor.sh`
 - Check Git worktree support anytime with:
   - `bash ./scripts/check-worktree.sh`
+- Step-by-step vendoring guide: [`RUST_NEOVIM_CHEATSHEET.md`](./RUST_NEOVIM_CHEATSHEET.md) (section **Offline / Vendor Plugins**)
+
+## Private mirror: AWS, internal git, or other repos
+
+Use this when machines cannot reach GitHub but can reach **your** storage (S3, CodeCommit, GitLab, Gitea, Artifactory, etc.).
+
+### How local loading works (no GitHub at runtime)
+
+`lua/config/lazy.lua` checks disk first:
+
+| Path | Role |
+|---|---|
+| `vendor/lazy/lazy.nvim` | `lazy.nvim` manager |
+| `vendor/plugins/<name>/` | One git checkout per plugin |
+
+If those folders exist, Neovim loads plugins from **local directories** — not from GitHub. Pair with corporate mode so nothing is downloaded at startup:
+
+```bash
+NVIM_CORPORATE_MODE=1 nvim .
+```
+
+### Option A — Private git repo (recommended for teams)
+
+Best when you already host dotfiles or internal tooling in git.
+
+**On a connected build machine (once per release):**
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+git add vendor/ lazy-lock.json
+git commit -m "Vendor plugins at lazy-lock pins"
+git push origin main    # your private GitHub / GitLab / CodeCommit remote
+```
+
+**On each laptop / Termux / CI runner:**
+
+```bash
+git clone git@your-internal-host:team/nvim-config.git ~/.config/nvim
+# or: git pull in an existing clone
+NVIM_CORPORATE_MODE=1 nvim .
+:Lazy    # plugins should show local/vendor source, not Failed
+```
+
+Tips:
+- Commit the whole `vendor/` tree (or use **Git LFS** if your org requires it for large trees).
+- Tag releases (`nvim-vendor-2025-06-07`) so air-gapped hosts can checkout a reviewed snapshot.
+- Never run `vendor-plugins.sh --latest` on production machines; only on the build machine after review.
+
+### Option B — AWS S3 tarball (good for air-gapped / Termux bulk deploy)
+
+**1. Build the vendor bundle (connected machine):**
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+
+RELEASE="nvim-config-$(date +%Y%m%d)"
+tar -czf "/tmp/${RELEASE}.tar.gz" \
+  --exclude='.git' \
+  -C "$(dirname "$PWD")" "$(basename "$PWD")"
+```
+
+The archive should include at least: `vendor/`, `lazy-lock.json`, `lua/`, `init.lua`, `scripts/`.
+
+**2. Upload to S3:**
+
+```bash
+aws s3 cp "/tmp/${RELEASE}.tar.gz" "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz"
+# optional integrity file:
+shasum -a 256 "/tmp/${RELEASE}.tar.gz" | tee "/tmp/${RELEASE}.tar.gz.sha256"
+aws s3 cp "/tmp/${RELEASE}.tar.gz.sha256" "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz.sha256"
+```
+
+Use your org's KMS, bucket policy, and VPC endpoint rules as required.
+
+**3. Download and install (target machine):**
+
+```bash
+aws s3 cp "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz" /tmp/
+aws s3 cp "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz.sha256" /tmp/
+cd /tmp && shasum -a 256 -c "${RELEASE}.tar.gz.sha256"
+
+mkdir -p ~/.config
+tar -xzf "/tmp/${RELEASE}.tar.gz" -C ~/.config
+NVIM_CORPORATE_MODE=1 nvim .
+```
+
+On Termux, use the same flow after `pkg install aws-cli` (or copy the tarball in over `scp`/`adb push` if AWS CLI is not available).
+
+### Option C — Mirror each plugin repo (CodeCommit / GitLab / Gitea)
+
+Use when policy requires every upstream plugin to live in **your** git forge, not only a tarball.
+
+**1. Mirror upstream repos (build machine, one-time per plugin):**
+
+`scripts/vendor-plugins.sh` clones from `https://github.com/<owner>/<repo>.git`. Mirror each entry in its `repos=(...)` list to your internal remote with the **same repo name** (e.g. `nvim-cmp`).
+
+Example pattern (GitLab):
+
+```bash
+git clone --mirror "https://github.com/hrsh7th/nvim-cmp.git"
+cd nvim-cmp.git
+git remote add internal "git@gitlab.internal:tools/nvim-cmp.git"
+git push --mirror internal
+```
+
+Repeat for `folke/lazy.nvim` and every plugin in `scripts/vendor-plugins.sh`.
+
+**2. Point vendoring at your mirror**
+
+Edit `clone_or_update()` in `scripts/vendor-plugins.sh` and replace the GitHub URL with your base URL, for example:
+
+```bash
+# was: url="https://github.com/${repo}.git"
+url="https://git-codecommit.us-east-1.amazonaws.com/v1/repos/${repo##*/}"
+# or: url="https://gitlab.internal/tools/${repo##*/}.git"
+```
+
+Then vendor from the mirror:
+
+```bash
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+**3. Distribute** using Option A (git) or Option B (S3).
+
+### Option D — Object storage without git history (S3 / MinIO / Artifactory raw)
+
+If you only store **directories** (not git clones), sync the vendored tree:
+
+```bash
+# upload after vendoring
+aws s3 sync ~/.config/nvim/vendor/ "s3://YOUR-BUCKET/nvim/vendor/" --delete
+
+# download on target
+aws s3 sync "s3://YOUR-BUCKET/nvim/vendor/" ~/.config/nvim/vendor/
+```
+
+You still need `lazy-lock.json` and the rest of the config locally. Prefer Option B tarball unless you have an automated sync job.
+
+### Verify plugins load from local mirror
+
+```bash
+NVIM_CORPORATE_MODE=1 nvim .
+:Lazy
+```
+
+Healthy signs:
+- `lazy.nvim` and plugins show **loaded** or **not loaded** (lazy triggers) — not **Failed** / **not installed**
+- Plugin rows mention `vendor/plugins/...` as the source
+- `:checkhealth lazy` is clean
+
+If a plugin is missing:
+
+```bash
+ls ~/.config/nvim/vendor/plugins/<plugin-name>
+bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
+```
+
+### Release checklist (internal mirror)
+
+1. Update plugins on a connected machine (`NVIM_VIM_FORCE=1 nvim .` → `:Lazy update` if needed).
+2. `bash ./scripts/vendor-plugins.sh --locked`
+3. Test `NVIM_CORPORATE_MODE=1 nvim .` and `:Lazy`
+4. Publish (private git tag, S3 tarball, or per-repo mirror push)
+5. Document the version/tag for air-gapped hosts
+6. On targets: pull/sync only — do not re-vendor from GitHub
 
 ## Enterprise Defaults (`NVIM_VIM_FORCE`)
 - Plain `nvim .` starts in enterprise-safe mode. External read/write integrations stay off unless you opt in.
@@ -254,5 +422,12 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
 
-# Flags
-NVIM_VIM_ONLY=0 nvim .   # unmark and restore IDE indexing
+## Environment flags (quick reference)
+
+| Flag | Example | Effect |
+|---|---|---|
+| (default) | `nvim .` | Enterprise-safe; vim-only workspace mark + stash |
+| `NVIM_VIM_FORCE` | `NVIM_VIM_FORCE=1 nvim .` | Clipboard, external completions, proc macros |
+| `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
+| `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
+| `NVIM_TRUST_RUST_PROJECT` | with force + corporate | Allow rust proc macros on trusted repos |
