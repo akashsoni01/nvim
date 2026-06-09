@@ -86,7 +86,7 @@ return {
           end
         end,
         settings = {
-          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
+          ["rust-analyzer"] = lsp.rust_analyzer_settings(nil, rust_can_execute),
         },
       }
 
@@ -103,7 +103,7 @@ return {
         -- Fallback for older Neovim versions (< 0.11).
         local lspconfig = require("lspconfig")
         rust_analyzer_cfg.settings = {
-          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
+          ["rust-analyzer"] = lsp.rust_analyzer_settings(nil, rust_can_execute),
         }
         lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
       end

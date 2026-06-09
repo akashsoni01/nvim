@@ -75,33 +75,65 @@ function M.rust_analyzer_root_dir(path)
   return rust_test.project_root()
 end
 
-local function linked_projects_for(path)
-  if not path or path == "" then
+local function sibling_cargo_projects(parent)
+  local children = rust_test.child_cargo_roots(parent)
+  if #children <= 1 then
     return nil
   end
 
-  local dir = vim.fs.dirname(path)
-  while dir and dir ~= "/" do
-    local children = rust_test.child_cargo_roots(dir)
-    if #children > 1 then
-      local projects = {}
-      for _, child in ipairs(children) do
-        projects[#projects + 1] = child .. "/Cargo.toml"
-      end
-      return projects
-    end
+  local projects = {}
+  for _, child in ipairs(children) do
+    projects[#projects + 1] = child .. "/Cargo.toml"
+  end
 
-    if vim.uv.fs_stat(dir .. "/Cargo.toml") then
-      return nil
-    end
+  return projects
+end
 
-    dir = vim.fs.dirname(dir)
+local function linked_projects_for(path)
+  if not path or path == "" then
+    path = vim.api.nvim_buf_get_name(0)
+  end
+  if path == "" then
+    return sibling_cargo_projects(vim.fn.getcwd())
+  end
+
+  local root = M.rust_analyzer_root_dir(path)
+  if not root then
+    return nil
+  end
+
+  local parent = vim.fs.dirname(root)
+  if parent and parent ~= "/" then
+    local siblings = sibling_cargo_projects(parent)
+    if siblings then
+      return siblings
+    end
   end
 
   return nil
 end
 
+function M.apply_rust_analyzer_settings(client, bufnr)
+  if client.name ~= "rust_analyzer" then
+    return
+  end
+
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  local security = require("config.security")
+  local settings = {
+    ["rust-analyzer"] = M.rust_analyzer_settings(path, security.rust_can_execute_project_code()),
+  }
+
+  client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, settings)
+  if client.notify then
+    client.notify("workspace/didChangeConfiguration", { settings = settings })
+  end
+end
+
 function M.rust_analyzer_settings(path, rust_can_execute)
+  if not path or path == "" then
+    path = vim.api.nvim_buf_get_name(0)
+  end
   local settings = {
     cargo = { allFeatures = true },
     checkOnSave = rust_can_execute,
@@ -139,6 +171,10 @@ end
 
 function M.on_attach(client, bufnr)
   local navic = require("nvim-navic")
+
+  if client.name == "rust_analyzer" then
+    M.apply_rust_analyzer_settings(client, bufnr)
+  end
 
   if client.server_capabilities.documentSymbolProvider then
     navic.attach(client, bufnr)
@@ -240,7 +276,11 @@ function M.lsp_action(fn, label)
 end
 
 function M.jump_definition()
-  vim.lsp.buf.definition()
+  vim.lsp.buf.definition({
+    filter = function(client)
+      return client.name == "rust_analyzer"
+    end,
+  })
 end
 
 function M.show_definition()

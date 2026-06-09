@@ -521,6 +521,10 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - Project root:
   - Open a file **inside** a crate (`Cargo.toml` folder), or a parent folder with child crates (`1/`, `2/`)
   - If filetype is wrong, use `<leader>ftr` to set Rust
+- Two sibling workspaces in one parent folder (`1/`, `2/`):
+  - `gd` needs `linkedProjects`; this config sets them from the parent directory automatically
+  - After opening the second crate, run `:LspRestart` if cross-crate `gd` still fails
+- Proc macros / cross-crate defs also need: `NVIM_VIM_FORCE=1 nvim .`
 - Wait a few seconds after opening a file — `rust-analyzer` indexes before `gd` / `K` return docs
 
 ### Formatter not running
