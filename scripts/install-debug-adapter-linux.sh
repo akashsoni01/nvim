@@ -13,6 +13,7 @@ set -euo pipefail
 BIN_DIR="${HOME}/.config/nvim/bin"
 CODELLDB_DIR="${HOME}/.local/share/codelldb"
 CORPORATE_MODE="${NVIM_CORPORATE_MODE:-0}"
+FORCE_MODE="${NVIM_VIM_FORCE:-0}"
 
 have() {
   command -v "$1" >/dev/null 2>&1
@@ -85,6 +86,10 @@ if have lldb-dap; then
 fi
 
 echo "lldb-dap still missing. Falling back to codelldb binary install..."
+if [[ "$FORCE_MODE" != "1" && "$FORCE_MODE" != "true" ]]; then
+  echo "Set NVIM_VIM_FORCE=1 to allow downloading codelldb from the network."
+  exit 1
+fi
 need_cmd curl
 need_cmd unzip
 need_cmd file

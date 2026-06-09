@@ -11,6 +11,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 
 ## Docs
 - Full shortcut + workflow guide: [`RUST_NEOVIM_CHEATSHEET.md`](./RUST_NEOVIM_CHEATSHEET.md)
+- Script reference: [`scripts/README.md`](./scripts/README.md)
 
 ## Offline Mode (Vendor Plugins)
 - Run once while online:
@@ -27,14 +28,49 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 - Check Git worktree support anytime with:
   - `bash ./scripts/check-worktree.sh`
 
+## Enterprise Defaults (`NVIM_VIM_FORCE`)
+- Plain `nvim .` starts in enterprise-safe mode. External read/write integrations stay off unless you opt in.
+- Enable clipboard, filesystem completions, plugin downloads, and rust proc-macro execution:
+  - `NVIM_VIM_FORCE=1 nvim .`
+- Disabled without `NVIM_VIM_FORCE=1`:
+  - Linux clipboard (`wl-clipboard`, `xclip`, `xsel`) and `+` register keymaps (`<leader>yf`, `<leader>pf`, `<leader>p`, …)
+  - `cmp-path` and `crates.nvim` completion sources
+  - `lazy.nvim` missing-plugin downloads and luarocks
+  - `rust-analyzer` proc macros and check-on-save
+  - `scripts/install-debug-adapter-linux.sh` network download fallback for `codelldb`
+- Linux clipboard providers are never auto-installed. Install `wl-clipboard` or `xclip`/`xsel` yourself, then use `NVIM_VIM_FORCE=1`.
+
+## Neovim-Only Workspace (default)
+- `nvim .` automatically marks the workspace/crate root as Neovim-only and blocks Cursor, VS Code, JetBrains, and LLM indexing.
+- While Neovim is open, IDE marker files (`.vscode`, `.cursor`, ignore files) are stashed under `~/.config/nvim/.vim-only-stash/`.
+- When Neovim exits, markers are restored so other IDEs stay blocked.
+- Opt out for a project:
+  - `NVIM_VIM_ONLY=0 nvim .`
+- Inside Neovim:
+  - `:VimOnlyMark` — mark + stash now
+  - `:VimOnlyReset` — remove all markers and restore IDE indexing
+
 ## Corporate Mode
 - Start with:
   - `NVIM_CORPORATE_MODE=1 nvim .`
 - Corporate mode requires vendored `lazy.nvim` and plugins; it does not fall back to downloaded lazy data or install missing plugins.
-- Rust project code execution is reduced by disabling `rust-analyzer` proc macros and check-on-save unless explicitly trusted:
-  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Rust project code execution also requires force mode and an explicit trust flag:
+  - `NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
 - For Linux `codelldb` fallback downloads in corporate mode, pin and verify the binary:
-  - `CODELLDB_URL=... CODELLDB_SHA256=... NVIM_CORPORATE_MODE=1 ./scripts/install-debug-adapter-linux.sh`
+  - `NVIM_VIM_FORCE=1 CODELLDB_URL=... CODELLDB_SHA256=... NVIM_CORPORATE_MODE=1 ./scripts/install-debug-adapter-linux.sh`
+
+## Scripts
+| Script | Purpose |
+|---|---|
+| `scripts/nvim-workspace.sh` | Universal `nvim` wrapper; documents env vars |
+| `scripts/install-nvim-wrapper.sh` | Install shell `nvim()` function + wrapper binary |
+| `scripts/mark-vim-only-project.sh` | Write IDE/LLM blockers to stash and deploy |
+| `scripts/unmark-vim-only-project.sh` | Remove blockers and stash for a project |
+| `scripts/vim-only-stash.sh` | `stash` / `restore` / `deploy` IDE marker files |
+| `scripts/vendor-plugins.sh` | Vendor `lazy.nvim` and plugins for offline/corporate use |
+| `scripts/install-debug-adapter-linux.sh` | Install LLDB DAP adapter (network fallback needs `NVIM_VIM_FORCE=1`) |
+| `scripts/uninstall-deps.sh` | Remove config-managed debug adapters |
+| `scripts/check-worktree.sh` | Verify git worktree support |
 
 ## Cleanup / Uninstall Scripts
 - Remove local vendored plugin sources:
@@ -113,9 +149,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Undo | `u` | Undo last change | Press multiple times for history |
 | Redo | `<C-r>` | Redo undone change | Opposite of undo |
 | Copy Line | `yy` | Yank (copy) line | Use count like `3yy` |
-| Copy Full File | `<leader>yf` | Yank entire file to clipboard | Native alt: `ggyG` |
-| Paste Full File | `<leader>pf` | Replace buffer with clipboard | Pair with `<leader>yf` |
-| Cut Full File | `<leader>xf` | Cut entire file to clipboard | Clears buffer; use `u` to undo |
+| Copy Full File | `<leader>yf` | Yank entire file to clipboard | Requires `NVIM_VIM_FORCE=1`; native alt: `ggyG` |
+| Paste Full File | `<leader>pf` | Replace buffer with clipboard | Requires `NVIM_VIM_FORCE=1` |
+| Cut Full File | `<leader>xf` | Cut entire file to clipboard | Requires `NVIM_VIM_FORCE=1` |
 | Paste | `p` or `<leader>p` | Paste after cursor | `P` / `<leader>P` paste before cursor |
 | Delete Line | `dd` | Delete current line | Use count like `2dd` |
 | Change Word | `ciw` | Replace word under cursor | Very common refactor action |
@@ -217,3 +253,6 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
+
+# Flags
+NVIM_VIM_ONLY=0 nvim .   # unmark and restore IDE indexing

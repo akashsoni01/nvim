@@ -3,16 +3,6 @@
 ## Leader Key
 - `Leader` = `Space`
 
-## Corporate Mode
-- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
-- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
-- Rust proc macros and check-on-save are disabled unless the repo is trusted:
-  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
-- Vendor reviewed plugin commits from `lazy-lock.json`:
-  - `bash ./scripts/vendor-plugins.sh --locked`
-- Update to latest plugin commits only during review:
-  - `bash ./scripts/vendor-plugins.sh --latest`
-
 ## All Shortkeys Table
 
 | Area | Shortcut | Action |
@@ -110,11 +100,11 @@
 | Grep/Replace (`.rs` / `.toml` only) | `<leader>sR` | Find & **replace in project** (literal): all `*.rs` and `*.toml` under cwd (needs `rg`) |
 | Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
 | Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
-| Editing | `<leader>yf` | Yank full file to clipboard |
-| Editing | `<leader>pf` | Paste full file from clipboard |
-| Editing | `<leader>xf` | Cut full file to clipboard |
-| Editing | `<leader>p` | Paste from system clipboard after cursor |
-| Editing | `<leader>P` | Paste from system clipboard before cursor |
+| Editing | `<leader>yf` | Yank full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>pf` | Paste full file from clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>xf` | Cut full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>p` | Paste from system clipboard after cursor (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>P` | Paste from system clipboard before cursor (`NVIM_VIM_FORCE=1`) |
 
 ## Core Shortcuts
 
@@ -592,3 +582,39 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `./scripts/check-worktree.sh` - verify `git worktree` support
 - `./scripts/remove-vendor.sh` - remove local vendored plugin repos
 - `./scripts/uninstall-deps.sh` - remove config-managed debug adapter files
+
+
+## Enterprise Defaults (`NVIM_VIM_FORCE`)
+- Default: `nvim .` (enterprise-safe; no external read/write integrations)
+- Opt in to clipboard, path/crate completions, plugin downloads, proc macros:
+  - `NVIM_VIM_FORCE=1 nvim .`
+- Without force mode:
+  - No Linux clipboard (`wl-clipboard` / `xclip` / `xsel`) or `+` register maps
+  - No `cmp-path` or `crates.nvim` completion
+  - No `lazy.nvim` missing-plugin download or luarocks
+  - No `rust-analyzer` proc macros / check-on-save
+  - No `codelldb` network download in `install-debug-adapter-linux.sh`
+
+## Neovim-Only Workspace (default)
+- `nvim .` marks the workspace and stashes `.vscode` / `.cursor` / ignore files while Neovim runs
+- Restore IDE indexing for a project: `NVIM_VIM_ONLY=0 nvim .`
+- Commands: `:VimOnlyMark`, `:VimOnlyReset`
+
+## Corporate Mode
+- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
+- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
+- Rust proc macros and check-on-save need force mode and an explicit trust flag:
+  - `NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Vendor reviewed plugin commits from `lazy-lock.json`:
+  - `bash ./scripts/vendor-plugins.sh --locked`
+- Update to latest plugin commits only during review:
+  - `bash ./scripts/vendor-plugins.sh --latest`
+
+## Environment Variables
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `NVIM_VIM_FORCE` | off | Enable clipboard, external completions, downloads, proc macros |
+| `NVIM_VIM_ONLY` | mark on `nvim .` | `0` = unmark project; `1` = explicit mark |
+| `NVIM_CORPORATE_MODE` | off | Require vendored plugins; block lazy downloads |
+| `NVIM_TRUST_RUST_PROJECT` | off | Allow rust proc macros when corporate + force mode |
+

@@ -1,6 +1,11 @@
+local security = require("config.security")
 local opt = vim.opt
 
 local function configure_linux_clipboard()
+  if not security.allow_system_clipboard() then
+    return
+  end
+
   if vim.fn.has("linux") ~= 1 then
     return
   end
@@ -54,8 +59,8 @@ local function configure_linux_clipboard()
   end
 
   vim.schedule(function()
-    vim.notify(
-      "Clipboard provider missing on Linux. Install wl-clipboard (Wayland) or xclip/xsel (X11).",
+    security.notify_restricted(
+      "Linux clipboard (install wl-clipboard or xclip/xsel, then restart with NVIM_VIM_FORCE=1)",
       vim.log.levels.WARN
     )
   end)
@@ -64,7 +69,7 @@ end
 opt.number = true
 opt.relativenumber = false
 opt.mouse = "a"
-opt.clipboard = "unnamedplus"
+opt.clipboard = security.allow_system_clipboard() and "unnamedplus" or ""
 opt.expandtab = true
 opt.shiftwidth = 2
 opt.tabstop = 2
@@ -82,7 +87,6 @@ opt.sidescrolloff = 8
 opt.cursorline = true
 opt.wrap = false
 
--- GUI clients can use this; terminal fallback remains external.
 opt.guifont = "Averia_Libre:h13,JetBrainsMono Nerd Font:h13"
 
 configure_linux_clipboard()
