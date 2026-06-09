@@ -431,3 +431,5 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
 | `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
 | `NVIM_TRUST_RUST_PROJECT` | with force + corporate | Allow rust proc macros on trusted repos |
+
+NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 nvim .
