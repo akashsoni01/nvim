@@ -587,6 +587,160 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `./scripts/remove-vendor.sh` - remove local vendored plugin repos
 - `./scripts/uninstall-deps.sh` - remove config-managed debug adapter files
 
+---
+
+## Offline / Vendor Plugins — Step by Step
+
+Vendoring copies `lazy.nvim` and every plugin repo into this config so Neovim can start **offline** or in **corporate mode** without downloading from GitHub.
+
+| Path | Contents |
+| --- | --- |
+| `vendor/lazy/lazy.nvim` | Plugin manager |
+| `vendor/plugins/<name>/` | One git clone per plugin |
+| `lazy-lock.json` | Pinned commit per plugin (used by `--locked`) |
+
+This config prefers `vendor/` automatically when those folders exist (`lua/config/lazy.lua`).
+
+### Prerequisites (one-time, online machine)
+
+1. Install **git** and **python3** (required for locked vendoring).
+2. Clone or open this config:
+   - `cd ~/.config/nvim`
+3. Ensure you can reach GitHub (or use a mirror that can clone `github.com/*` repos).
+
+### Step 1 — First-time vendor (recommended: locked)
+
+Use **locked** mode in normal workflows. It checks out the exact commits in `lazy-lock.json` (reviewed, reproducible).
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh
+# same as:
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+What the script does:
+
+1. Clones/updates `folke/lazy.nvim` → `vendor/lazy/lazy.nvim`
+2. Clones/updates each plugin in `scripts/vendor-plugins.sh` → `vendor/plugins/<name>/`
+3. Pins each repo to the commit in `lazy-lock.json`
+4. Tries to install a debug adapter (`lldb-dap` / `codelldb`)
+5. Runs `./scripts/check-worktree.sh`
+
+Expected end of output:
+
+```text
+Vendoring complete.
+You can now run Neovim offline with local plugin sources.
+```
+
+### Step 2 — Verify vendoring worked
+
+```bash
+ls vendor/lazy/lazy.nvim
+ls vendor/plugins/nvim-cmp
+nvim .          # should start without lazy download errors
+:Lazy           # all plugins should show local/vendor source
+```
+
+Disconnect network (or use `NVIM_CORPORATE_MODE=1 nvim .`) and confirm Neovim still starts.
+
+### Step 3 — Add a **new** plugin to vendors
+
+Do this when you add a plugin to `lua/plugins/init.lua` and want it available offline.
+
+1. **Add the plugin spec** in `lua/plugins/init.lua` (example):
+   ```lua
+   { "author/new-plugin.nvim", opts = {} },
+   ```
+2. **Install once online** so `lazy-lock.json` gets a commit pin:
+   ```bash
+   NVIM_VIM_FORCE=1 nvim .
+   ```
+   In Neovim:
+   - `:Lazy sync` (or open Neovim and wait for lazy to install missing plugins)
+   - Confirm `:Lazy` shows the new plugin as installed
+3. **Confirm `lazy-lock.json`** has an entry for the plugin name (folder name, e.g. `"new-plugin.nvim"`).
+4. **Register the repo** in `scripts/vendor-plugins.sh` — add one line to the `repos=( ... )` array:
+   ```bash
+   "author/new-plugin.nvim"
+   ```
+   Use the GitHub path `owner/repo` (no `.git`). The script stores it as `vendor/plugins/new-plugin.nvim/`.
+5. **Vendor the new plugin** (locked):
+   ```bash
+   cd ~/.config/nvim
+   bash ./scripts/vendor-plugins.sh --locked
+   ```
+6. **Verify**:
+   ```bash
+   ls vendor/plugins/new-plugin.nvim
+   nvim .
+   :Lazy
+   ```
+
+### Step 4 — Refresh vendors after `lazy-lock.json` changes
+
+When `lazy-lock.json` changes (you merged an update, or ran `:Lazy update` online), re-vendor with locked pins:
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+Commit both `lazy-lock.json` and the updated `vendor/` trees (or re-run vendoring on each machine from the same lock file).
+
+### Step 5 — Upgrade plugins to latest (review window only)
+
+Use **`--latest`** only during an intentional plugin review — it pulls the newest default branch instead of `lazy-lock.json` commits.
+
+```bash
+cd ~/.config/nvim
+NVIM_VIM_FORCE=1 nvim .
+# in Neovim: :Lazy update
+bash ./scripts/vendor-plugins.sh --latest
+# review diffs, test, then commit updated lazy-lock.json + vendor trees
+```
+
+Do **not** use `--latest` for routine corporate/offline refreshes; use `--locked`.
+
+### Step 6 — Corporate / air-gapped usage
+
+After Step 1 (locked vendoring) on a connected machine:
+
+1. Copy the whole config (including `vendor/` and `lazy-lock.json`) to the air-gapped host.
+2. Start Neovim:
+   ```bash
+   NVIM_CORPORATE_MODE=1 nvim .
+   ```
+3. Corporate mode **requires** vendored `lazy.nvim` and plugins; it will not download missing plugins.
+4. For rust proc macros in corporate mode:
+   ```bash
+   NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .
+   ```
+
+### Step 7 — Remove vendored plugins
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/remove-vendor.sh
+# or non-interactive:
+bash ./scripts/remove-vendor.sh --yes
+```
+
+Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you vendor again.
+
+### Vendor troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| `Missing lock file: lazy-lock.json` | Run `NVIM_VIM_FORCE=1 nvim .` and `:Lazy sync` online first |
+| `python3 is required for locked vendoring` | Install python3 |
+| `Corporate mode: missing vendored plugin X` | Add repo to `vendor-plugins.sh`, run `--locked`, or disable plugin |
+| Plugin works online but not offline | Re-run `bash ./scripts/vendor-plugins.sh --locked` |
+| New plugin not in vendor dir | Add repo to `repos=(...)` in `vendor-plugins.sh`, then re-vendor |
+| Want to reset everything | `remove-vendor.sh --yes`, then `vendor-plugins.sh --locked` |
+
+---
 
 ## Enterprise Defaults (`NVIM_VIM_FORCE`)
 - Default: `nvim .` (enterprise-safe; no external read/write integrations)
