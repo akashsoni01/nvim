@@ -12,7 +12,7 @@
 | Telescope | `<leader>fc` | Search text in current buffer |
 | Telescope | `<leader>fb` | List open buffers |
 | Telescope | `<leader>fh` | Help tags |
-| LSP | `gd` / `<leader>ld` | Jump to definition |
+| LSP | `gd` / `<leader>ld` | Jump to definition (vertical-split safe) |
 | LSP | `gpd` / `<leader>lD` | Show definition (peek float, stay in place) |
 | LSP | `gr` | Find references |
 | LSP | `K` | Hover documentation |
@@ -55,6 +55,7 @@
 | Git | `<leader>gps` | Git push current branch |
 | Git | `<leader>gS` | Git stash including untracked files |
 | Git | `<leader>gL` | Git stash list |
+| Git | `<leader>ga` | Save all, `cargo fmt`, `git add .` |
 | Git | `<leader>gA` | Git stash apply latest |
 | Git | `<leader>ghn` | Next git hunk |
 | Git | `<leader>ghN` | Previous git hunk |
@@ -100,6 +101,7 @@
 | Grep/Replace (`.rs` / `.toml` only) | `<leader>sR` | Find & **replace in project** (literal): all `*.rs` and `*.toml` under cwd (needs `rg`) |
 | Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
 | Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
+| Editing | `/` (visual) | Toggle block comment `/* */` on selected lines |
 | Editing | `<leader>yf` | Yank full file to clipboard (`NVIM_VIM_FORCE=1`) |
 | Editing | `<leader>pf` | Paste full file from clipboard (`NVIM_VIM_FORCE=1`) |
 | Editing | `<leader>xf` | Cut full file to clipboard (`NVIM_VIM_FORCE=1`) |
@@ -116,7 +118,7 @@
 - `<leader>fh` - Help tags
 
 ### LSP
-- `gd` / `<leader>ld` - Jump to definition
+- `gd` / `<leader>ld` - Jump to definition (works in vertical splits; 8s timeout if rust-analyzer is still indexing)
 - `gpd` / `<leader>lD` - Show definition (peek float)
 - `gr` - Find references
 - `K` - Hover documentation
@@ -184,6 +186,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>gps` - Push current branch
 - `<leader>gS` - Stash tracked and untracked changes
 - `<leader>gL` - List stashes
+- `<leader>ga` - Save all buffers, run `cargo fmt`, then `git add .` (one-key pre-commit prep)
 - `<leader>gA` - Apply latest stash
 - `<leader>ghn` / `<leader>ghN` - Next/previous hunk
 - `<leader>ghp` - Preview current hunk
@@ -225,6 +228,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 | Push current branch | `<leader>gps` | `git push` |
 | Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
 | Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
+| Format and stage everything before commit | `<leader>ga` | `:wa` → `cargo fmt` → `git add .` |
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
 
@@ -259,6 +263,11 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>tf` - Run `cargo fmt`
 - `<leader>tb` - Run `cargo build`
 - `<leader>tr` - Run `cargo run`
+
+### Editing / Comments
+- Select lines in visual mode (`v`, `V`, or `<C-v>`), then press `/` to wrap with `/* */`
+- Press `/` again on the same block to remove the comment
+- Normal-mode `/` is unchanged (still starts search)
 
 ### UI Toggles
 - `<leader>ul` - Telescope theme picker
@@ -321,12 +330,14 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 2. Wait for `rust-analyzer` diagnostics/virtual text
 3. Use `<leader>ca` for quick fixes and imports
 4. Save file to auto-format (`rustfmt` on save)
+5. Before commit: `<leader>ga` (save all → `cargo fmt` → `git add .`)
 
 ### 2) Symbol Navigation
 1. Place cursor on symbol
-2. `gd` to jump to definition
+2. `gd` to jump to definition (safe in vertical splits)
 3. `gr` to inspect usages
 4. `K` for API docs without leaving buffer
+5. `gpd` / `<leader>lD` to peek definition without leaving your place
 
 ### 3) Test-Driven Cycle
 1. Put cursor on target test/function name
@@ -526,6 +537,9 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
   - After opening the second crate, run `:LspRestart` if cross-crate `gd` still fails
 - Proc macros / cross-crate defs also need: `NVIM_VIM_FORCE=1 nvim .`
 - Wait a few seconds after opening a file — `rust-analyzer` indexes before `gd` / `K` return docs
+- `gd` hanging in a vertical split:
+  - This config uses a single `rust-analyzer` request with an 8s timeout instead of Neovim's default multi-client handler
+  - If you see a timeout warning, wait for indexing or run `:LspRestart`
 
 ### Formatter not running
 - Check `rustfmt`:

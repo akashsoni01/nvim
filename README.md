@@ -267,7 +267,12 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 - `h` `j` `k` `l` - left/down/up/right
 - `w` / `b` - next/previous word
 - `gg` / `G` - top/bottom of file
-- `/text` then `n` / `N` - search and jump next/previous match
+- `/text` then `n` / `N` - search and jump next/previous match (normal mode only; visual `/` is block comment — see below)
+
+### 3b) Block comments (visual mode)
+- Select lines with `v`, `V`, or `<C-v>`
+- Press `/` to wrap the selection with `/* */`
+- Press `/` again on the same block to uncomment
 
 ### 4) Work with multiple files and splits
 - `<leader>sv` - Open vertical split
@@ -277,8 +282,8 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 - Move between splits with `Ctrl-w` then `h/j/k/l`
 
 ### 5) Navigate Rust code with LSP
-- `gd` / `<leader>ld` - Jump to definition
-- `gpd` / `<leader>lD` - Show definition (peek)
+- `gd` / `<leader>ld` - Jump to definition (works in vertical splits)
+- `gpd` / `<leader>lD` - Show definition (peek float)
 - `gr` - Find references
 - `K` - Hover documentation
 - `<leader>rn` - Rename symbol project-wide
@@ -289,6 +294,7 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 3. Jump to definition: `gd`
 4. Fix issues with code actions: `<leader>ca`
 5. Save to format (`rustfmt` runs on save)
+6. Before commit: `<leader>ga` (save all → `cargo fmt` → `git add .`)
 
 ## Big Table: Widely Used Commands
 
@@ -340,8 +346,9 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 | Equalize Splits | `<leader>se` | Make split sizes equal | Fix uneven layout quickly |
 | Close Split | `<leader>sx` | Close current split | Safe cleanup |
 | Split Navigation | `<C-w> h/j/k/l` | Move between windows | Core multi-pane workflow |
-| Jump to Definition | `gd` / `<leader>ld` | Jump to symbol definition | Use constantly in Rust code |
+| Jump to Definition | `gd` / `<leader>ld` | Jump to symbol definition | Safe in vertical splits; 8s timeout if indexing |
 | Show Definition | `gpd` / `<leader>lD` | Peek definition in float | Stay in place, press `q` to close |
+| Block Comment | `/` (visual) | Toggle `/* */` on selected lines | Use `V` for line-wise selection; normal `/` still searches |
 | References | `gr` | Show symbol references | Great for safe refactors |
 | Hover Docs | `K` | Show docs for symbol | API info without leaving file |
 | Signature Help | `<C-k>` | Show function parameters | Helpful while typing calls |
@@ -374,6 +381,7 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 | Git Push | `<leader>gps` or `:GitPush` | Run `git push` | Push current branch |
 | Git Stash | `<leader>gS` or `:GitStash` | Run `git stash push -u` | Save dirty work including untracked files |
 | Git Stash List | `<leader>gL` or `:GitStashList` | Run `git stash list` | Review saved stashes |
+| Git Stage Prep | `<leader>ga` | Save all → `cargo fmt` → `git add .` | One-key pre-commit workflow |
 | Git Stash Apply | `<leader>gA` | Run `git stash apply` | Reapply latest stash |
 | Git Hunk Preview | `<leader>ghp` | Preview current hunk | Inspect nearby changes inline |
 | Git Hunk Stage | `<leader>ghs` | Stage current hunk | Commit part of a file |
@@ -418,6 +426,7 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | Update your current branch | `<leader>gpl` | `git pull --ff-only` |
 | Push current branch | `<leader>gps` | `git push` |
 | Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
+| Format and stage everything before commit | `<leader>ga` | `:wa` → `cargo fmt` → `git add .` |
 | Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
