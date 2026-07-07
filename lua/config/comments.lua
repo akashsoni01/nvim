@@ -28,7 +28,7 @@ local function inline_block_comment(first, last)
 end
 
 local function uncomment_wrapped(bufnr, start_line, end_line)
-  vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {})
+  vim.api.nvim_buf_set_lines(bufnr, end_line + 1, end_line + 2, false, {})
   vim.api.nvim_buf_set_lines(bufnr, start_line - 2, start_line - 1, false, {})
 end
 
@@ -44,6 +44,16 @@ local function comment_wrapped(bufnr, start_line, end_line)
   local indent = line_indent(first)
   vim.api.nvim_buf_set_lines(bufnr, start_line - 1, start_line - 1, false, { indent .. "/*" })
   vim.api.nvim_buf_set_lines(bufnr, end_line + 1, end_line + 1, false, { indent .. "*/" })
+end
+
+local function finish(lnum, col)
+  col = col or 1
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
+  vim.schedule(function()
+    local max = vim.api.nvim_buf_line_count(0)
+    lnum = math.min(math.max(lnum, 1), max)
+    pcall(vim.api.nvim_win_set_cursor, 0, { lnum, col - 1 })
+  end)
 end
 
 function M.toggle_block()
@@ -64,22 +74,18 @@ function M.toggle_block()
 
   if wrapped_block_comment(bufnr, start_line, end_line) then
     uncomment_wrapped(bufnr, start_line, end_line)
-    vim.fn.setpos(".", { start_line - 1, 1, 0, 0 })
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
+    finish(start_line - 1)
     return
   end
 
   if inline_block_comment(first, last) then
     uncomment_inline(bufnr, start_line, end_line)
-    vim.fn.setpos(".", { start_line, 1, 0, 0 })
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
+    finish(start_line)
     return
   end
 
   comment_wrapped(bufnr, start_line, end_line)
-  vim.fn.setpos(".", { start_line + 1, 1, 0, 0 })
-
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
+  finish(start_line + 1)
 end
 
 return M
