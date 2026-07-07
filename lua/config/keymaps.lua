@@ -36,6 +36,29 @@ vim.api.nvim_create_user_command("FC", function()
   require("telescope.builtin").current_buffer_fuzzy_find()
 end, { desc = "Telescope search current buffer" })
 
+local function go_to_line()
+  vim.ui.input({
+    prompt = "Go to line: ",
+    default = tostring(vim.fn.line(".")),
+  }, function(line)
+    if not line or line == "" then
+      return
+    end
+
+    local num = tonumber(line)
+    if not num or num < 1 then
+      vim.notify("Invalid line number: " .. line, vim.log.levels.WARN)
+      return
+    end
+
+    num = math.min(num, vim.api.nvim_buf_line_count(0))
+    vim.api.nvim_win_set_cursor(0, { num, 0 })
+    vim.cmd("normal! zz")
+  end)
+end
+
+vim.api.nvim_create_user_command("GoToLine", go_to_line, { desc = "Go to line number" })
+
 local lsp = require("config.lsp")
 
 map(
@@ -62,6 +85,7 @@ map(
   lsp.lsp_action(lsp.show_definition, "Show definition"),
   vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
 )
+map("n", "<leader>ln", go_to_line, vim.tbl_extend("force", opts, { desc = "Go to line number" }))
 map(
   "n",
   "gr",
@@ -529,29 +553,12 @@ map("n", "<leader>sx", "<cmd>close<cr>", vim.tbl_extend("force", opts, { desc = 
 local comments = require("config.comments")
 map({ "v", "V", "\22" }, "/", comments.toggle_block, vim.tbl_extend("force", opts, { desc = "Toggle block comment /* */" }))
 
+local clipboard = require("config.clipboard")
 local visual_modes = { "v", "V", "\22" }
 
-local function visual_clip_keys(op)
-  if security.allow_system_clipboard() then
-    return '"+' .. op
-  end
-  return op
-end
-
-local function visual_clip(action, keys, desc, exit_visual)
-  map(visual_modes, action, function()
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false)
-    if exit_visual then
-      vim.schedule(function()
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
-      end)
-    end
-  end, vim.tbl_extend("force", opts, { desc = desc }))
-end
-
-visual_clip("c", visual_clip_keys("y"), "Copy selection", true)
-visual_clip("x", visual_clip_keys("d"), "Cut selection", false)
-visual_clip("p", visual_clip_keys("p"), "Paste over selection", false)
+map(visual_modes, "c", clipboard.copy_visual, vim.tbl_extend("force", opts, { desc = "Copy selection" }))
+map(visual_modes, "x", clipboard.cut_visual, vim.tbl_extend("force", opts, { desc = "Cut selection" }))
+map(visual_modes, "p", clipboard.paste_visual, vim.tbl_extend("force", opts, { desc = "Paste over selection" }))
 
 map("n", "<leader>qa", "<cmd>wqa<cr>", vim.tbl_extend("force", opts, { desc = "Save all and quit" }))
 map("n", "<leader>qQ", "<cmd>qa!<cr>", vim.tbl_extend("force", opts, { desc = "Quit all without saving" }))

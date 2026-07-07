@@ -17,26 +17,46 @@ local function get_visual_lines()
   return start_line, end_line
 end
 
-local function wrapped_block_comment(bufnr, start_line, end_line)
+local function wrapped_block_comment(bufnr, start_line, end_line, first, last)
+  if trim(first) == "/*" and trim(last) == "*/" then
+    return true
+  end
+
   local before = start_line > 1 and vim.api.nvim_buf_get_lines(bufnr, start_line - 2, start_line - 1, false)[1]
   local after = vim.api.nvim_buf_get_lines(bufnr, end_line, end_line + 1, false)[1]
   return before and trim(before) == "/*" and after and trim(after) == "*/"
 end
 
 local function inline_block_comment(first, last)
-  return first:find("/%*", 1, true) and last:find("%*/", 1, true)
+  local open = first:find("/%*", 1, true)
+  local close = last:find("%*/", 1, true)
+  return open ~= nil and close ~= nil and not (trim(first) == "/*" and trim(last) == "*/")
 end
 
-local function uncomment_wrapped(bufnr, start_line, end_line)
-  vim.api.nvim_buf_set_lines(bufnr, end_line + 1, end_line + 2, false, {})
+local function uncomment_wrapped(bufnr, start_line, end_line, first, last)
+  if trim(first) == "/*" and trim(last) == "*/" then
+    if start_line == end_line then
+      vim.api.nvim_buf_set_lines(bufnr, start_line - 1, end_line, false, {})
+      return start_line - 1
+    end
+
+    vim.api.nvim_buf_set_lines(bufnr, end_line - 1, end_line, false, {})
+    vim.api.nvim_buf_set_lines(bufnr, start_line - 1, start_line, false, {})
+    return start_line
+  end
+
+  -- Closing `*/` sits on the line after the selection (1-indexed end_line + 1).
+  vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {})
   vim.api.nvim_buf_set_lines(bufnr, start_line - 2, start_line - 1, false, {})
+  return start_line - 1
 end
 
 local function uncomment_inline(bufnr, start_line, end_line)
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
-  lines[1] = lines[1]:gsub("/%*", "", 1)
-  lines[#lines] = lines[#lines]:gsub("%*/", "", 1)
+  lines[1] = lines[1]:gsub("^(%s*)/%*", "%1")
+  lines[#lines] = lines[#lines]:gsub("%*/%s*$", "")
   vim.api.nvim_buf_set_lines(bufnr, start_line - 1, end_line, false, lines)
+  return start_line
 end
 
 local function comment_wrapped(bufnr, start_line, end_line)
@@ -72,15 +92,15 @@ function M.toggle_block()
   local first = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, start_line, false)[1]
   local last = vim.api.nvim_buf_get_lines(bufnr, end_line - 1, end_line, false)[1]
 
-  if wrapped_block_comment(bufnr, start_line, end_line) then
-    uncomment_wrapped(bufnr, start_line, end_line)
-    finish(start_line - 1)
+  if wrapped_block_comment(bufnr, start_line, end_line, first, last) then
+    local cursor_line = uncomment_wrapped(bufnr, start_line, end_line, first, last)
+    finish(cursor_line)
     return
   end
 
   if inline_block_comment(first, last) then
-    uncomment_inline(bufnr, start_line, end_line)
-    finish(start_line)
+    local cursor_line = uncomment_inline(bufnr, start_line, end_line)
+    finish(cursor_line)
     return
   end
 
