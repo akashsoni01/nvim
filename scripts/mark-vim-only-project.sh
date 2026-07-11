@@ -11,16 +11,34 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
+mark_one_project() {
+  local project="$1"
+  local parent_super="${2:-false}"
+  local stash_dir
+
+  stash_dir="$(stash_dir_for "$project")"
+  mkdir -p "$stash_dir"
+  write_vim_only_files "$stash_dir" "$parent_super" "$project"
+  printf '%s\n' "$project" >"$stash_dir/project.path"
+  registry_add "$project"
+  bash "$SCRIPT_DIR/vim-only-stash.sh" deploy "$project"
+  echo "Marked as Neovim-only: $project"
+  echo "  - stash: $stash_dir"
+}
+
 project="$(cd "$1" && pwd)"
-stash_dir="$(stash_dir_for "$project")"
 
-mkdir -p "$stash_dir"
-write_vim_only_files "$stash_dir"
-printf '%s\n' "$project" >"$stash_dir/project.path"
-registry_add "$project"
+mark_one_project "$project" false
 
-bash "$SCRIPT_DIR/vim-only-stash.sh" deploy "$project"
+if vim_only_mode_is_enhanced; then
+  parent="$(parent_super_dir "$project")"
+  if [[ -n "$parent" && "$parent" != "$project" ]]; then
+    mark_one_project "$parent" true
+    echo "  - parent super marked: $parent"
+  fi
+fi
 
-echo "Marked as Neovim-only: $project"
-echo "  - stash: $stash_dir"
 echo "IDE/LLM marker files stay in the project only while Neovim is closed."
+if keep_ignores_on_disk; then
+  echo "Ignore files (.cursorignore, .claudeignore, .ignore) stay on disk while Neovim runs (NVIM_VIM_ONLY=2)."
+fi

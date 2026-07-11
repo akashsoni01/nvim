@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `NVIM_VIM_FORCE` | off | Clipboard, external completions, plugin downloads, proc macros, `codelldb` download |
 | `NVIM_VIM_ONLY` | mark on `nvim .` | `mark-vim-only-project.sh`, `vim_only.lua` |
+| `NVIM_VIM_ONLY=2` | enhanced Claude/parent block | parent `super/` mark, `.claudeignore`, on-disk ignores |
 | `NVIM_CORPORATE_MODE` | off | `vendor-plugins.sh`, `lazy.lua`, debug adapter install |
 | `NVIM_TRUST_RUST_PROJECT` | off | `rust-analyzer` proc macros (with force + corporate) |
 
@@ -24,6 +25,11 @@ Flow:
 1. `nvim .` marks the workspace (unless `NVIM_VIM_ONLY=0`)
 2. On enter, IDE marker dirs are moved to `.vim-only-stash/<hash>/`
 3. On exit, markers are restored to the project
+
+`NVIM_VIM_ONLY=2` additionally:
+- Marks the parent `super/` folder when marking a child Cargo crate
+- Writes ignore/agent/config files for Cursor, Claude, Copilot, Windsurf, Zed, Continue, Codeium, Cody, Tabnine, Aider, Gemini, JetBrains, PearAI, IDX, Codex, and other common AI tools
+- Leaves ignore and agent instruction files on disk while Neovim runs
 
 ## Offline / corporate
 

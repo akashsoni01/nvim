@@ -93,32 +93,43 @@ function M.restore_ide_markers(dir)
   return run_script("vim-only-stash.sh", "restore", root)
 end
 
+---@return nil|0|1|2 nil means default mark (mode 1)
 local function parse_vim_only_env()
   local value = vim.fn.getenv("NVIM_VIM_ONLY")
   if value == vim.NIL or value == "" then
     return nil
   end
 
-  local lower = value:lower()
-  if value == "1" or lower == "true" or lower == "yes" then
-    return true
-  end
-  if value == "0" or lower == "false" or lower == "no" then
-    return false
+  if value == "2" then
+    return 2
   end
 
-  return nil
+  local lower = value:lower()
+  if value == "1" or lower == "true" or lower == "yes" then
+    return 1
+  end
+  if value == "0" or lower == "false" or lower == "no" then
+    return 0
+  end
+
+  return 1
+end
+
+function M.vim_only_mode()
+  return parse_vim_only_env() or 1
 end
 
 function M.handle_startup_env()
-  local vim_only = parse_vim_only_env()
-  if vim_only == false then
+  local mode = parse_vim_only_env()
+  if mode == 0 then
     M.unmark()
     return
   end
 
-  if not M.is_vim_only_project() then
-    M.mark()
+  if mode == nil or mode >= 1 then
+    if not M.is_vim_only_project() then
+      M.mark()
+    end
   end
 end
 

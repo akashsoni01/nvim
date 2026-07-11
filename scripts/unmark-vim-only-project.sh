@@ -19,72 +19,70 @@ skipped=0
 
 remove_owned_file() {
   local file="$1"
-  local check_fn="$2"
 
-  if "$check_fn" "$file"; then
-    rm -f "$file"
+  if is_vim_only_owned_file "$project" "$file"; then
+    rm -f "$project/$file"
     removed=$((removed + 1))
-    echo "Removed: $file"
+    echo "Removed: $project/$file"
     return 0
   fi
 
-  if [[ -f "$file" ]]; then
+  if [[ -f "$project/$file" ]]; then
     skipped=$((skipped + 1))
-    echo "Skipped (custom file): $file"
+    echo "Skipped (custom file): $project/$file"
   fi
 }
 
-remove_owned_tree() {
-  local path="$1"
+remove_owned_dir_if_marker() {
+  local dir="$1"
   local marker_file="$2"
-  local check_fn="$3"
 
-  if "$check_fn" "$marker_file"; then
-    rm -rf "$path"
-    removed=$((removed + 1))
-    echo "Removed: $path"
+  if [[ ! -e "$project/$dir" ]]; then
     return 0
   fi
 
-  if [[ -e "$path" ]]; then
+  if [[ -n "$marker_file" ]] && ! is_vim_only_owned_file "$project" "$marker_file"; then
     skipped=$((skipped + 1))
-    echo "Skipped (custom path): $path"
+    echo "Skipped (custom path): $project/$dir"
+    return 0
   fi
+
+  rm -rf "$project/$dir"
+  removed=$((removed + 1))
+  echo "Removed: $project/$dir"
 }
 
 bash "$SCRIPT_DIR/vim-only-stash.sh" force-restore "$project" >/dev/null 2>&1 || true
 
-remove_owned_tree "$project/.vscode" "$project/.vscode/settings.json" has_marker
+local_rel=""
+while IFS= read -r local_rel; do
+  [[ -n "$local_rel" ]] || continue
+  remove_owned_file "$local_rel"
+done < <(vim_only_file_markers)
 
-for ignore_file in \
-  "$project/.cursorignore" \
-  "$project/.cursorindexingignore" \
-  "$project/.ignore"; do
-  remove_owned_file "$ignore_file" has_marker
-done
-
-remove_owned_file "$project/.cursor/rules/neovim-only.mdc" has_marker
-if [[ -d "$project/.cursor/rules" ]] && [[ -z "$(ls -A "$project/.cursor/rules")" ]]; then
-  rmdir "$project/.cursor/rules"
-fi
-if [[ -d "$project/.cursor" ]] && [[ -z "$(ls -A "$project/.cursor")" ]]; then
-  rmdir "$project/.cursor"
-fi
-
-remove_owned_file "$project/.neovim-only" is_vim_only_neovim_marker
-
-if is_vim_only_jetbrains_misc "$project/.idea/misc.xml"; then
-  rm -f "$project/.idea/misc.xml"
-  removed=$((removed + 1))
-  echo "Removed: $project/.idea/misc.xml"
-  if [[ -d "$project/.idea" ]] && [[ -z "$(ls -A "$project/.idea")" ]]; then
-    rmdir "$project/.idea"
-    echo "Removed empty directory: $project/.idea"
-  fi
-elif [[ -f "$project/.idea/misc.xml" ]]; then
-  skipped=$((skipped + 1))
-  echo "Skipped (custom JetBrains config): $project/.idea/misc.xml"
-fi
+while IFS= read -r local_rel; do
+  [[ -n "$local_rel" ]] || continue
+  case "$local_rel" in
+    .vscode) remove_owned_dir_if_marker ".vscode" ".vscode/settings.json" ;;
+    .cursor) remove_owned_dir_if_marker ".cursor" ".cursor/rules/neovim-only.mdc" ;;
+    .idea) remove_owned_dir_if_marker ".idea" ".idea/misc.xml" ;;
+    .zed | .continue | .windsurf | .fleet | .github | .claude | .idx | .pearai | .codex)
+      marker=""
+      case "$local_rel" in
+        .zed) marker=".zed/settings.json" ;;
+        .continue) marker=".continue/config.json" ;;
+        .windsurf) marker=".windsurf/settings.json" ;;
+        .fleet) marker=".fleet/settings.json" ;;
+        .github) marker=".github/copilot-instructions.md" ;;
+        .claude) marker=".claude/settings.json" ;;
+        .idx) marker=".idx/settings.json" ;;
+        .pearai) marker=".pearai/settings.json" ;;
+        .codex) marker=".codex/settings.json" ;;
+      esac
+      remove_owned_dir_if_marker "$local_rel" "$marker"
+      ;;
+  esac
+done < <(vim_only_dir_markers)
 
 if [[ -d "$stash_dir" ]]; then
   rm -rf "$stash_dir"

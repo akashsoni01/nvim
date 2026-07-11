@@ -56,6 +56,10 @@ should_move_from_project() {
   local project="$1"
   local rel="$2"
 
+  if keep_ignores_on_disk && ! stash_only_dirs_in_enhanced_mode "$rel"; then
+    return 1
+  fi
+
   case "$rel" in
     .vscode)
       has_marker "$project/.vscode/settings.json"
@@ -63,8 +67,36 @@ should_move_from_project() {
     .cursor)
       has_marker "$project/.cursor/rules/neovim-only.mdc"
       ;;
-    .cursorignore | .cursorindexingignore | .ignore)
-      has_marker "$project/$rel"
+    .zed)
+      is_vim_only_editor_json "$project/.zed/settings.json"
+      ;;
+    .continue)
+      is_vim_only_editor_json "$project/.continue/config.json"
+      ;;
+    .windsurf)
+      is_vim_only_editor_json "$project/.windsurf/settings.json"
+      ;;
+    .fleet)
+      is_vim_only_editor_json "$project/.fleet/settings.json"
+      ;;
+    .github)
+      is_vim_only_agent_file "$project/.github/copilot-instructions.md" \
+        || is_vim_only_agent_file "$project/.github/instructions/neovim-only.instructions.md"
+      ;;
+    .claude)
+      is_vim_only_editor_json "$project/.claude/settings.json"
+      ;;
+    .idx)
+      is_vim_only_editor_json "$project/.idx/settings.json"
+      ;;
+    .pearai)
+      is_vim_only_editor_json "$project/.pearai/settings.json"
+      ;;
+    .codex)
+      is_vim_only_editor_json "$project/.codex/settings.json"
+      ;;
+    .idea)
+      is_vim_only_jetbrains_misc "$project/.idea/misc.xml"
       ;;
     .neovim-only)
       is_vim_only_neovim_marker "$project/$rel"
@@ -73,20 +105,9 @@ should_move_from_project() {
       is_vim_only_jetbrains_misc "$project/$rel"
       ;;
     *)
-      return 1
+      is_vim_only_owned_file "$project" "$rel"
       ;;
   esac
-}
-
-managed_items() {
-  printf '%s\n' \
-    '.vscode' \
-    '.cursor' \
-    '.cursorignore' \
-    '.cursorindexingignore' \
-    '.ignore' \
-    '.neovim-only' \
-    '.idea/misc.xml'
 }
 
 move_item_to_stash() {
@@ -106,9 +127,23 @@ move_item_to_stash() {
   mv "$src" "$dest"
 
   if [[ "$rel" == ".idea/misc.xml" ]]; then
+    remove_empty_parents "$project/.idea" "$project"
+  elif [[ "$rel" == ".claude/settings.json" ]]; then
+    remove_empty_parents "$project/.claude" "$project"
+  elif [[ "$rel" == ".zed/settings.json" ]]; then
+    remove_empty_parents "$project/.zed" "$project"
+  elif [[ "$rel" == ".continue/config.json" ]]; then
+    remove_empty_parents "$project/.continue" "$project"
+  elif [[ "$rel" == ".windsurf/settings.json" ]]; then
+    remove_empty_parents "$project/.windsurf" "$project"
+  elif [[ "$rel" == ".fleet/settings.json" ]]; then
+    remove_empty_parents "$project/.fleet" "$project"
+  elif [[ "$rel" == ".idx/settings.json" || "$rel" == ".pearai/settings.json" || "$rel" == ".codex/settings.json" || "$rel" == ".sourcery.yaml" ]]; then
     remove_empty_parents "$(dirname "$src")" "$project"
-  elif [[ "$rel" == ".vscode" || "$rel" == ".cursor" ]]; then
-    remove_empty_parents "$src" "$project"
+  elif [[ "$rel" == ".github/copilot-instructions.md" || "$rel" == ".github/instructions/neovim-only.instructions.md" ]]; then
+    remove_empty_parents "$project/.github" "$project"
+  elif [[ "$rel" == ".vscode" || "$rel" == ".cursor" || "$rel" == ".zed" || "$rel" == ".continue" || "$rel" == ".windsurf" || "$rel" == ".fleet" || "$rel" == ".github" || "$rel" == ".claude" || "$rel" == ".idx" || "$rel" == ".pearai" || "$rel" == ".codex" || "$rel" == ".idea" ]]; then
+    remove_empty_parents "$project/$rel" "$project"
   fi
 }
 
@@ -128,7 +163,15 @@ move_item_to_project() {
 
   if [[ "$rel" == ".idea/misc.xml" ]]; then
     remove_empty_parents "$(dirname "$src")" "$stash_dir"
-  elif [[ "$rel" == ".vscode" || "$rel" == ".cursor" ]]; then
+  elif [[ "$rel" == ".claude/settings.json" ]]; then
+    remove_empty_parents "$(dirname "$src")" "$stash_dir"
+  elif [[ "$rel" == ".zed/settings.json" || "$rel" == ".continue/config.json" || "$rel" == ".windsurf/settings.json" || "$rel" == ".fleet/settings.json" ]]; then
+    remove_empty_parents "$(dirname "$src")" "$stash_dir"
+  elif [[ "$rel" == ".idx/settings.json" || "$rel" == ".pearai/settings.json" || "$rel" == ".codex/settings.json" || "$rel" == ".sourcery.yaml" ]]; then
+    remove_empty_parents "$(dirname "$src")" "$stash_dir"
+  elif [[ "$rel" == ".github/copilot-instructions.md" || "$rel" == ".github/instructions/neovim-only.instructions.md" ]]; then
+    remove_empty_parents "$(dirname "$src")" "$stash_dir"
+  elif [[ "$rel" == ".vscode" || "$rel" == ".cursor" || "$rel" == ".zed" || "$rel" == ".continue" || "$rel" == ".windsurf" || "$rel" == ".fleet" || "$rel" == ".github" || "$rel" == ".claude" || "$rel" == ".idx" || "$rel" == ".pearai" || "$rel" == ".codex" || "$rel" == ".idea" ]]; then
     remove_empty_parents "$src" "$stash_dir"
   fi
 }

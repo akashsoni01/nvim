@@ -214,6 +214,9 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 - When Neovim exits, markers are restored so other IDEs stay blocked.
 - Opt out for a project:
   - `NVIM_VIM_ONLY=0 nvim .`
+- Enhanced Claude/parent blocking:
+  - `NVIM_VIM_ONLY=2 nvim .` — also marks parent `super/`, adds Claude ignores, and keeps all LLM/editor blocker files on disk while Neovim runs
+- Blocked tools include Cursor, VS Code, Claude Code, Copilot, Windsurf, Zed, Continue, Codeium, Cody, Tabnine, Aider, Roo/Cline, Gemini, JetBrains Junie/Fleet, PearAI, IDX, Codex, OpenHands, Devin, and other common AI editors
 - Inside Neovim:
   - `:VimOnlyMark` — mark + stash now
   - `:VimOnlyReset` — remove all markers and restore IDE indexing
@@ -438,6 +441,7 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | (default) | `nvim .` | Enterprise-safe; vim-only workspace mark + stash |
 | `NVIM_VIM_FORCE` | `NVIM_VIM_FORCE=1 nvim .` | Clipboard, external completions, proc macros |
 | `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
+| `NVIM_VIM_ONLY=2` | `NVIM_VIM_ONLY=2 nvim .` | Mark parent `super/`, Claude ignores, on-disk ignore files |
 | `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
 | `NVIM_TRUST_RUST_PROJECT` | with force + corporate | Allow rust proc macros on trusted repos |
 
