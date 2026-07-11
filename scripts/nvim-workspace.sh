@@ -15,11 +15,12 @@ Usage: nvim [nvim args...]
 Examples:
   nvim .
   NVIM_VIM_ONLY=0 nvim ~/code/my-workspace
+  NVIM_VIM_FORCE=1 nvim .
 
 Environment:
-  (default)       Mark workspace as Neovim-only and stash IDE/LLM files on enter
-  NVIM_VIM_ONLY=0 Restore IDE indexing for the workspace/crate root
-  NVIM_VIM_ONLY=1 Same as default (explicit mark)
+  (default)         Mark workspace Neovim-only; stash IDE/LLM files on enter
+  NVIM_VIM_ONLY=0   Restore IDE indexing for the workspace/crate root
+  NVIM_VIM_FORCE=1  Enable system clipboard, external completions, and network installs
 
 Install once on any machine:
   ${CONFIG_DIR}/scripts/install-nvim-wrapper.sh

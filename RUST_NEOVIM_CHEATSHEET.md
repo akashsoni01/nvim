@@ -3,16 +3,6 @@
 ## Leader Key
 - `Leader` = `Space`
 
-## Corporate Mode
-- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
-- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
-- Rust proc macros and check-on-save are disabled unless the repo is trusted:
-  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
-- Vendor reviewed plugin commits from `lazy-lock.json`:
-  - `bash ./scripts/vendor-plugins.sh --locked`
-- Update to latest plugin commits only during review:
-  - `bash ./scripts/vendor-plugins.sh --latest`
-
 ## All Shortkeys Table
 
 | Area | Shortcut | Action |
@@ -22,7 +12,7 @@
 | Telescope | `<leader>fc` | Search text in current buffer |
 | Telescope | `<leader>fb` | List open buffers |
 | Telescope | `<leader>fh` | Help tags |
-| LSP | `gd` / `<leader>ld` | Jump to definition |
+| LSP | `gd` / `<leader>ld` | Jump to definition (vertical-split safe) |
 | LSP | `gpd` / `<leader>lD` | Show definition (peek float, stay in place) |
 | LSP | `gr` | Find references |
 | LSP | `K` | Hover documentation |
@@ -65,6 +55,7 @@
 | Git | `<leader>gps` | Git push current branch |
 | Git | `<leader>gS` | Git stash including untracked files |
 | Git | `<leader>gL` | Git stash list |
+| Git | `<leader>ga` | Save all, `cargo fmt`, `git add .` |
 | Git | `<leader>gA` | Git stash apply latest |
 | Git | `<leader>ghn` | Next git hunk |
 | Git | `<leader>ghN` | Previous git hunk |
@@ -110,11 +101,12 @@
 | Grep/Replace (`.rs` / `.toml` only) | `<leader>sR` | Find & **replace in project** (literal): all `*.rs` and `*.toml` under cwd (needs `rg`) |
 | Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
 | Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
-| Editing | `<leader>yf` | Yank full file to clipboard |
-| Editing | `<leader>pf` | Paste full file from clipboard |
-| Editing | `<leader>xf` | Cut full file to clipboard |
-| Editing | `<leader>p` | Paste from system clipboard after cursor |
-| Editing | `<leader>P` | Paste from system clipboard before cursor |
+| Editing | `/` (visual) | Toggle block comment `/* */` on selected lines |
+| Editing | `<leader>yf` | Yank full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>pf` | Paste full file from clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>xf` | Cut full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>p` | Paste from system clipboard after cursor (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>P` | Paste from system clipboard before cursor (`NVIM_VIM_FORCE=1`) |
 
 ## Core Shortcuts
 
@@ -126,7 +118,7 @@
 - `<leader>fh` - Help tags
 
 ### LSP
-- `gd` / `<leader>ld` - Jump to definition
+- `gd` / `<leader>ld` - Jump to definition (works in vertical splits; 8s timeout if rust-analyzer is still indexing)
 - `gpd` / `<leader>lD` - Show definition (peek float)
 - `gr` - Find references
 - `K` - Hover documentation
@@ -194,6 +186,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>gps` - Push current branch
 - `<leader>gS` - Stash tracked and untracked changes
 - `<leader>gL` - List stashes
+- `<leader>ga` - Save all buffers, run `cargo fmt`, then `git add .` (one-key pre-commit prep)
 - `<leader>gA` - Apply latest stash
 - `<leader>ghn` / `<leader>ghN` - Next/previous hunk
 - `<leader>ghp` - Preview current hunk
@@ -235,6 +228,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 | Push current branch | `<leader>gps` | `git push` |
 | Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
 | Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
+| Format and stage everything before commit | `<leader>ga` | `:wa` → `cargo fmt` → `git add .` |
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
 
@@ -269,6 +263,11 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `<leader>tf` - Run `cargo fmt`
 - `<leader>tb` - Run `cargo build`
 - `<leader>tr` - Run `cargo run`
+
+### Editing / Comments
+- Select lines in visual mode (`v`, `V`, or `<C-v>`), then press `/` to wrap with `/* */`
+- Press `/` again on the same block to remove the comment
+- Normal-mode `/` is unchanged (still starts search)
 
 ### UI Toggles
 - `<leader>ul` - Telescope theme picker
@@ -331,12 +330,14 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 2. Wait for `rust-analyzer` diagnostics/virtual text
 3. Use `<leader>ca` for quick fixes and imports
 4. Save file to auto-format (`rustfmt` on save)
+5. Before commit: `<leader>ga` (save all → `cargo fmt` → `git add .`)
 
 ### 2) Symbol Navigation
 1. Place cursor on symbol
-2. `gd` to jump to definition
+2. `gd` to jump to definition (safe in vertical splits)
 3. `gr` to inspect usages
 4. `K` for API docs without leaving buffer
+5. `gpd` / `<leader>lD` to peek definition without leaving your place
 
 ### 3) Test-Driven Cycle
 1. Put cursor on target test/function name
@@ -531,7 +532,14 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - Project root:
   - Open a file **inside** a crate (`Cargo.toml` folder), or a parent folder with child crates (`1/`, `2/`)
   - If filetype is wrong, use `<leader>ftr` to set Rust
+- Two sibling workspaces in one parent folder (`1/`, `2/`):
+  - `gd` needs `linkedProjects`; this config sets them from the parent directory automatically
+  - After opening the second crate, run `:LspRestart` if cross-crate `gd` still fails
+- Proc macros / cross-crate defs also need: `NVIM_VIM_FORCE=1 nvim .`
 - Wait a few seconds after opening a file — `rust-analyzer` indexes before `gd` / `K` return docs
+- `gd` hanging in a vertical split:
+  - This config uses a single `rust-analyzer` request with an 8s timeout instead of Neovim's default multi-client handler
+  - If you see a timeout warning, wait for indexing or run `:LspRestart`
 
 ### Formatter not running
 - Check `rustfmt`:
@@ -592,3 +600,193 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - `./scripts/check-worktree.sh` - verify `git worktree` support
 - `./scripts/remove-vendor.sh` - remove local vendored plugin repos
 - `./scripts/uninstall-deps.sh` - remove config-managed debug adapter files
+
+---
+
+## Offline / Vendor Plugins — Step by Step
+
+Vendoring copies `lazy.nvim` and every plugin repo into this config so Neovim can start **offline** or in **corporate mode** without downloading from GitHub.
+
+| Path | Contents |
+| --- | --- |
+| `vendor/lazy/lazy.nvim` | Plugin manager |
+| `vendor/plugins/<name>/` | One git clone per plugin |
+| `lazy-lock.json` | Pinned commit per plugin (used by `--locked`) |
+
+This config prefers `vendor/` automatically when those folders exist (`lua/config/lazy.lua`).
+
+### Prerequisites (one-time, online machine)
+
+1. Install **git** and **python3** (required for locked vendoring).
+2. Clone or open this config:
+   - `cd ~/.config/nvim`
+3. Ensure you can reach GitHub (or use a mirror that can clone `github.com/*` repos).
+
+### Step 1 — First-time vendor (recommended: locked)
+
+Use **locked** mode in normal workflows. It checks out the exact commits in `lazy-lock.json` (reviewed, reproducible).
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh
+# same as:
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+What the script does:
+
+1. Clones/updates `folke/lazy.nvim` → `vendor/lazy/lazy.nvim`
+2. Clones/updates each plugin in `scripts/vendor-plugins.sh` → `vendor/plugins/<name>/`
+3. Pins each repo to the commit in `lazy-lock.json`
+4. Tries to install a debug adapter (`lldb-dap` / `codelldb`)
+5. Runs `./scripts/check-worktree.sh`
+
+Expected end of output:
+
+```text
+Vendoring complete.
+You can now run Neovim offline with local plugin sources.
+```
+
+### Step 2 — Verify vendoring worked
+
+```bash
+ls vendor/lazy/lazy.nvim
+ls vendor/plugins/nvim-cmp
+nvim .          # should start without lazy download errors
+:Lazy           # all plugins should show local/vendor source
+```
+
+Disconnect network (or use `NVIM_CORPORATE_MODE=1 nvim .`) and confirm Neovim still starts.
+
+### Step 3 — Add a **new** plugin to vendors
+
+Do this when you add a plugin to `lua/plugins/init.lua` and want it available offline.
+
+1. **Add the plugin spec** in `lua/plugins/init.lua` (example):
+   ```lua
+   { "author/new-plugin.nvim", opts = {} },
+   ```
+2. **Install once online** so `lazy-lock.json` gets a commit pin:
+   ```bash
+   NVIM_VIM_FORCE=1 nvim .
+   ```
+   In Neovim:
+   - `:Lazy sync` (or open Neovim and wait for lazy to install missing plugins)
+   - Confirm `:Lazy` shows the new plugin as installed
+3. **Confirm `lazy-lock.json`** has an entry for the plugin name (folder name, e.g. `"new-plugin.nvim"`).
+4. **Register the repo** in `scripts/vendor-plugins.sh` — add one line to the `repos=( ... )` array:
+   ```bash
+   "author/new-plugin.nvim"
+   ```
+   Use the GitHub path `owner/repo` (no `.git`). The script stores it as `vendor/plugins/new-plugin.nvim/`.
+5. **Vendor the new plugin** (locked):
+   ```bash
+   cd ~/.config/nvim
+   bash ./scripts/vendor-plugins.sh --locked
+   ```
+6. **Verify**:
+   ```bash
+   ls vendor/plugins/new-plugin.nvim
+   nvim .
+   :Lazy
+   ```
+
+### Step 4 — Refresh vendors after `lazy-lock.json` changes
+
+When `lazy-lock.json` changes (you merged an update, or ran `:Lazy update` online), re-vendor with locked pins:
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+Commit both `lazy-lock.json` and the updated `vendor/` trees (or re-run vendoring on each machine from the same lock file).
+
+### Step 5 — Upgrade plugins to latest (review window only)
+
+Use **`--latest`** only during an intentional plugin review — it pulls the newest default branch instead of `lazy-lock.json` commits.
+
+```bash
+cd ~/.config/nvim
+NVIM_VIM_FORCE=1 nvim .
+# in Neovim: :Lazy update
+bash ./scripts/vendor-plugins.sh --latest
+# review diffs, test, then commit updated lazy-lock.json + vendor trees
+```
+
+Do **not** use `--latest` for routine corporate/offline refreshes; use `--locked`.
+
+### Step 6 — Corporate / air-gapped usage
+
+After Step 1 (locked vendoring) on a connected machine:
+
+1. Copy the whole config (including `vendor/` and `lazy-lock.json`) to the air-gapped host.
+2. Start Neovim:
+   ```bash
+   NVIM_CORPORATE_MODE=1 nvim .
+   ```
+3. Corporate mode **requires** vendored `lazy.nvim` and plugins; it will not download missing plugins.
+4. For rust proc macros in corporate mode:
+   ```bash
+   NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .
+   ```
+
+### Step 7 — Remove vendored plugins
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/remove-vendor.sh
+# or non-interactive:
+bash ./scripts/remove-vendor.sh --yes
+```
+
+Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you vendor again.
+
+### Vendor troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| `Missing lock file: lazy-lock.json` | Run `NVIM_VIM_FORCE=1 nvim .` and `:Lazy sync` online first |
+| `python3 is required for locked vendoring` | Install python3 |
+| `Corporate mode: missing vendored plugin X` | Add repo to `vendor-plugins.sh`, run `--locked`, or disable plugin |
+| Plugin works online but not offline | Re-run `bash ./scripts/vendor-plugins.sh --locked` |
+| New plugin not in vendor dir | Add repo to `repos=(...)` in `vendor-plugins.sh`, then re-vendor |
+| Want to reset everything | `remove-vendor.sh --yes`, then `vendor-plugins.sh --locked` |
+
+---
+
+## Enterprise Defaults (`NVIM_VIM_FORCE`)
+- Default: `nvim .` (enterprise-safe; no external read/write integrations)
+- Opt in to clipboard, path/crate completions, plugin downloads, proc macros:
+  - `NVIM_VIM_FORCE=1 nvim .`
+- Without force mode:
+  - No Linux clipboard (`wl-clipboard` / `xclip` / `xsel`) or `+` register maps
+  - No `cmp-path` or `crates.nvim` completion
+  - No `lazy.nvim` missing-plugin download or luarocks
+  - No `rust-analyzer` proc macros / check-on-save
+  - No `codelldb` network download in `install-debug-adapter-linux.sh`
+
+## Neovim-Only Workspace (default)
+- `nvim .` marks the workspace and stashes `.vscode` / `.cursor` / ignore files while Neovim runs
+- Restore IDE indexing for a project: `NVIM_VIM_ONLY=0 nvim .`
+- Commands: `:VimOnlyMark`, `:VimOnlyReset`
+
+## Corporate Mode
+- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
+- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
+- Rust proc macros and check-on-save need force mode and an explicit trust flag:
+  - `NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Vendor reviewed plugin commits from `lazy-lock.json`:
+  - `bash ./scripts/vendor-plugins.sh --locked`
+- Update to latest plugin commits only during review:
+  - `bash ./scripts/vendor-plugins.sh --latest`
+
+## Environment Variables
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `NVIM_VIM_FORCE` | off | Enable clipboard, external completions, downloads, proc macros |
+| `NVIM_VIM_ONLY` | mark on `nvim .` | `0` = unmark project; `1` = explicit mark |
+| `NVIM_CORPORATE_MODE` | off | Require vendored plugins; block lazy downloads |
+| `NVIM_TRUST_RUST_PROJECT` | off | Allow rust proc macros when corporate + force mode |
+

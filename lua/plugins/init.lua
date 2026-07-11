@@ -1,3 +1,5 @@
+local security = require("config.security")
+
 return {
   {
     "nvim-tree/nvim-web-devicons",
@@ -84,11 +86,13 @@ return {
           end
         end,
         settings = {
-          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
+          ["rust-analyzer"] = lsp.rust_analyzer_settings(nil, rust_can_execute),
         },
       }
 
-      if security.corporate_mode and not security.trusted_rust_project then
+      if not security.force_mode then
+        security.notify_restricted("rust-analyzer proc macros and check-on-save")
+      elseif security.corporate_mode and not security.trusted_rust_project then
         security.notify_corporate("rust-analyzer proc macros and check-on-save are disabled until NVIM_TRUST_RUST_PROJECT=1")
       end
 
@@ -99,7 +103,7 @@ return {
         -- Fallback for older Neovim versions (< 0.11).
         local lspconfig = require("lspconfig")
         rust_analyzer_cfg.settings = {
-          ["rust-analyzer"] = lsp.rust_analyzer_settings("", rust_can_execute),
+          ["rust-analyzer"] = lsp.rust_analyzer_settings(nil, rust_can_execute),
         }
         lspconfig.rust_analyzer.setup(rust_analyzer_cfg)
       end
@@ -116,15 +120,28 @@ return {
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
-    dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
-      "L3MON4D3/LuaSnip",
-    },
+    dependencies = vim.tbl_extend(
+      "keep",
+      {
+        "hrsh7th/cmp-nvim-lsp",
+        "hrsh7th/cmp-buffer",
+        "L3MON4D3/LuaSnip",
+      },
+      security.allow_external_completion() and { "hrsh7th/cmp-path" } or {}
+    ),
     config = function()
+      local security = require("config.security")
       local cmp = require("cmp")
       local luasnip = require("luasnip")
+
+      local sources = {
+        { name = "nvim_lsp" },
+        { name = "buffer" },
+      }
+      if security.allow_external_completion() then
+        table.insert(sources, { name = "crates" })
+        table.insert(sources, { name = "path" })
+      end
 
       cmp.setup({
         snippet = {
@@ -154,26 +171,25 @@ return {
             end
           end, { "i", "s" }),
         }),
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-          { name = "crates" },
-          { name = "buffer" },
-          { name = "path" },
-        }),
+        sources = cmp.config.sources(sources),
       })
     end,
   },
 
   {
     "saecki/crates.nvim",
+    enabled = security.allow_external_completion(),
     event = { "BufRead Cargo.toml" },
     dependencies = { "hrsh7th/nvim-cmp" },
-    opts = {
-      popup = { border = "rounded" },
-      completion = {
-        cmp = { enabled = true },
-      },
-    },
+    opts = function()
+      local security = require("config.security")
+      return {
+        popup = { border = "rounded" },
+        completion = {
+          cmp = { enabled = security.allow_external_completion() },
+        },
+      }
+    end,
   },
 
   {

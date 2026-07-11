@@ -78,8 +78,8 @@ end
 require("lazy").setup(plugin_specs, {
   change_detection = { notify = false },
   checker = { enabled = false },
-  install = { colorscheme = { "habamax" }, missing = not security.corporate_mode },
-  rocks = { enabled = not security.corporate_mode },
+  install = { colorscheme = { "habamax" }, missing = security.allow_plugin_downloads() },
+  rocks = { enabled = security.allow_plugin_downloads() },
   ui = {
     border = "rounded",
     backdrop = 100,

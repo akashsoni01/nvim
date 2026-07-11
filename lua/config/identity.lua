@@ -11,7 +11,7 @@ local function cp(...)
   return table.concat(out)
 end
 
-M.S_B = cp(67, 111, 100, 101) .. cp(102, 111, 110, 115, 105)
+M.S_B = cp(67, 70, 80, 76)
 M.S_A = cp(65, 107, 97, 115, 104) .. cp(32) .. cp(83, 111, 110, 105)
 
 ---@param year integer|string

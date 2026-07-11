@@ -1,6 +1,9 @@
 local M = {}
 
+local ms = vim.lsp.protocol.Methods
 local rust_test = require("config.rust_test")
+
+local DEFINITION_TIMEOUT_MS = 8000
 
 local function cmd_works(cmd)
   local result = vim.system(vim.list_extend(cmd, { "--version" }), { text = true }):wait()
@@ -75,33 +78,65 @@ function M.rust_analyzer_root_dir(path)
   return rust_test.project_root()
 end
 
-local function linked_projects_for(path)
-  if not path or path == "" then
+local function sibling_cargo_projects(parent)
+  local children = rust_test.child_cargo_roots(parent)
+  if #children <= 1 then
     return nil
   end
 
-  local dir = vim.fs.dirname(path)
-  while dir and dir ~= "/" do
-    local children = rust_test.child_cargo_roots(dir)
-    if #children > 1 then
-      local projects = {}
-      for _, child in ipairs(children) do
-        projects[#projects + 1] = child .. "/Cargo.toml"
-      end
-      return projects
-    end
+  local projects = {}
+  for _, child in ipairs(children) do
+    projects[#projects + 1] = child .. "/Cargo.toml"
+  end
 
-    if vim.uv.fs_stat(dir .. "/Cargo.toml") then
-      return nil
-    end
+  return projects
+end
 
-    dir = vim.fs.dirname(dir)
+local function linked_projects_for(path)
+  if not path or path == "" then
+    path = vim.api.nvim_buf_get_name(0)
+  end
+  if path == "" then
+    return sibling_cargo_projects(vim.fn.getcwd())
+  end
+
+  local root = M.rust_analyzer_root_dir(path)
+  if not root then
+    return nil
+  end
+
+  local parent = vim.fs.dirname(root)
+  if parent and parent ~= "/" then
+    local siblings = sibling_cargo_projects(parent)
+    if siblings then
+      return siblings
+    end
   end
 
   return nil
 end
 
+function M.apply_rust_analyzer_settings(client, bufnr)
+  if client.name ~= "rust_analyzer" then
+    return
+  end
+
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  local security = require("config.security")
+  local settings = {
+    ["rust-analyzer"] = M.rust_analyzer_settings(path, security.rust_can_execute_project_code()),
+  }
+
+  client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, settings)
+  if client.notify then
+    client.notify("workspace/didChangeConfiguration", { settings = settings })
+  end
+end
+
 function M.rust_analyzer_settings(path, rust_can_execute)
+  if not path or path == "" then
+    path = vim.api.nvim_buf_get_name(0)
+  end
   local settings = {
     cargo = { allFeatures = true },
     checkOnSave = rust_can_execute,
@@ -139,6 +174,10 @@ end
 
 function M.on_attach(client, bufnr)
   local navic = require("nvim-navic")
+
+  if client.name == "rust_analyzer" then
+    M.apply_rust_analyzer_settings(client, bufnr)
+  end
 
   if client.server_capabilities.documentSymbolProvider then
     navic.attach(client, bufnr)
@@ -190,7 +229,7 @@ function M.setup_autocmds()
         return
       end
 
-      if #vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" }) > 0 then
+      if M.rust_analyzer_client(bufnr) then
         warned_missing_client[bufnr] = nil
         return
       end
@@ -204,11 +243,7 @@ function M.setup_autocmds()
           return
         end
 
-        if #vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" }) > 0 then
-          return
-        end
-
-        if M.start_rust_analyzer(bufnr) then
+        if M.rust_analyzer_client(bufnr) then
           return
         end
 
@@ -219,7 +254,7 @@ function M.setup_autocmds()
           and ("Expected root: " .. root .. ". Run :Mason or `rustup component add rust-analyzer`, then :LspInfo.")
           or "Open a file inside a Cargo project (or parent folder with child crates)."
         vim.notify("rust-analyzer did not attach. " .. hint, vim.log.levels.WARN)
-      end, 2000)
+      end, 3000)
     end,
   })
 end
@@ -239,54 +274,176 @@ function M.lsp_action(fn, label)
   end
 end
 
+function M.rust_analyzer_client(bufnr)
+  bufnr = bufnr or 0
+  local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" })
+  return clients[1]
+end
+
+function M.wait_for_rust_analyzer(bufnr, timeout_ms)
+  bufnr = bufnr or 0
+  timeout_ms = timeout_ms or 3000
+  local client = M.rust_analyzer_client(bufnr)
+  if client then
+    return client
+  end
+
+  vim.wait(timeout_ms, function()
+    return M.rust_analyzer_client(bufnr) ~= nil
+  end, 50)
+
+  return M.rust_analyzer_client(bufnr)
+end
+
+local function jumpable_window(winid)
+  if not winid or winid == 0 then
+    return false
+  end
+
+  if vim.api.nvim_win_get_config(winid).relative ~= "" then
+    return false
+  end
+
+  local bt = vim.bo[vim.api.nvim_win_get_buf(winid)].buftype
+  return bt == ""
+end
+
+local function jump_to_location_item(item, opts)
+  opts = opts or {}
+  local bufnr = item.bufnr or vim.fn.bufadd(item.filename)
+  vim.bo[bufnr].buflisted = true
+
+  local win = vim.api.nvim_get_current_win()
+  if opts.reuse_win then
+    for _, candidate in ipairs(vim.fn.win_findbuf(bufnr)) do
+      if candidate ~= win and jumpable_window(candidate) then
+        win = candidate
+        vim.api.nvim_set_current_win(win)
+        break
+      end
+    end
+  end
+
+  vim.cmd("normal! m'")
+  vim.api.nvim_win_set_buf(win, bufnr)
+  vim.api.nvim_win_set_cursor(win, { item.lnum, item.col - 1 })
+  vim._with({ win = win }, function()
+    vim.cmd("normal! zv")
+  end)
+end
+
+local function request_definition(client, bufnr, on_result)
+  local win = vim.api.nvim_get_current_win()
+  local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+  local finished = false
+
+  local timer = vim.defer_fn(function()
+    if finished then
+      return
+    end
+    finished = true
+    vim.notify(
+      "Definition request timed out. rust-analyzer may still be indexing — try again or run :LspRestart.",
+      vim.log.levels.WARN
+    )
+  end, DEFINITION_TIMEOUT_MS)
+
+  client:request(ms.textDocument_definition, params, function(err, result)
+    if finished then
+      return
+    end
+    finished = true
+    pcall(vim.fn.timer_stop, timer)
+
+    if err then
+      vim.notify(err.message or "Definition request failed", vim.log.levels.ERROR)
+      return
+    end
+
+    on_result(result, client.offset_encoding)
+  end, bufnr)
+end
+
 function M.jump_definition()
-  vim.lsp.buf.definition()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local client = M.wait_for_rust_analyzer(bufnr)
+  if not client then
+    vim.notify(
+      "rust-analyzer not attached. Open a Rust file in a Cargo project and run :LspInfo.",
+      vim.log.levels.WARN
+    )
+    return
+  end
+
+  request_definition(client, bufnr, function(result, encoding)
+    if not result or (vim.islist(result) and #result == 0) then
+      vim.notify("No definition found", vim.log.levels.WARN)
+      return
+    end
+
+    local locations = vim.islist(result) and result or { result }
+    local items = vim.lsp.util.locations_to_items(locations, encoding)
+    if #items == 0 then
+      vim.notify("No definition found", vim.log.levels.WARN)
+      return
+    end
+
+    if #items > 1 then
+      vim.fn.setloclist(0, {}, " ", { title = "LSP locations", items = items })
+      vim.cmd.lopen()
+      return
+    end
+
+    -- Stay in the current split; do not steal focus from other vsplits.
+    jump_to_location_item(items[1], { reuse_win = false })
+  end)
 end
 
 function M.show_definition()
-  vim.lsp.buf.definition({
-    on_list = function(what)
-      if not what.items or #what.items == 0 then
-        vim.notify("No definition found", vim.log.levels.WARN)
-        return
-      end
+  local bufnr = vim.api.nvim_get_current_buf()
+  local client = M.wait_for_rust_analyzer(bufnr)
+  if not client then
+    vim.notify(
+      "rust-analyzer not attached. Open a Rust file in a Cargo project and run :LspInfo.",
+      vim.log.levels.WARN
+    )
+    return
+  end
 
-      if #what.items > 1 then
-        vim.fn.setloclist(0, {}, " ", what)
-        vim.cmd.lopen()
-        return
-      end
+  request_definition(client, bufnr, function(result, encoding)
+    if not result or (vim.islist(result) and #result == 0) then
+      vim.notify("No definition found", vim.log.levels.WARN)
+      return
+    end
 
-      local item = what.items[1]
-      local target_bufnr = vim.fn.bufadd(item.filename)
-      vim.fn.bufload(target_bufnr)
+    local locations = vim.islist(result) and result or { result }
+    local items = vim.lsp.util.locations_to_items(locations, encoding)
+    if #items == 0 then
+      vim.notify("No definition found", vim.log.levels.WARN)
+      return
+    end
 
-      local encoding = "utf-8"
-      if what.context and what.context.bufnr then
-        local clients = vim.lsp.get_clients({ bufnr = what.context.bufnr })
-        if clients[1] then
-          encoding = clients[1].offset_encoding
-        end
-      end
+    if #items > 1 then
+      vim.fn.setloclist(0, {}, " ", { title = "LSP locations", items = items })
+      vim.cmd.lopen()
+      return
+    end
 
-      local location = {
-        uri = vim.uri_from_bufnr(target_bufnr),
-        range = {
-          start = { line = item.lnum - 1, character = item.col - 1 },
-          ["end"] = {
-            line = (item.end_lnum or item.lnum) - 1,
-            character = (item.end_col or item.col) - 1,
-          },
+    local item = items[1]
+    local target_bufnr = item.bufnr or vim.fn.bufadd(item.filename)
+    local location = {
+      uri = vim.uri_from_bufnr(target_bufnr),
+      range = {
+        start = { line = item.lnum - 1, character = item.col - 1 },
+        ["end"] = {
+          line = (item.end_lnum or item.lnum) - 1,
+          character = (item.end_col or item.col) - 1,
         },
-      }
+      },
+    }
 
-      vim.lsp.util.show_document(location, encoding, {
-        focus = false,
-        border = "rounded",
-        reuse_win = true,
-      })
-    end,
-  })
+    vim.lsp.util.preview_location(location, { border = "rounded", focusable = true })
+  end)
 end
 
 function M.setup_commands()

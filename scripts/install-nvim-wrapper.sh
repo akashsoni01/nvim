@@ -7,7 +7,7 @@ WORKSPACE_SCRIPT="$SCRIPT_DIR/nvim-workspace.sh"
 BIN_DIR="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 WRAPPER_BIN="${BIN_DIR}/nvim"
 NVIM_BIN_CACHE="$CONFIG_DIR/.nvim-bin"
-PATH_MARKER='# >>> nvim workspace env (NVIM_VIM_ONLY) >>>'
+PATH_MARKER='# >>> nvim workspace env (NVIM_VIM_ONLY / NVIM_VIM_FORCE) >>>'
 PATH_MARKER_END='# <<< nvim workspace flags <<<'
 
 usage() {
@@ -17,6 +17,7 @@ Usage: $0 [--dry-run]
 Installs a universal nvim wrapper so these work on any machine:
   nvim .
   NVIM_VIM_ONLY=0 nvim .
+  NVIM_VIM_FORCE=1 nvim .
 
 Uses a shell function (reliable even when Homebrew/pyenv reorder PATH).
 Supported shells: bash, zsh, sh/profile, fish
@@ -173,4 +174,5 @@ if ! $dry_run; then
   echo "Restart your shell, then run:"
   echo "  type nvim"
   echo "  nvim ."
+  echo "  NVIM_VIM_FORCE=1 nvim ."
 fi

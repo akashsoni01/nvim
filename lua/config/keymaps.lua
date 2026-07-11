@@ -1,3 +1,4 @@
+local security = require("config.security")
 local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
@@ -35,6 +36,29 @@ vim.api.nvim_create_user_command("FC", function()
   require("telescope.builtin").current_buffer_fuzzy_find()
 end, { desc = "Telescope search current buffer" })
 
+local function go_to_line()
+  vim.ui.input({
+    prompt = "Go to line: ",
+    default = tostring(vim.fn.line(".")),
+  }, function(line)
+    if not line or line == "" then
+      return
+    end
+
+    local num = tonumber(line)
+    if not num or num < 1 then
+      vim.notify("Invalid line number: " .. line, vim.log.levels.WARN)
+      return
+    end
+
+    num = math.min(num, vim.api.nvim_buf_line_count(0))
+    vim.api.nvim_win_set_cursor(0, { num, 0 })
+    vim.cmd("normal! zz")
+  end)
+end
+
+vim.api.nvim_create_user_command("GoToLine", go_to_line, { desc = "Go to line number" })
+
 local lsp = require("config.lsp")
 
 map(
@@ -61,6 +85,7 @@ map(
   lsp.lsp_action(lsp.show_definition, "Show definition"),
   vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
 )
+map("n", "<leader>ln", go_to_line, vim.tbl_extend("force", opts, { desc = "Go to line number" }))
 map(
   "n",
   "gr",
@@ -329,6 +354,9 @@ end, vim.tbl_extend("force", opts, { desc = "Git stash include untracked" }))
 map("n", "<leader>gL", function()
   git_terminal("stash list")
 end, vim.tbl_extend("force", opts, { desc = "Git stash list" }))
+map("n", "<leader>ga", function()
+  require("config.git_workflow").save_fmt_stage()
+end, vim.tbl_extend("force", opts, { desc = "Save all, cargo fmt, git add ." }))
 map("n", "<leader>gA", function()
   git_terminal("stash apply")
 end, vim.tbl_extend("force", opts, { desc = "Git stash apply latest" }))
@@ -491,34 +519,46 @@ vim.api.nvim_create_user_command("GitStashList", function()
   git_terminal("stash list")
 end, { desc = "List git stashes" })
 
-map("n", "<leader>yf", "<cmd>%yank +<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
-map("n", "<leader>pf", function()
-  local clip = vim.fn.getreg("+")
-  if clip == "" then
-    vim.notify("System clipboard is empty.", vim.log.levels.WARN)
-    return
-  end
+if security.allow_system_clipboard() then
+  map("n", "<leader>yf", "<cmd>%yank +<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
+  map("n", "<leader>pf", function()
+    local clip = vim.fn.getreg("+")
+    if clip == "" then
+      vim.notify("System clipboard is empty.", vim.log.levels.WARN)
+      return
+    end
 
-  local lines = vim.split(clip, "\n", { plain = true })
-  if clip:sub(-1) == "\n" and lines[#lines] == "" then
-    table.remove(lines)
-  end
+    local lines = vim.split(clip, "\n", { plain = true })
+    if clip:sub(-1) == "\n" and lines[#lines] == "" then
+      table.remove(lines)
+    end
 
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
-  vim.cmd("normal! gg")
-end, vim.tbl_extend("force", opts, { desc = "Paste full file from clipboard" }))
-map("n", "<leader>xf", function()
-  vim.cmd("%yank +")
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
-  vim.cmd("normal! gg")
-end, vim.tbl_extend("force", opts, { desc = "Cut full file to clipboard" }))
-map({ "n", "v" }, "<leader>p", '"+p', vim.tbl_extend("force", opts, { desc = "Paste from clipboard" }))
-map({ "n", "v" }, "<leader>P", '"+P', vim.tbl_extend("force", opts, { desc = "Paste from clipboard before cursor" }))
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    vim.cmd("normal! gg")
+  end, vim.tbl_extend("force", opts, { desc = "Paste full file from clipboard" }))
+  map("n", "<leader>xf", function()
+    vim.cmd("%yank +")
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
+    vim.cmd("normal! gg")
+  end, vim.tbl_extend("force", opts, { desc = "Cut full file to clipboard" }))
+  map({ "n", "v" }, "<leader>p", '"+p', vim.tbl_extend("force", opts, { desc = "Paste from clipboard" }))
+  map({ "n", "v" }, "<leader>P", '"+P', vim.tbl_extend("force", opts, { desc = "Paste from clipboard before cursor" }))
+end
 
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
 map("n", "<leader>se", "<C-w>=", vim.tbl_extend("force", opts, { desc = "Equalize splits" }))
 map("n", "<leader>sx", "<cmd>close<cr>", vim.tbl_extend("force", opts, { desc = "Close split" }))
+
+local comments = require("config.comments")
+map("x", "/", comments.toggle_block, vim.tbl_extend("force", opts, { desc = "Toggle block comment /* */" }))
+
+local clipboard = require("config.clipboard")
+
+map("x", "c", clipboard.copy_visual, vim.tbl_extend("force", opts, { desc = "Copy selection" }))
+map("x", "x", clipboard.cut_visual, vim.tbl_extend("force", opts, { desc = "Cut selection" }))
+map("x", "p", clipboard.paste_visual, vim.tbl_extend("force", opts, { desc = "Paste over selection" }))
+
 map("n", "<leader>qa", "<cmd>wqa<cr>", vim.tbl_extend("force", opts, { desc = "Save all and quit" }))
 map("n", "<leader>qQ", "<cmd>qa!<cr>", vim.tbl_extend("force", opts, { desc = "Quit all without saving" }))
 map("n", "<leader>th", "<cmd>split | terminal<cr>", vim.tbl_extend("force", opts, { desc = "Terminal horizontal" }))

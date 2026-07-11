@@ -11,6 +11,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 
 ## Docs
 - Full shortcut + workflow guide: [`RUST_NEOVIM_CHEATSHEET.md`](./RUST_NEOVIM_CHEATSHEET.md)
+- Script reference: [`scripts/README.md`](./scripts/README.md)
 
 ## Offline Mode (Vendor Plugins)
 - Run once while online:
@@ -26,15 +27,218 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
   - `bash ./scripts/remove-vendor.sh`
 - Check Git worktree support anytime with:
   - `bash ./scripts/check-worktree.sh`
+- Step-by-step vendoring guide: [`RUST_NEOVIM_CHEATSHEET.md`](./RUST_NEOVIM_CHEATSHEET.md) (section **Offline / Vendor Plugins**)
+
+## Private mirror: AWS, internal git, or other repos
+
+Use this when machines cannot reach GitHub but can reach **your** storage (S3, CodeCommit, GitLab, Gitea, Artifactory, etc.).
+
+### How local loading works (no GitHub at runtime)
+
+`lua/config/lazy.lua` checks disk first:
+
+| Path | Role |
+|---|---|
+| `vendor/lazy/lazy.nvim` | `lazy.nvim` manager |
+| `vendor/plugins/<name>/` | One git checkout per plugin |
+
+If those folders exist, Neovim loads plugins from **local directories** — not from GitHub. Pair with corporate mode so nothing is downloaded at startup:
+
+```bash
+NVIM_CORPORATE_MODE=1 nvim .
+```
+
+### Option A — Private git repo (recommended for teams)
+
+Best when you already host dotfiles or internal tooling in git.
+
+**On a connected build machine (once per release):**
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+git add vendor/ lazy-lock.json
+git commit -m "Vendor plugins at lazy-lock pins"
+git push origin main    # your private GitHub / GitLab / CodeCommit remote
+```
+
+**On each laptop / Termux / CI runner:**
+
+```bash
+git clone git@your-internal-host:team/nvim-config.git ~/.config/nvim
+# or: git pull in an existing clone
+NVIM_CORPORATE_MODE=1 nvim .
+:Lazy    # plugins should show local/vendor source, not Failed
+```
+
+Tips:
+- Commit the whole `vendor/` tree (or use **Git LFS** if your org requires it for large trees).
+- Tag releases (`nvim-vendor-2025-06-07`) so air-gapped hosts can checkout a reviewed snapshot.
+- Never run `vendor-plugins.sh --latest` on production machines; only on the build machine after review.
+
+### Option B — AWS S3 tarball (good for air-gapped / Termux bulk deploy)
+
+**1. Build the vendor bundle (connected machine):**
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+
+RELEASE="nvim-config-$(date +%Y%m%d)"
+tar -czf "/tmp/${RELEASE}.tar.gz" \
+  --exclude='.git' \
+  -C "$(dirname "$PWD")" "$(basename "$PWD")"
+```
+
+The archive should include at least: `vendor/`, `lazy-lock.json`, `lua/`, `init.lua`, `scripts/`.
+
+**2. Upload to S3:**
+
+```bash
+aws s3 cp "/tmp/${RELEASE}.tar.gz" "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz"
+# optional integrity file:
+shasum -a 256 "/tmp/${RELEASE}.tar.gz" | tee "/tmp/${RELEASE}.tar.gz.sha256"
+aws s3 cp "/tmp/${RELEASE}.tar.gz.sha256" "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz.sha256"
+```
+
+Use your org's KMS, bucket policy, and VPC endpoint rules as required.
+
+**3. Download and install (target machine):**
+
+```bash
+aws s3 cp "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz" /tmp/
+aws s3 cp "s3://YOUR-BUCKET/nvim/${RELEASE}.tar.gz.sha256" /tmp/
+cd /tmp && shasum -a 256 -c "${RELEASE}.tar.gz.sha256"
+
+mkdir -p ~/.config
+tar -xzf "/tmp/${RELEASE}.tar.gz" -C ~/.config
+NVIM_CORPORATE_MODE=1 nvim .
+```
+
+On Termux, use the same flow after `pkg install aws-cli` (or copy the tarball in over `scp`/`adb push` if AWS CLI is not available).
+
+### Option C — Mirror each plugin repo (CodeCommit / GitLab / Gitea)
+
+Use when policy requires every upstream plugin to live in **your** git forge, not only a tarball.
+
+**1. Mirror upstream repos (build machine, one-time per plugin):**
+
+`scripts/vendor-plugins.sh` clones from `https://github.com/<owner>/<repo>.git`. Mirror each entry in its `repos=(...)` list to your internal remote with the **same repo name** (e.g. `nvim-cmp`).
+
+Example pattern (GitLab):
+
+```bash
+git clone --mirror "https://github.com/hrsh7th/nvim-cmp.git"
+cd nvim-cmp.git
+git remote add internal "git@gitlab.internal:tools/nvim-cmp.git"
+git push --mirror internal
+```
+
+Repeat for `folke/lazy.nvim` and every plugin in `scripts/vendor-plugins.sh`.
+
+**2. Point vendoring at your mirror**
+
+Edit `clone_or_update()` in `scripts/vendor-plugins.sh` and replace the GitHub URL with your base URL, for example:
+
+```bash
+# was: url="https://github.com/${repo}.git"
+url="https://git-codecommit.us-east-1.amazonaws.com/v1/repos/${repo##*/}"
+# or: url="https://gitlab.internal/tools/${repo##*/}.git"
+```
+
+Then vendor from the mirror:
+
+```bash
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+**3. Distribute** using Option A (git) or Option B (S3).
+
+### Option D — Object storage without git history (S3 / MinIO / Artifactory raw)
+
+If you only store **directories** (not git clones), sync the vendored tree:
+
+```bash
+# upload after vendoring
+aws s3 sync ~/.config/nvim/vendor/ "s3://YOUR-BUCKET/nvim/vendor/" --delete
+
+# download on target
+aws s3 sync "s3://YOUR-BUCKET/nvim/vendor/" ~/.config/nvim/vendor/
+```
+
+You still need `lazy-lock.json` and the rest of the config locally. Prefer Option B tarball unless you have an automated sync job.
+
+### Verify plugins load from local mirror
+
+```bash
+NVIM_CORPORATE_MODE=1 nvim .
+:Lazy
+```
+
+Healthy signs:
+- `lazy.nvim` and plugins show **loaded** or **not loaded** (lazy triggers) — not **Failed** / **not installed**
+- Plugin rows mention `vendor/plugins/...` as the source
+- `:checkhealth lazy` is clean
+
+If a plugin is missing:
+
+```bash
+ls ~/.config/nvim/vendor/plugins/<plugin-name>
+bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
+```
+
+### Release checklist (internal mirror)
+
+1. Update plugins on a connected machine (`NVIM_VIM_FORCE=1 nvim .` → `:Lazy update` if needed).
+2. `bash ./scripts/vendor-plugins.sh --locked`
+3. Test `NVIM_CORPORATE_MODE=1 nvim .` and `:Lazy`
+4. Publish (private git tag, S3 tarball, or per-repo mirror push)
+5. Document the version/tag for air-gapped hosts
+6. On targets: pull/sync only — do not re-vendor from GitHub
+
+## Enterprise Defaults (`NVIM_VIM_FORCE`)
+- Plain `nvim .` starts in enterprise-safe mode. External read/write integrations stay off unless you opt in.
+- Enable clipboard, filesystem completions, plugin downloads, and rust proc-macro execution:
+  - `NVIM_VIM_FORCE=1 nvim .`
+- Disabled without `NVIM_VIM_FORCE=1`:
+  - Linux clipboard (`wl-clipboard`, `xclip`, `xsel`) and `+` register keymaps (`<leader>yf`, `<leader>pf`, `<leader>p`, …)
+  - `cmp-path` and `crates.nvim` completion sources
+  - `lazy.nvim` missing-plugin downloads and luarocks
+  - `rust-analyzer` proc macros and check-on-save
+  - `scripts/install-debug-adapter-linux.sh` network download fallback for `codelldb`
+- Linux clipboard providers are never auto-installed. Install `wl-clipboard` or `xclip`/`xsel` yourself, then use `NVIM_VIM_FORCE=1`.
+
+## Neovim-Only Workspace (default)
+- `nvim .` automatically marks the workspace/crate root as Neovim-only and blocks Cursor, VS Code, JetBrains, and LLM indexing.
+- While Neovim is open, IDE marker files (`.vscode`, `.cursor`, ignore files) are stashed under `~/.config/nvim/.vim-only-stash/`.
+- When Neovim exits, markers are restored so other IDEs stay blocked.
+- Opt out for a project:
+  - `NVIM_VIM_ONLY=0 nvim .`
+- Inside Neovim:
+  - `:VimOnlyMark` — mark + stash now
+  - `:VimOnlyReset` — remove all markers and restore IDE indexing
 
 ## Corporate Mode
 - Start with:
   - `NVIM_CORPORATE_MODE=1 nvim .`
 - Corporate mode requires vendored `lazy.nvim` and plugins; it does not fall back to downloaded lazy data or install missing plugins.
-- Rust project code execution is reduced by disabling `rust-analyzer` proc macros and check-on-save unless explicitly trusted:
-  - `NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Rust project code execution also requires force mode and an explicit trust flag:
+  - `NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
 - For Linux `codelldb` fallback downloads in corporate mode, pin and verify the binary:
-  - `CODELLDB_URL=... CODELLDB_SHA256=... NVIM_CORPORATE_MODE=1 ./scripts/install-debug-adapter-linux.sh`
+  - `NVIM_VIM_FORCE=1 CODELLDB_URL=... CODELLDB_SHA256=... NVIM_CORPORATE_MODE=1 ./scripts/install-debug-adapter-linux.sh`
+
+## Scripts
+| Script | Purpose |
+|---|---|
+| `scripts/nvim-workspace.sh` | Universal `nvim` wrapper; documents env vars |
+| `scripts/install-nvim-wrapper.sh` | Install shell `nvim()` function + wrapper binary |
+| `scripts/mark-vim-only-project.sh` | Write IDE/LLM blockers to stash and deploy |
+| `scripts/unmark-vim-only-project.sh` | Remove blockers and stash for a project |
+| `scripts/vim-only-stash.sh` | `stash` / `restore` / `deploy` IDE marker files |
+| `scripts/vendor-plugins.sh` | Vendor `lazy.nvim` and plugins for offline/corporate use |
+| `scripts/install-debug-adapter-linux.sh` | Install LLDB DAP adapter (network fallback needs `NVIM_VIM_FORCE=1`) |
+| `scripts/uninstall-deps.sh` | Remove config-managed debug adapters |
+| `scripts/check-worktree.sh` | Verify git worktree support |
 
 ## Cleanup / Uninstall Scripts
 - Remove local vendored plugin sources:
@@ -63,7 +267,12 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 - `h` `j` `k` `l` - left/down/up/right
 - `w` / `b` - next/previous word
 - `gg` / `G` - top/bottom of file
-- `/text` then `n` / `N` - search and jump next/previous match
+- `/text` then `n` / `N` - search and jump next/previous match (normal mode only; visual `/` is block comment — see below)
+
+### 3b) Block comments (visual mode)
+- Select lines with `v`, `V`, or `<C-v>`
+- Press `/` to wrap the selection with `/* */`
+- Press `/` again on the same block to uncomment
 
 ### 4) Work with multiple files and splits
 - `<leader>sv` - Open vertical split
@@ -73,8 +282,8 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 - Move between splits with `Ctrl-w` then `h/j/k/l`
 
 ### 5) Navigate Rust code with LSP
-- `gd` / `<leader>ld` - Jump to definition
-- `gpd` / `<leader>lD` - Show definition (peek)
+- `gd` / `<leader>ld` - Jump to definition (works in vertical splits)
+- `gpd` / `<leader>lD` - Show definition (peek float)
 - `gr` - Find references
 - `K` - Hover documentation
 - `<leader>rn` - Rename symbol project-wide
@@ -85,6 +294,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 3. Jump to definition: `gd`
 4. Fix issues with code actions: `<leader>ca`
 5. Save to format (`rustfmt` runs on save)
+6. Before commit: `<leader>ga` (save all → `cargo fmt` → `git add .`)
 
 ## Big Table: Widely Used Commands
 
@@ -113,9 +323,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Undo | `u` | Undo last change | Press multiple times for history |
 | Redo | `<C-r>` | Redo undone change | Opposite of undo |
 | Copy Line | `yy` | Yank (copy) line | Use count like `3yy` |
-| Copy Full File | `<leader>yf` | Yank entire file to clipboard | Native alt: `ggyG` |
-| Paste Full File | `<leader>pf` | Replace buffer with clipboard | Pair with `<leader>yf` |
-| Cut Full File | `<leader>xf` | Cut entire file to clipboard | Clears buffer; use `u` to undo |
+| Copy Full File | `<leader>yf` | Yank entire file to clipboard | Requires `NVIM_VIM_FORCE=1`; native alt: `ggyG` |
+| Paste Full File | `<leader>pf` | Replace buffer with clipboard | Requires `NVIM_VIM_FORCE=1` |
+| Cut Full File | `<leader>xf` | Cut entire file to clipboard | Requires `NVIM_VIM_FORCE=1` |
 | Paste | `p` or `<leader>p` | Paste after cursor | `P` / `<leader>P` paste before cursor |
 | Delete Line | `dd` | Delete current line | Use count like `2dd` |
 | Change Word | `ciw` | Replace word under cursor | Very common refactor action |
@@ -136,8 +346,9 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Equalize Splits | `<leader>se` | Make split sizes equal | Fix uneven layout quickly |
 | Close Split | `<leader>sx` | Close current split | Safe cleanup |
 | Split Navigation | `<C-w> h/j/k/l` | Move between windows | Core multi-pane workflow |
-| Jump to Definition | `gd` / `<leader>ld` | Jump to symbol definition | Use constantly in Rust code |
+| Jump to Definition | `gd` / `<leader>ld` | Jump to symbol definition | Safe in vertical splits; 8s timeout if indexing |
 | Show Definition | `gpd` / `<leader>lD` | Peek definition in float | Stay in place, press `q` to close |
+| Block Comment | `/` (visual) | Toggle `/* */` on selected lines | Use `V` for line-wise selection; normal `/` still searches |
 | References | `gr` | Show symbol references | Great for safe refactors |
 | Hover Docs | `K` | Show docs for symbol | API info without leaving file |
 | Signature Help | `<C-k>` | Show function parameters | Helpful while typing calls |
@@ -170,6 +381,7 @@ This config is a `lazy.nvim`-based Neovim setup focused on Rust development in T
 | Git Push | `<leader>gps` or `:GitPush` | Run `git push` | Push current branch |
 | Git Stash | `<leader>gS` or `:GitStash` | Run `git stash push -u` | Save dirty work including untracked files |
 | Git Stash List | `<leader>gL` or `:GitStashList` | Run `git stash list` | Review saved stashes |
+| Git Stage Prep | `<leader>ga` | Save all → `cargo fmt` → `git add .` | One-key pre-commit workflow |
 | Git Stash Apply | `<leader>gA` | Run `git stash apply` | Reapply latest stash |
 | Git Hunk Preview | `<leader>ghp` | Preview current hunk | Inspect nearby changes inline |
 | Git Hunk Stage | `<leader>ghs` | Stage current hunk | Commit part of a file |
@@ -214,6 +426,19 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | Update your current branch | `<leader>gpl` | `git pull --ff-only` |
 | Push current branch | `<leader>gps` | `git push` |
 | Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
+| Format and stage everything before commit | `<leader>ga` | `:wa` → `cargo fmt` → `git add .` |
 | Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
 | Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
 | Check why a line changed | `<leader>ghb` | Gitsigns blame line |
+
+## Environment flags (quick reference)
+
+| Flag | Example | Effect |
+|---|---|---|
+| (default) | `nvim .` | Enterprise-safe; vim-only workspace mark + stash |
+| `NVIM_VIM_FORCE` | `NVIM_VIM_FORCE=1 nvim .` | Clipboard, external completions, proc macros |
+| `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
+| `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
+| `NVIM_TRUST_RUST_PROJECT` | with force + corporate | Allow rust proc macros on trusted repos |
+
+NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 nvim .

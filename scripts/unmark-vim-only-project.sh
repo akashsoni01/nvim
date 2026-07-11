@@ -103,4 +103,3 @@ echo "Reset IDE indexing for: $project"
 if [[ $skipped -gt 0 ]]; then
   echo "Left $skipped custom file(s) untouched."
 fi
-echo "Reload the Cursor/VS Code window (Cmd+Shift+P -> Developer: Reload Window) if this project is already open."
