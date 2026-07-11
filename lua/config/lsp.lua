@@ -2,8 +2,13 @@ local M = {}
 
 local ms = vim.lsp.protocol.Methods
 local rust_test = require("config.rust_test")
+local security = require("config.security")
+local telescope_grep = require("config.telescope_grep")
 
-local DEFINITION_TIMEOUT_MS = 8000
+local DEFINITION_TIMEOUT_MS = security.light_mode and 5000 or 12000
+local RA_ATTACH_WAIT_MS = security.light_mode and 1000 or 3000
+
+M.rust_analyzer_indexing = false
 
 local function cmd_works(cmd)
   local result = vim.system(vim.list_extend(cmd, { "--version" }), { text = true }):wait()
@@ -79,8 +84,17 @@ function M.rust_analyzer_root_dir(path)
 end
 
 local function sibling_cargo_projects(parent)
+  if security.light_mode and not security.link_all_crates then
+    return nil
+  end
+
   local children = rust_test.child_cargo_roots(parent)
   if #children <= 1 then
+    return nil
+  end
+
+  -- Loading every sibling crate doubles RAM on big workspaces; cap unless forced.
+  if not security.link_all_crates and #children > 2 then
     return nil
   end
 
@@ -137,18 +151,31 @@ function M.rust_analyzer_settings(path, rust_can_execute)
   if not path or path == "" then
     path = vim.api.nvim_buf_get_name(0)
   end
+
+  local light = security.light_mode
   local settings = {
-    cargo = { allFeatures = true },
-    checkOnSave = rust_can_execute,
-    check = { command = "clippy" },
-    procMacro = { enable = rust_can_execute },
+    cargo = {
+      allFeatures = not light,
+      buildScripts = { enable = not light and rust_can_execute },
+    },
+    checkOnSave = not light and rust_can_execute,
+    check = { command = light and "check" or "clippy" },
+    procMacro = { enable = not light and rust_can_execute },
     completion = {
-      callable = { snippets = "fill_arguments" },
+      callable = { snippets = light and "disabled" or "fill_arguments" },
     },
     diagnostics = {
       enable = true,
     },
-    inlayHints = {
+    files = {
+      excludeDirs = light and { "target", "node_modules", ".git", "dist", "build" } or nil,
+    },
+    inlayHints = light and {
+      bindingModeHints = { enable = false },
+      closureReturnTypeHints = { enable = "never" },
+      lifetimeElisionHints = { enable = "never" },
+      reborrowHints = { enable = "never" },
+    } or {
       bindingModeHints = { enable = true },
       closureReturnTypeHints = { enable = "always" },
       lifetimeElisionHints = { enable = "skip_trivial" },
@@ -183,7 +210,11 @@ function M.on_attach(client, bufnr)
     navic.attach(client, bufnr)
   end
 
-  if vim.lsp.inlay_hint and client.server_capabilities.inlayHintProvider then
+  if
+    not security.light_mode
+    and vim.lsp.inlay_hint
+    and client.server_capabilities.inlayHintProvider
+  then
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
   end
 
@@ -201,6 +232,27 @@ end
 function M.setup_autocmds()
   local warned_missing_cmd = false
   local warned_missing_client = {}
+  local progress_active = 0
+
+  vim.api.nvim_create_autocmd("LspProgress", {
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if not client or client.name ~= "rust_analyzer" then
+        return
+      end
+
+      local value = args.data.params.value
+      if value and value.kind == "begin" then
+        progress_active = progress_active + 1
+        M.rust_analyzer_indexing = true
+      elseif value and (value.kind == "end" or value.kind == "report") then
+        if value.kind == "end" then
+          progress_active = math.max(0, progress_active - 1)
+        end
+        M.rust_analyzer_indexing = progress_active > 0
+      end
+    end,
+  })
 
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
@@ -282,7 +334,7 @@ end
 
 function M.wait_for_rust_analyzer(bufnr, timeout_ms)
   bufnr = bufnr or 0
-  timeout_ms = timeout_ms or 3000
+  timeout_ms = timeout_ms or RA_ATTACH_WAIT_MS
   local client = M.rust_analyzer_client(bufnr)
   if client then
     return client
@@ -332,23 +384,34 @@ local function jump_to_location_item(item, opts)
   end)
 end
 
-local function request_definition(client, bufnr, on_result)
+local function definition_timeout_message()
+  if M.rust_analyzer_indexing then
+    return "Definition timed out — rust-analyzer is still indexing. Wait, use gr for references, or :GrepWord as fallback."
+  end
+  return "Definition timed out. Try :GrepWord, :LspRestart, or NVIM_LIGHT=1 nvim . for big workspaces."
+end
+
+local function request_definition(client, bufnr, on_result, on_timeout)
   local win = vim.api.nvim_get_current_win()
   local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
   local finished = false
+  local request_id
 
   local timer = vim.defer_fn(function()
     if finished then
       return
     end
     finished = true
-    vim.notify(
-      "Definition request timed out. rust-analyzer may still be indexing — try again or run :LspRestart.",
-      vim.log.levels.WARN
-    )
+    if request_id and client.cancel_request then
+      pcall(client.cancel_request, client, request_id)
+    end
+    vim.notify(definition_timeout_message(), vim.log.levels.WARN)
+    if on_timeout then
+      on_timeout()
+    end
   end, DEFINITION_TIMEOUT_MS)
 
-  client:request(ms.textDocument_definition, params, function(err, result)
+  request_id = client:request(ms.textDocument_definition, params, function(err, result)
     if finished then
       return
     end
@@ -356,6 +419,10 @@ local function request_definition(client, bufnr, on_result)
     pcall(vim.fn.timer_stop, timer)
 
     if err then
+      local code = type(err) == "table" and err.code
+      if code == -32802 or (type(err.message) == "string" and err.message:lower():find("cancel", 1, true)) then
+        return
+      end
       vim.notify(err.message or "Definition request failed", vim.log.levels.ERROR)
       return
     end
@@ -396,6 +463,8 @@ function M.jump_definition()
 
     -- Stay in the current split; do not steal focus from other vsplits.
     jump_to_location_item(items[1], { reuse_win = false })
+  end, function()
+    telescope_grep.grep_word(nil, { prompt_title = "Definition fallback (grep word)" })
   end)
 end
 
@@ -454,6 +523,15 @@ function M.setup_commands()
   vim.api.nvim_create_user_command("ShowDefinition", function()
     M.show_definition()
   end, { desc = "Show symbol definition in a float" })
+
+  vim.api.nvim_create_user_command("GrepWord", function()
+    telescope_grep.grep_word()
+  end, { desc = "Telescope grep word under cursor (fast; skips target/)" })
+
+  vim.api.nvim_create_user_command("RaIndexing", function()
+    local state = M.rust_analyzer_indexing and "indexing" or "idle"
+    vim.notify("rust-analyzer: " .. state, vim.log.levels.INFO)
+  end, { desc = "Show whether rust-analyzer is still indexing" })
 end
 
 return M

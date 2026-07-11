@@ -23,6 +23,8 @@ Environment:
   NVIM_VIM_ONLY=2   Enhanced block: mark parent super/, add Claude ignores,
                     keep ignore files on disk while Neovim runs
   NVIM_VIM_FORCE=1  Enable system clipboard, external completions, and network installs
+  NVIM_LIGHT=1      Low-memory mode: lighter rust-analyzer, skip target/ in grep, faster gd fallback
+  NVIM_RA_LINK_ALL=1 Load all sibling Cargo crates (cross-crate gd); uses more RAM
 
 Install once on any machine:
   ${CONFIG_DIR}/scripts/install-nvim-wrapper.sh

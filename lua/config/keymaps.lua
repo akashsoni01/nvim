@@ -1,15 +1,12 @@
 local security = require("config.security")
+local telescope_grep = require("config.telescope_grep")
 local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
-  local builtin = require("telescope.builtin")
-  if vim.fn.executable("rg") == 1 then
-    builtin.live_grep()
-  else
-    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
-    builtin.current_buffer_fuzzy_find()
+  if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
+    require("telescope.builtin").current_buffer_fuzzy_find()
   end
 end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
 map("n", "<leader>fc", function()
@@ -23,12 +20,8 @@ vim.api.nvim_create_user_command("FF", function()
 end, { desc = "Telescope find files" })
 
 vim.api.nvim_create_user_command("FG", function()
-  local builtin = require("telescope.builtin")
-  if vim.fn.executable("rg") == 1 then
-    builtin.live_grep()
-  else
-    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
-    builtin.current_buffer_fuzzy_find()
+  if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
+    require("telescope.builtin").current_buffer_fuzzy_find()
   end
 end, { desc = "Telescope live grep" })
 
@@ -255,6 +248,9 @@ map("n", "<leader>tb", "<cmd>split | terminal cargo build<cr>", vim.tbl_extend("
 map("n", "<leader>tr", "<cmd>split | terminal cargo run<cr>", vim.tbl_extend("force", opts, { desc = "Run cargo run" }))
 
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
+map("n", "<leader>gw", function()
+  telescope_grep.grep_word()
+end, vim.tbl_extend("force", opts, { desc = "Grep word under cursor" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))
 map("n", "<leader>gd", "<cmd>Gitsigns diffthis<cr>", vim.tbl_extend("force", opts, { desc = "Git diff" }))
 map("n", "<leader>gb", "<cmd>Telescope git_branches<cr>", vim.tbl_extend("force", opts, { desc = "Git branches" }))

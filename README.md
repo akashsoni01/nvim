@@ -443,6 +443,8 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 | `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
 | `NVIM_VIM_ONLY=2` | `NVIM_VIM_ONLY=2 nvim .` | Mark parent `super/`, Claude ignores, on-disk ignore files |
 | `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
+| `NVIM_LIGHT` | `NVIM_LIGHT=1 nvim .` | Low-memory rust-analyzer; skip `target/` in grep |
+| `NVIM_RA_LINK_ALL` | with light/big monorepo | Load all sibling crates for cross-crate `gd` |
 | `NVIM_TRUST_RUST_PROJECT` | with force + corporate | Allow rust proc macros on trusted repos |
 
 NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 nvim .

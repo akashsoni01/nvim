@@ -96,6 +96,13 @@ return {
         security.notify_corporate("rust-analyzer proc macros and check-on-save are disabled until NVIM_TRUST_RUST_PROJECT=1")
       end
 
+      if security.light_mode then
+        vim.notify(
+          "NVIM_LIGHT=1: low-memory rust-analyzer (single crate, no inlay hints). Use NVIM_RA_LINK_ALL=1 for cross-crate gd.",
+          vim.log.levels.INFO
+        )
+      end
+
       if vim.lsp.config and vim.lsp.enable then
         vim.lsp.config("rust_analyzer", rust_analyzer_cfg)
         vim.lsp.enable("rust_analyzer")

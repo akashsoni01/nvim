@@ -13,6 +13,8 @@ end
 M.force_mode = env_enabled("NVIM_VIM_FORCE")
 M.corporate_mode = env_enabled("NVIM_CORPORATE_MODE")
 M.trusted_rust_project = env_enabled("NVIM_TRUST_RUST_PROJECT")
+M.light_mode = env_enabled("NVIM_LIGHT")
+M.link_all_crates = env_enabled("NVIM_RA_LINK_ALL")
 
 function M.allow_system_clipboard()
   return M.force_mode

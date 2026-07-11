@@ -9,6 +9,8 @@
 | `NVIM_VIM_ONLY=2` | enhanced Claude/parent block | parent `super/` mark, `.claudeignore`, on-disk ignores |
 | `NVIM_CORPORATE_MODE` | off | `vendor-plugins.sh`, `lazy.lua`, debug adapter install |
 | `NVIM_TRUST_RUST_PROJECT` | off | `rust-analyzer` proc macros (with force + corporate) |
+| `NVIM_LIGHT` | off | Low-memory `rust-analyzer`, faster Telescope grep |
+| `NVIM_RA_LINK_ALL` | off | Link all sibling `Cargo.toml` crates for cross-crate `gd` |
 
 ## Vim-only / IDE blocking
 

@@ -1,5 +1,6 @@
 -- Find/replace in current buffer or in project, scoped to .rs and .toml (via ripglob).
 local M = {}
+local telescope_grep = require("config.telescope_grep")
 
 local delim = "#"
 
@@ -81,10 +82,12 @@ function M.find_in_project()
     vim.notify("ripgrep (rg) required. Scoped to *.rs and *.toml.", vim.log.levels.ERROR)
     return
   end
-  require("telescope.builtin").live_grep({
-    prompt_title = "Grep in *.rs and *.toml",
-    additional_args = { "-g", "*.rs", "-g", "*.toml" },
-  })
+  require("telescope.builtin").live_grep(
+    telescope_grep.live_grep_opts({
+      prompt_title = "Grep in *.rs and *.toml",
+      additional_args = { "-g", "*.rs", "-g", "*.toml" },
+    })
+  )
 end
 
 --- Live grep across the whole project (any file `rg` searches; honors .gitignore).
@@ -93,9 +96,11 @@ function M.find_in_project_all()
     vim.notify("ripgrep (rg) required for project search.", vim.log.levels.ERROR)
     return
   end
-  require("telescope.builtin").live_grep({
-    prompt_title = "Grep in project (all files)",
-  })
+  require("telescope.builtin").live_grep(
+    telescope_grep.live_grep_opts({
+      prompt_title = "Grep in project (all files)",
+    })
+  )
 end
 
 local function replace_in_paths(paths, search, repl, file_desc)

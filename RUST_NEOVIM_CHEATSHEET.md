@@ -8,7 +8,11 @@
 | Area | Shortcut | Action |
 | --- | --- | --- |
 | Telescope | `<leader>ff` | Find files |
-| Telescope | `<leader>fg` | Live grep in project |
+| Telescope | `<leader>fg` or `:FG` | Live grep in project (skips `target/`) |
+| Telescope | `<leader>fA` | Same as `fg` — all file types |
+| Telescope | `<leader>sg` | Grep `*.rs` + `*.toml` only (faster on big repos) |
+| Telescope | `<leader>gw` or `:GrepWord` | Grep word under cursor (gd fallback) |
+| Telescope | `<leader>fc` | Search current buffer only (fastest) |
 | Telescope | `<leader>fc` | Search text in current buffer |
 | Telescope | `<leader>fb` | List open buffers |
 | Telescope | `<leader>fh` | Help tags |
@@ -112,14 +116,19 @@
 
 ### Telescope / Navigation
 - `<leader>ff` - Find files
-- `<leader>fg` - Live grep in project
+- `<leader>fg` or `:FG` - Live grep in project (ripgrep; skips `target/`, `node_modules/`)
+- `<leader>fA` - Same as `fg` (all files)
+- `<leader>sg` - Grep only `*.rs` and `*.toml` (faster on big Rust workspaces)
+- `<leader>gw` or `:GrepWord` - Grep the word under cursor (use when `gd` times out)
+- `<leader>fc` - Fuzzy search in **current buffer** only (instant; no project scan)
 - `<leader>fc` - Search text in current buffer
 - `<leader>fb` - List open buffers
 - `<leader>fh` - Help tags
 
 ### LSP
-- `gd` / `<leader>ld` - Jump to definition (works in vertical splits; 8s timeout if rust-analyzer is still indexing)
+- `gd` / `<leader>ld` - Jump to definition (12s timeout; opens Telescope grep fallback if indexing is slow)
 - `gpd` / `<leader>lD` - Show definition (peek float)
+- **Note:** `<leader>gd` is **Git diff**, not go-to-definition — use `gd` or `<leader>ld` for LSP jump
 - `gr` - Find references
 - `K` - Hover documentation
 - `<C-k>` - Signature help (function params)
@@ -522,6 +531,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 ## Termux Troubleshooting
 
 ### `rust-analyzer` not working (`gd` / `K` do nothing)
+- **Keymap mix-up:** `<leader>gd` = Git diff (Gitsigns). For LSP jump use `gd` or `<leader>ld`.
 - Verify install:
   - `pkg install rust`
   - `rustup component add rust-analyzer`
@@ -537,8 +547,14 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
   - After opening the second crate, run `:LspRestart` if cross-crate `gd` still fails
 - Proc macros / cross-crate defs also need: `NVIM_VIM_FORCE=1 nvim .`
 - Wait a few seconds after opening a file — `rust-analyzer` indexes before `gd` / `K` return docs
-- `gd` hanging in a vertical split:
-  - This config uses a single `rust-analyzer` request with an 8s timeout instead of Neovim's default multi-client handler
+- `gd` hanging or timing out on big projects:
+  - rust-analyzer may still be indexing — run `:RaIndexing` to check
+  - On timeout, config auto-opens Telescope grep for the symbol (`:GrepWord` / `<leader>gw`)
+  - Open the **crate root** (`Cargo.toml` folder), not a parent `super/` with many children
+  - Low-memory mode: `NVIM_LIGHT=1 nvim .` (single crate, no inlay hints, lighter checks)
+  - Cross-crate `gd` in a monorepo needs siblings linked: `NVIM_RA_LINK_ALL=1 nvim .` (uses more RAM)
+  - Close Cursor/VS Code on the same folder — `NVIM_VIM_ONLY=2 nvim .` blocks their indexing
+  - This config cancels stuck LSP requests after 12s instead of freezing the UI
   - If you see a timeout warning, wait for indexing or run `:LspRestart`
 
 ### Formatter not running
@@ -550,6 +566,9 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 ### Live grep finds nothing
 - Ensure `ripgrep` exists:
   - `pkg install ripgrep`
+- Run Neovim from the **project/crate root** you want to search
+- On huge repos use `<leader>sg` (Rust/TOML only) or `<leader>fc` (current file)
+- `fg` / `fA` skip `target/` automatically — rebuild artifacts won't clutter results
 
 ### Debugger fails to launch
 - Ensure binary is built:
@@ -788,5 +807,7 @@ Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you ve
 | `NVIM_VIM_FORCE` | off | Enable clipboard, external completions, downloads, proc macros |
 | `NVIM_VIM_ONLY` | mark on `nvim .` | `0` = unmark project; `1` = explicit mark |
 | `NVIM_CORPORATE_MODE` | off | Require vendored plugins; block lazy downloads |
+| `NVIM_LIGHT` | off | Low-memory rust-analyzer + faster grep (single crate) |
+| `NVIM_RA_LINK_ALL` | off | Load all sibling crates for cross-crate `gd` (more RAM) |
 | `NVIM_TRUST_RUST_PROJECT` | off | Allow rust proc macros when corporate + force mode |
 
