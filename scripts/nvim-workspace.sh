@@ -18,7 +18,8 @@ Examples:
   NVIM_VIM_FORCE=1 nvim .
 
 Environment:
-  (default)         Mark workspace Neovim-only; stash IDE/LLM files on enter
+  (default)         No IDE/LLM changes — plain nvim startup
+  NVIM_VIM_ONLY=1   Mark workspace Neovim-only; stash IDE/LLM files on enter
   NVIM_VIM_ONLY=0   Restore IDE indexing for the workspace/crate root
   NVIM_VIM_ONLY=2   Enhanced block: mark parent super/, add Claude ignores,
                     keep ignore files on disk while Neovim runs

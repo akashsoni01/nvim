@@ -16,6 +16,7 @@ Usage: $0 [--dry-run]
 
 Installs a universal nvim wrapper so these work on any machine:
   nvim .
+  NVIM_VIM_ONLY=1 nvim .
   NVIM_VIM_ONLY=0 nvim .
   NVIM_VIM_ONLY=2 nvim .
   NVIM_VIM_FORCE=1 nvim .

@@ -208,11 +208,13 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
   - `scripts/install-debug-adapter-linux.sh` network download fallback for `codelldb`
 - Linux clipboard providers are never auto-installed. Install `wl-clipboard` or `xclip`/`xsel` yourself, then use `NVIM_VIM_FORCE=1`.
 
-## Neovim-Only Workspace (default)
-- `nvim .` automatically marks the workspace/crate root as Neovim-only and blocks Cursor, VS Code, JetBrains, and LLM indexing.
-- While Neovim is open, IDE marker files (`.vscode`, `.cursor`, ignore files) are stashed under `~/.config/nvim/.vim-only-stash/`.
+## Neovim-Only Workspace (manual)
+- Plain `nvim .` does **not** change IDE/LLM settings — use `NVIM_VIM_ONLY` when you want to mark or unmark.
+- Mark and block Cursor, VS Code, JetBrains, and LLM indexing:
+  - `NVIM_VIM_ONLY=1 nvim .`
+- While Neovim is open (with `NVIM_VIM_ONLY=1` or `2`), IDE marker files (`.vscode`, `.cursor`, ignore files) are stashed under `~/.config/nvim/.vim-only-stash/`.
 - When Neovim exits, markers are restored so other IDEs stay blocked.
-- Opt out for a project:
+- Restore IDE indexing for a project:
   - `NVIM_VIM_ONLY=0 nvim .`
 - Enhanced Claude/parent blocking:
   - `NVIM_VIM_ONLY=2 nvim .` — also marks parent `super/`, adds Claude ignores, and keeps all LLM/editor blocker files on disk while Neovim runs
@@ -438,10 +440,9 @@ Aliases: `<leader>gwa` also creates/adds a worktree, and `<leader>gwr` also remo
 
 | Flag | Example | Effect |
 |---|---|---|
-| (default) | `nvim .` | Enterprise-safe; vim-only workspace mark + stash |
+| (default) | `nvim .` | Enterprise-safe; no IDE/LLM changes unless you set `NVIM_VIM_ONLY` |
 | `NVIM_VIM_FORCE` | `NVIM_VIM_FORCE=1 nvim .` | Clipboard, external completions, proc macros |
-| `NVIM_VIM_ONLY` | `NVIM_VIM_ONLY=0 nvim .` | Unmark project; restore IDE indexing |
-| `NVIM_VIM_ONLY=2` | `NVIM_VIM_ONLY=2 nvim .` | Mark parent `super/`, Claude ignores, on-disk ignore files |
+| `NVIM_VIM_ONLY` | off (no change on `nvim .`) | `1` = mark; `0` = unmark; `2` = enhanced block |
 | `NVIM_CORPORATE_MODE` | `NVIM_CORPORATE_MODE=1 nvim .` | Require local `vendor/`; block lazy downloads |
 | `NVIM_LIGHT` | `NVIM_LIGHT=1 nvim .` | Low-memory rust-analyzer; skip `target/` in grep |
 | `NVIM_RA_LINK_ALL` | with light/big monorepo | Load all sibling crates for cross-crate `gd` |

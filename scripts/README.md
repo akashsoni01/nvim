@@ -5,7 +5,7 @@
 | Variable | Default | Used by |
 | --- | --- | --- |
 | `NVIM_VIM_FORCE` | off | Clipboard, external completions, plugin downloads, proc macros, `codelldb` download |
-| `NVIM_VIM_ONLY` | mark on `nvim .` | `mark-vim-only-project.sh`, `vim_only.lua` |
+| `NVIM_VIM_ONLY` | off (no change) | `1` = mark; `0` = unmark; `2` = enhanced — `vim_only.lua` |
 | `NVIM_VIM_ONLY=2` | enhanced Claude/parent block | parent `super/` mark, `.claudeignore`, on-disk ignores |
 | `NVIM_CORPORATE_MODE` | off | `vendor-plugins.sh`, `lazy.lua`, debug adapter install |
 | `NVIM_TRUST_RUST_PROJECT` | off | `rust-analyzer` proc macros (with force + corporate) |
@@ -23,10 +23,11 @@
 | `vim-only-stash.sh` | `stash`, `restore`, `deploy`, `force-restore`, `is-vim-only` |
 | `vim-only-common.sh` | Shared marker writers and registry helpers (sourced, not run directly) |
 
-Flow:
-1. `nvim .` marks the workspace (unless `NVIM_VIM_ONLY=0`)
-2. On enter, IDE marker dirs are moved to `.vim-only-stash/<hash>/`
+Flow (only when `NVIM_VIM_ONLY` is set, or via `:VimOnlyMark`):
+1. `NVIM_VIM_ONLY=1 nvim .` marks the workspace; `NVIM_VIM_ONLY=0` unmarks
+2. On enter (`NVIM_VIM_ONLY=1` or `2`), IDE marker dirs are moved to `.vim-only-stash/<hash>/`
 3. On exit, markers are restored to the project
+4. Plain `nvim .` does not mark, unmark, or stash anything
 
 `NVIM_VIM_ONLY=2` additionally:
 - Marks the parent `super/` folder when marking a child Cargo crate

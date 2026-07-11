@@ -787,7 +787,8 @@ Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you ve
   - No `codelldb` network download in `install-debug-adapter-linux.sh`
 
 ## Neovim-Only Workspace (default)
-- `nvim .` marks the workspace and stashes `.vscode` / `.cursor` / ignore files while Neovim runs
+- Plain `nvim .` does not change IDE/LLM settings — set `NVIM_VIM_ONLY` when you want to mark or unmark
+- Mark workspace and stash `.vscode` / `.cursor` / ignore files while Neovim runs: `NVIM_VIM_ONLY=1 nvim .`
 - Restore IDE indexing for a project: `NVIM_VIM_ONLY=0 nvim .`
 - Commands: `:VimOnlyMark`, `:VimOnlyReset`
 
@@ -805,7 +806,7 @@ Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you ve
 | Variable | Default | Effect |
 | --- | --- | --- |
 | `NVIM_VIM_FORCE` | off | Enable clipboard, external completions, downloads, proc macros |
-| `NVIM_VIM_ONLY` | mark on `nvim .` | `0` = unmark project; `1` = explicit mark |
+| `NVIM_VIM_ONLY` | off (no change) | `1` = mark; `0` = unmark; `2` = enhanced block |
 | `NVIM_CORPORATE_MODE` | off | Require vendored plugins; block lazy downloads |
 | `NVIM_LIGHT` | off | Low-memory rust-analyzer + faster grep (single crate) |
 | `NVIM_RA_LINK_ALL` | off | Load all sibling crates for cross-crate `gd` (more RAM) |

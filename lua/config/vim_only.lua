@@ -93,7 +93,7 @@ function M.restore_ide_markers(dir)
   return run_script("vim-only-stash.sh", "restore", root)
 end
 
----@return nil|0|1|2 nil means default mark (mode 1)
+---@return nil|0|1|2 nil means leave workspace unchanged (no auto mark/stash)
 local function parse_vim_only_env()
   local value = vim.fn.getenv("NVIM_VIM_ONLY")
   if value == vim.NIL or value == "" then
@@ -116,44 +116,64 @@ local function parse_vim_only_env()
 end
 
 function M.vim_only_mode()
-  return parse_vim_only_env() or 1
+  return parse_vim_only_env()
 end
 
 function M.handle_startup_env()
   local mode = parse_vim_only_env()
+  if mode == nil then
+    return
+  end
+
   if mode == 0 then
     M.unmark()
     return
   end
 
-  if mode == nil or mode >= 1 then
-    if not M.is_vim_only_project() then
-      M.mark()
-    end
+  if mode >= 1 and not M.is_vim_only_project() then
+    M.mark()
   end
 end
 
 function M.setup()
+  local session_stashed = false
+
+  local function stash_for_session()
+    if M.stash_ide_markers() then
+      session_stashed = true
+    end
+  end
+
   vim.api.nvim_create_user_command("VimOnlyMark", function()
     M.mark()
-    M.stash_ide_markers()
+    stash_for_session()
   end, { desc = "Stop IDE indexing for the workspace root" })
 
   vim.api.nvim_create_user_command("VimOnlyReset", function()
     M.unmark()
+    session_stashed = false
   end, { desc = "Restore IDE indexing for the workspace root" })
 
   vim.api.nvim_create_autocmd("VimEnter", {
     once = true,
     callback = function()
+      local mode = parse_vim_only_env()
+      if mode == nil then
+        return
+      end
+
       M.handle_startup_env()
-      M.stash_ide_markers()
+      if mode >= 1 then
+        stash_for_session()
+      end
     end,
   })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
-      M.restore_ide_markers()
+      if session_stashed then
+        M.restore_ide_markers()
+      end
     end,
   })
 end
