@@ -25,6 +25,11 @@ vim.api.nvim_create_user_command("FG", function()
   end
 end, { desc = "Telescope live grep" })
 
+vim.api.nvim_create_user_command("GrepSelfTest", function()
+  local ok, msg = require("config.telescope_grep").self_test()
+  vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, { title = "GrepSelfTest" })
+end, { desc = "Verify ripgrep + Telescope live_grep wiring" })
+
 vim.api.nvim_create_user_command("FC", function()
   require("telescope.builtin").current_buffer_fuzzy_find()
 end, { desc = "Telescope search current buffer" })
