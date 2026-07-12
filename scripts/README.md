@@ -8,9 +8,9 @@
 | `NVIM_VIM_ONLY` | off (no change) | `1` = mark; `0` = unmark; `2` = enhanced — `vim_only.lua` |
 | `NVIM_VIM_ONLY=2` | enhanced Claude/parent block | parent `super/` mark, `.claudeignore`, on-disk ignores |
 | `NVIM_CORPORATE_MODE` | off | `vendor-plugins.sh`, `lazy.lua`, debug adapter install |
-| `NVIM_TRUST_RUST_PROJECT` | off | `rust-analyzer` proc macros (with force + corporate) |
-| `NVIM_LIGHT` | off | Low-memory `rust-analyzer`, faster Telescope grep |
-| `NVIM_RA_LINK_ALL` | off | Link all sibling `Cargo.toml` crates for cross-crate `gd` |
+| `NVIM_TRUST_RUST_PROJECT` | off | N/A on Java branch |
+| `NVIM_LIGHT` | off | Low-memory LSP; faster Telescope grep |
+| `NVIM_RA_LINK_ALL` | off | N/A on Java branch |
 
 ## Vim-only / IDE blocking
 
@@ -46,9 +46,12 @@ Flow (only when `NVIM_VIM_ONLY` is set, or via `:VimOnlyMark`):
 
 | Script | Description |
 | --- | --- |
-| `install-debug-adapter-linux.sh` | Install LLDB DAP; network `codelldb` fallback needs `NVIM_VIM_FORCE=1` |
-| `install-debug-adapter-macos.sh` | macOS LLDB / codelldb setup |
-| `install-debug-adapter-termux.sh` | Termux LLDB setup |
+| `install-debug-adapter-linux.sh` | Forwards to `setup-java-linux.sh` (JDK install) |
+| `install-debug-adapter-macos.sh` | Forwards to `setup-java-macos.sh` |
+| `install-debug-adapter-termux.sh` | Forwards to `setup-java-termux.sh` |
+| `setup-java-macos.sh` | Install OpenJDK via Homebrew |
+| `setup-java-linux.sh` | Install OpenJDK on Linux |
+| `setup-java-termux.sh` | Install OpenJDK on Termux |
 | `uninstall-deps.sh` | Remove config-managed adapters (`--system` for package manager) |
 
 ## Utilities
