@@ -1,72 +1,813 @@
-# Swift + Neovim Cheatsheet
+# Swift + Neovim Cheatsheet (Termux)
 
-## Toolchain (all OSes)
-- From the config repo: `bash ./scripts/install-swift.sh` (macOS, Linux/WSL, FreeBSD, Termux; `--dry-run` to preview)
-- Or follow [swift.org/install](https://www.swift.org/install/)
-
-## Leader
+## Leader Key
 - `Leader` = `Space`
 
-## New project (terminal)
+## All Shortkeys Table
+
+| Area | Shortcut | Action |
+| --- | --- | --- |
+| Telescope | `<leader>ff` | Find files |
+| Telescope | `<leader>fg` or `:FG` | Live grep in project (skips `.build/`) |
+| Telescope | `<leader>fA` | Same as `fg` — all file types |
+| Telescope | `<leader>sg` | Grep `*.swift` + `Package.swift` only |
+| Telescope | `<leader>gw` or `:GrepWord` | Grep word under cursor (gd fallback) |
+| Telescope | `<leader>fc` | Search current buffer only (fastest) |
+| Telescope | `<leader>fc` | Search text in current buffer |
+| Telescope | `<leader>fb` | List open buffers |
+| Telescope | `<leader>fh` | Help tags |
+| LSP | `gd` / `<leader>ld` | Jump to definition (vertical-split safe) |
+| LSP | `gpd` / `<leader>lD` | Show definition (peek float, stay in place) |
+| LSP | `gr` | Find references |
+| LSP | `K` | Hover documentation |
+| LSP | `<C-k>` | Signature help |
+| LSP | `<leader>ca` | Code actions |
+| LSP | `<leader>rn` | Rename symbol |
+| LSP | `<leader>fm` | Format current buffer |
+| LSP | `<leader>len` | Next compile error |
+| LSP | `<leader>lep` | Previous compile error |
+| LSP | `<leader>lwn` | Next warning |
+| LSP | `<leader>lwp` | Previous warning |
+| LSP | `<leader>lfe` | Telescope: all compile errors (file:line) |
+| LSP | `<leader>lee` | Telescope: current/cached errors with full log |
+| LSP | `<leader>lfE` | Previous error file |
+| LSP | `<leader>lfw` | Telescope: all warnings (file:line) |
+| LSP | `<leader>lww` | Telescope: current/cached warnings with full log |
+| LSP | `<leader>lfW` | Previous file with warning |
+| Completion | `<C-Space>` | Open completion menu |
+| Completion | `<CR>` | Confirm selected completion |
+| Completion | `<Tab>` | Next completion item / snippet jump |
+| Completion | `<S-Tab>` | Previous completion item / snippet jump back |
+| Debug | `<leader>db` | Toggle breakpoint |
+| Debug | `<leader>dc` | Continue/start debugger |
+| Debug | `<leader>dn` | Jump to next breakpoint |
+| Debug | `<leader>do` | Step over |
+| Debug | `<leader>di` | Step into |
+| Debug | `<leader>dO` | Step out |
+| Debug | `<leader>dr` | Open DAP REPL |
+| Debug | `<leader>du` | Toggle debug UI screen |
+| Debug | `<leader>de` | Eval variable/expression under cursor |
+| Debug | `<leader>dx` | Terminate debug session |
+| Git | `<leader>gs` | Git status |
+| Git | `<leader>gl` | Git commits log |
+| Git | `<leader>gd` | Git diff |
+| Git | `<leader>gb` | Git branches |
+| Git | `<leader>gC` | Git commits for current buffer |
+| Git | `<leader>gco` | Git checkout branch |
+| Git | `<leader>gf` | Git fetch all remotes |
+| Git | `<leader>gpl` | Git pull fast-forward only |
+| Git | `<leader>gps` | Git push current branch |
+| Git | `<leader>gS` | Git stash including untracked files |
+| Git | `<leader>gL` | Git stash list |
+| Git | `<leader>ga` | Save all, format Swift buffers, `git add .` |
+| Git | `<leader>gA` | Git stash apply latest |
+| Git | `<leader>ghn` | Next git hunk |
+| Git | `<leader>ghN` | Previous git hunk |
+| Git | `<leader>ghp` | Preview git hunk |
+| Git | `<leader>ghs` | Stage git hunk |
+| Git | `<leader>ghr` | Reset git hunk |
+| Git | `<leader>ghb` | Blame current line |
+| Git | `<leader>ghd` | Toggle deleted lines |
+| Git | `<leader>gwc` | Create git worktree |
+| Git | `<leader>gwa` | Add git worktree alias |
+| Git | `<leader>gwb` | Create git worktree with new branch |
+| Git | `<leader>gwl` | List git worktrees |
+| Git | `<leader>gws` | Switch Neovim to a worktree |
+| Git | `<leader>gwd` | Delete git worktree |
+| Git | `<leader>gwr` | Remove git worktree alias |
+| Window | `<leader>sv` | Vertical split |
+| Window | `<leader>sh` | Horizontal split |
+| Window | `<leader>se` | Equalize split sizes |
+| Window | `<leader>sx` | Close current split |
+| Quit | `<leader>qa` | Save all buffers and quit all windows |
+| Quit | `<leader>qQ` | Quit all windows without saving |
+| Terminal | `<leader>th` | Open horizontal terminal split |
+| Terminal | `<leader>tv` | Open vertical terminal split |
+| Terminal | `<C-\><C-n>` | Exit terminal insert mode |
+| Testing | `<leader>tt` | `swift test --filter <cword>` (or all if no word) |
+| Testing | `<leader>ta` | `swift test` (all) |
+| Testing | `<leader>to` | `swift test -v` |
+| Testing | `<leader>ts` | `swift test --parallel` |
+| Testing | `<leader>tc` | `swift package resolve` |
+| Testing | `<leader>tf` | Format buffer (SourceKit) |
+| Testing | `<leader>tb` | `swift build` |
+| Testing | `<leader>tr` | `swift run` |
+| UI | `<leader>ul` | Telescope theme picker (30 themes) |
+| UI | `<leader>ut` | Toggle transparency |
+| UI | `<leader>uh` | Toggle LSP inlay hints |
+| File type | `<leader>ftm` | Set buffer filetype: Markdown (`.md`, docs) |
+| File type | `<leader>ftt` | Set buffer filetype: TOML (e.g. `Package.swift`) |
+| File type | `<leader>fty` | Set buffer filetype: YAML (`.yml` / `.yaml`) |
+| File type | `<leader>fts` | Set buffer filetype: Swift |
+| Grep/Replace (Swift only) | `<leader>sf` | Find & replace in `.swift` / `Package.swift` buffer |
+| Grep/Replace (Swift only) | `<leader>sg` | Find in project: `*.swift` + `Package.swift` |
+| Grep/Replace (Swift only) | `<leader>sR` | Replace in all Swift project files |
+| Grep/Replace (any file) | `<leader>fA` or `<leader>fg` | **Find** in project: Telescope `live_grep` on **all** files (needs `rg`; obeys `.gitignore`); `fA` and `fg` are equivalent |
+| Grep/Replace (any file) | `<leader>sA` | Find & **replace in project** (literal) in **all** files `rg` matches (needs `rg`) |
+| Editing | `/` (visual) | Toggle block comment `/* */` on selected lines |
+| Editing | `<leader>yf` | Yank full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>pf` | Paste full file from clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>xf` | Cut full file to clipboard (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>p` | Paste from system clipboard after cursor (`NVIM_VIM_FORCE=1`) |
+| Editing | `<leader>P` | Paste from system clipboard before cursor (`NVIM_VIM_FORCE=1`) |
+
+## Core Shortcuts
+
+### Telescope / Navigation
+- `<leader>ff` - Find files
+- `<leader>fg` or `:FG` - Live grep in project (ripgrep; skips `target/`, `node_modules/`)
+- `<leader>fA` - Same as `fg` (all files)
+- `<leader>sg` - Grep only `*.rs` and `*.toml` (faster on big Swift workspaces)
+- `<leader>gw` or `:GrepWord` - Grep the word under cursor (use when `gd` times out)
+- `<leader>fc` - Fuzzy search in **current buffer** only (instant; no project scan)
+- `<leader>fc` - Search text in current buffer
+- `<leader>fb` - List open buffers
+- `<leader>fh` - Help tags
+
+### LSP
+- `gd` / `<leader>ld` - Jump to definition (12s timeout; opens Telescope grep fallback if indexing is slow)
+- `gpd` / `<leader>lD` - Show definition (peek float)
+- **Note:** `<leader>gd` is **Git diff**, not go-to-definition — use `gd` or `<leader>ld` for LSP jump
+- `gr` - Find references
+- `K` - Hover documentation
+- `<C-k>` - Signature help (function params)
+- `<leader>ca` - Code actions (imports/derives/impl assists)
+- `<leader>rn` - Rename symbol
+- `<leader>fm` - Format current buffer
+- `<leader>len` - Next current/cached compile error; opens the full diagnostic log near the cursor
+- `<leader>lep` - Previous current/cached compile error; opens the full diagnostic log near the cursor
+- `<leader>lwn` - Next current/cached warning; opens the full diagnostic log near the cursor
+- `<leader>lwp` - Previous current/cached warning; opens the full diagnostic log near the cursor
+- `<leader>lfe` - **Telescope**: all compile errors (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
+- `<leader>lee` - **Telescope**: current LSP errors + last cached cargo errors; does **not** run `cargo check`
+- `<leader>lfE` - Previous error file (from the same list)
+- `<leader>lfw` - **Telescope**: all warnings (`cargo check` + LSP), with full compiler log in preview; Enter jumps and opens the full log near the cursor
+- `<leader>lww` - **Telescope**: current LSP warnings + last cached cargo warnings; does **not** run `cargo check`
+- `<leader>lfW` - Previous warning file
+
+Use `<leader>len` / `<leader>lwn` for next current/cached diagnostics, and `<leader>lep` / `<leader>lwp` for previous current/cached diagnostics. These navigation keys open the full diagnostic float. Use `<leader>lfe` / `<leader>lfw` when you want a fresh `cargo check` scan, including files that are not open yet. After that, `<leader>lee` / `<leader>lww` reopen the current LSP diagnostics plus the last cached cargo results without running `cargo check` again.
+
+If you open a parent folder like `superdir/` with child crates such as `1/` (binary) and `2/` (library), fresh cargo diagnostics (`<leader>lfe` / `<leader>lfw`) run `cargo check` in each direct child crate that has a `Package.swift`.
+
+### File type (Markdown, TOML, YAML, Swift)
+Use when a buffer is plain text or the wrong syntax (extensionless scratch buffer, copy-paste, or rare paths):
+- `<leader>ftm` - Set filetype to Markdown
+- `<leader>ftt` - Set filetype to TOML
+- `<leader>fty` - Set filetype to YAML (covers `.yml` and `.yaml`)
+- `<leader>fts` - Set filetype back to Swift (after testing another `ft*` on a `.rs` buffer, or to fix detection)
+
+### Find & replace in one file
+- **`<leader>sr`** (current buffer, **any** file) — Literal find & replace in **this file only**; runs `:%s/.../.../gc` (confirm each change with `y`/`n`). Use in normal editable buffers, not the terminal. **Readonly** buffers are blocked.
+
+- **`<leader>sf`** (Swift / TOML only) — Same flow as `sr`, but only if the buffer is **`.rs` / `Package.swift` / other `.toml`** (or `rust` / `toml` filetype).
+
+### Find & replace (project; Swift / TOML scope)
+The following are scoped to **`.rs`** and **`.toml`** (including `Package.swift`) for **project** search/replace.
+- **`<leader>sg`** (project) — **Search** in the repo: Telescope **live_grep** with `rg` globs `*.rs` and `*.toml` only. Run Neovim from the **project root** (or the cwd you want to search). Requires **ripgrep** (`rg`).
+- **`<leader>sR`** (project) — **Replace** the literal search string with the replacement in **all** `*.rs` and `*.toml` files that contain a match. Uses `rg` to list files, then rewrites them on disk. **Reload** buffers in Neovim if you had those files open (`:e` or `:checktime`). Run from the **project root** so paths resolve correctly.
+
+- **`<leader>fA`** (project, **any** file) — **Search** the whole tree with Telescope `live_grep` and no extension filter. Same idea as **`<leader>fg`** (use whichever you remember). Needs **`rg`**.
+
+- **`<leader>sA`** (project, **any** file) — **Replace** a literal string in every file under cwd that `rg` reports as containing a match (not limited to `.rs`/`.toml`). Respects **`.gitignore`**. **Reload** open buffers after; use with care on large trees.
+
+### Debugging (DAP)
+- `<leader>db` - Toggle breakpoint
+- `<leader>dc` - Continue/start debugger
+- `<leader>dn` - Jump to next breakpoint (continue without stepping)
+- `<leader>do` - Step over
+- `<leader>di` - Step into
+- `<leader>dO` - Step out
+- `<leader>dr` - Open DAP REPL
+- `<leader>du` - Toggle debug UI screen (DAP UI)
+- `<leader>de` - Eval variable/expression under cursor
+- `<leader>dx` - Terminate debug session
+
+### Git
+- `<leader>gs` - Git status (Telescope)
+- `<leader>gl` - Git commits log (Telescope)
+- `<leader>gd` - Git diff (Gitsigns)
+- `<leader>gb` - Git branches (Telescope)
+- `<leader>gC` - Current buffer commit history (Telescope)
+- `<leader>gco` - Checkout/switch branch with `git checkout <branch>`
+- `<leader>gf` - Fetch all remotes and prune deleted refs
+- `<leader>gpl` - Pull current branch with `--ff-only`
+- `<leader>gps` - Push current branch
+- `<leader>gS` - Stash tracked and untracked changes
+- `<leader>gL` - List stashes
+- `<leader>ga` - Save all buffers, run `format Swift buffers`, then `git add .` (one-key pre-commit prep)
+- `<leader>gA` - Apply latest stash
+- `<leader>ghn` / `<leader>ghN` - Next/previous hunk
+- `<leader>ghp` - Preview current hunk
+- `<leader>ghs` - Stage current hunk
+- `<leader>ghr` - Reset current hunk
+- `<leader>ghb` - Blame current line
+- `<leader>ghd` - Toggle deleted lines
+- `:GitCheckout [branch]` - Command form for checkout/switch branch
+- `:GitFetch` / `:GitPull` / `:GitPush` - Command forms for sync actions
+- `:GitStash` / `:GitStashList` - Command forms for stash actions
+- `<leader>gwc` - Create a worktree with `git worktree add <path> [branch]`
+- `<leader>gwa` - Alias for create/add worktree
+- `<leader>gwb` - Create a worktree and new branch with `git worktree add -b`
+- `<leader>gwl` - List worktrees with `git worktree list`
+- `<leader>gws` - Switch Neovim's cwd to a selected worktree
+- `:GitWorktreeSwitch` - Command form of `<leader>gws`
+- `<leader>gwd` - Delete a worktree with `git worktree remove`
+- `<leader>gwr` - Alias for delete/remove worktree
+
+#### Git Worktree: What to Use When
+
+| Use case | Shortcut | Command pattern |
+| --- | --- | --- |
+| Work on an existing branch in a second folder | `<leader>gwc` | `git worktree add <path> <branch>` |
+| Create a fresh branch and checkout together | `<leader>gwb` | `git worktree add -b <new-branch> <path> [start-point]` |
+| Check all linked worktrees before switching/deleting | `<leader>gwl` | `git worktree list` |
+| Move this Neovim session to another worktree | `<leader>gws` | `:cd <selected-worktree>` |
+| Delete a finished worktree folder | `<leader>gwd` | `git worktree remove <path>` |
+
+#### Git Shortcuts: What to Use When
+
+| Use case | Shortcut | Command pattern |
+| --- | --- | --- |
+| Browse changed files | `<leader>gs` | `Telescope git_status` |
+| Browse branches | `<leader>gb` | `Telescope git_branches` |
+| Switch branch in the current checkout | `<leader>gco` | `git checkout <branch>` |
+| Update remote branch info | `<leader>gf` | `git fetch --all --prune` |
+| Update your current branch | `<leader>gpl` | `git pull --ff-only` |
+| Push current branch | `<leader>gps` | `git push` |
+| Save unfinished dirty work | `<leader>gS` | `git stash push -u` |
+| Commit only part of a file | `<leader>ghs` | Gitsigns stage hunk |
+| Format and stage everything before commit | `<leader>ga` | `:wa` → `format Swift buffers` → `git add .` |
+| Discard one bad hunk | `<leader>ghr` | Gitsigns reset hunk |
+| Check why a line changed | `<leader>ghb` | Gitsigns blame line |
+
+### Window / Split Management
+- `<leader>sv` - Vertical split
+- `<leader>sh` - Horizontal split
+- `<leader>se` - Equalize split sizes
+- `<leader>sx` - Close current split
+- `<leader>qa` - Save all buffers and quit all windows (`:wqa`)
+- `<leader>qQ` - Quit all windows without saving (`:qa!`)
+
+### Terminal (open and use)
+- Open terminal in horizontal split: `<leader>th`
+- Open terminal in vertical split: `<leader>tv`
+- Manual commands (alternative):
+  - `:split | terminal`
+  - `:vsplit | terminal`
+- Use existing run mappings (opens terminal split automatically):
+  - `<leader>tr` (`swift run`)
+  - `<leader>tc` (`swift package resolve --all-targets --all-features`)
+  - `<leader>tf` (`format Swift buffers`)
+  - `<leader>ta` / `<leader>tt` (test runs)
+- Exit terminal insert mode to normal mode: `<C-\><C-n>`
+- Close current terminal split: `<leader>sx`
+
+### Testing
+- `<leader>tt` - Run test under cursor (`swift test <word-under-cursor>`)
+- `<leader>ta` - Run all tests (`swift test`)
+- `<leader>to` - Toggle neotest output panel
+- `<leader>ts` - Toggle neotest summary panel
+- `<leader>tc` - Run `swift package resolve --all-targets --all-features`
+- `<leader>tf` - Run `format Swift buffers`
+- `<leader>tb` - Run `swift build`
+- `<leader>tr` - Run `swift run`
+
+### Editing / Comments
+- Select lines in visual mode (`v`, `V`, or `<C-v>`), then press `/` to wrap with `/* */`
+- Press `/` again on the same block to remove the comment
+- Normal-mode `/` is unchanged (still starts search)
+
+### UI Toggles
+- `<leader>ul` - Telescope theme picker
+- `<leader>ut` - Toggle transparency
+- `<leader>uh` - Toggle LSP inlay hints
+
+### Change Theme
+- Press `<leader>ul` to open the Telescope theme picker (30 themes, fuzzy search, preview pane). List order: **all dark themes first**, then **all bright themes**.
+- Move through results to **live-preview** each theme; press **Enter** to apply and **save as default** for future sessions.
+- `Esc` cancels and restores the theme you had when the picker opened.
+- Available palettes:
+  - **Coral** / **Light** — orange dark + clean white
+  - **Yellow** — gold dark + warm cream
+  - **Ocean** — teal dark + seafoam bright
+  - **Violet** — cosmic purple dark + lavender bright
+  - **Mint** — emerald dark + fresh green bright
+  - **Rose** — sakura pink dark + blush bright
+  - **Slate** — cool gray dark + clean silver bright
+  - **Amber** — burnt honey dark + warm cream bright
+  - **Cherry** — crimson dark + soft red bright
+  - **Arctic** — icy blue dark + frost bright
+  - **Forest** — deep pine dark + meadow bright
+  - **Dracula** — classic purple/pink dark + soft light
+  - **Solarized** — Ethan Schoonover dark + light
+  - **Xcode** — Apple-style dark + bright
+  - **Xcode2** — high-contrast for default macOS Terminal.app (black/white base)
+- Command mode:
+  - Picker: `:lua require("config.theme").pick()`
+  - Direct apply: `:lua require("config.theme").apply("xcode2_dark")` (aliases: `xcode2`, `xcode`, `dracula`, `solarized`, `yellow`, `ocean`, `violet`, `mint`, `rose`, `slate`, `amber`, `cherry`, `arctic`, `forest`, `mono`)
+
+---
+
+## Swift-Specific Workflows
+
+### 0) Build, Test, and Run (from project root)
+- Start Neovim in your Swift project root:
+  - `nvim .`
+- Inside Neovim, use these mapped shortcuts:
+  - Run app: `<leader>tr`
+  - Run nearest test: `<leader>tt`
+  - Run all tests: `<leader>ta`
+  - Run clippy: `<leader>tc` (great before commit)
+  - Run fmt: `<leader>tf` (format whole project)
+  - Build app: `<leader>tb`
+
+#### Open terminal manually in project
+1. Horizontal terminal: `<leader>th`
+2. Vertical terminal: `<leader>tv`
+3. Return terminal to normal mode: `<C-\><C-n>`
+4. Close terminal split: `<leader>sx`
+
+#### Typical safe flow (terminal)
+1. `format Swift buffers`
+2. `swift package resolve --all-targets --all-features -- -D warnings`
+3. `swift test`
+4. `swift run`
+
+### 1) Edit -> Diagnose -> Fix -> Format
+1. Open a Swift file (`.rs`)
+2. Wait for `SourceKit` diagnostics/virtual text
+3. Use `<leader>ca` for quick fixes and imports
+4. Save file to auto-format (`SourceKit format` on save)
+5. Before commit: `<leader>ga` (save all → `format Swift buffers` → `git add .`)
+
+### 2) Symbol Navigation
+1. Place cursor on symbol
+2. `gd` to jump to definition (safe in vertical splits)
+3. `gr` to inspect usages
+4. `K` for API docs without leaving buffer
+5. `gpd` / `<leader>lD` to peek definition without leaving your place
+
+### 3) Test-Driven Cycle
+1. Put cursor on target test/function name
+2. `<leader>tt` for focused test run
+3. `<leader>ta` for full suite before commit
+
+### 4) Debugging Swift Binary (Setup + Run + State)
+
+#### Debugging cheat sheet (table)
+
+| Goal | Shortcut / Command | What it does |
+| --- | --- | --- |
+| Install adapter on macOS | `./scripts/install-debug-adapter-macos.sh` | Installs/links `lldb-dap` using Xcode CLT or Homebrew llvm |
+| Install adapter on Linux | `./scripts/install-debug-adapter-linux.sh` | Installs `lldb-dap` from package manager or falls back to `codelldb` |
+| Install adapter on Termux | `./scripts/install-debug-adapter-termux.sh` | Installs `llvm` and links `lldb-dap` |
+| Verify adapter | `which lldb-dap || which codelldb` | Confirms debug adapter exists |
+| Build debug binary | `swift build` | Creates `target/debug/<binary>` |
+| Start Neovim in project | `nvim .` | Opens project root so DAP uses correct workspace |
+| Toggle breakpoint | `<leader>db` | Add/remove breakpoint at current line |
+| Start debugger | `<leader>dc` | Starts debug session; config stops on entry so you can step from program start |
+| Start debugger command | `:lua require("dap").continue()` | Same as `<leader>dc` |
+| Pick executable | `target/debug/<your-binary-name>` | Choose actual binary file, not `target/debug/` directory |
+| Jump to next breakpoint | `<leader>dn` | Continue without stepping into library code |
+| Step over line | `<leader>do` | Line-by-line execution in current function |
+| Step into function | `<leader>di` | Enter function call; may enter library code |
+| Step out | `<leader>dO` | Return from current function to caller |
+| Toggle debug screen | `<leader>du` | Show/hide DAP UI panels |
+| Inspect variable under cursor | `<leader>de` | Evaluate current variable/expression |
+| Open debug REPL | `<leader>dr` | Run expressions like `my_var` or `my_struct.field` |
+| Stop debugging | `<leader>dx` | Terminate debug session |
+
+| Debug UI panel | What to look for |
+| --- | --- |
+| `Scopes` | Local variables, function arguments, current values |
+| `Stacks` | Call stack / frames; selecting a frame changes visible variables |
+| `Watches` | Expressions you want to keep checking |
+| `Breakpoints` | Active breakpoint list |
+| `REPL` | Manual expression evaluation while paused |
+
+| Problem | Fix |
+| --- | --- |
+| Error: `target/debug/` is not valid executable | Select `target/debug/<binary-name>`, not the folder |
+| Variables missing or `<optimized out>` | Run `swift build`, avoid release build while debugging |
+| Debugger enters `std`, `core`, `alloc`, `tokio`, etc. | Use `<leader>dO` to step out, then `<leader>do` or `<leader>dn` |
+| Program runs directly without stopping | Add breakpoint with `<leader>db` on the exact assignment line, or restart Neovim so `stopOnEntry = true` loads |
+| Nothing opens for debug state | Press `<leader>du` to toggle DAP UI |
+| Adapter missing | Run platform install script or `./scripts/vendor-plugins.sh` |
+
+#### One-time setup (install adapter)
+- macOS:
+  - `./scripts/install-debug-adapter-macos.sh`
+- Linux:
+  - `./scripts/install-debug-adapter-linux.sh`
+- Termux:
+  - `./scripts/install-debug-adapter-termux.sh`
+- Or run everything (plugins + adapter check/install):
+  - `./scripts/vendor-plugins.sh`
+
+#### Cleanup / uninstall
+- Remove vendored plugin repos:
+  - `./scripts/remove-vendor.sh`
+- Remove config-managed debug adapter shims and downloaded `codelldb` files:
+  - `./scripts/uninstall-deps.sh`
+- Also try package-manager uninstall for `llvm`/`lldb`:
+  - `./scripts/uninstall-deps.sh --system`
+
+#### Dependencies by platform
+- macOS:
+  - Xcode CLT (`xcrun`, `xcode-select`)
+  - optional Homebrew (`brew`) for llvm fallback
+- Linux:
+  - one package manager (`apt-get` / `dnf` / `pacman` / `zypper`)
+  - `sudo` (or run as root)
+  - fallback downloader tools: `curl`, `unzip`, `file`
+- Termux:
+  - `pkg` and `llvm`
+
+#### Verify adapter is available
+- `which lldb-dap || which codelldb`
+- Confirm local shim (used by this config):
+  - `ls -l ~/.config/nvim/bin/lldb-dap`
+
+#### Build and start debugging
+1. Build target first:
+   - `swift build`
+2. Open project root in Neovim:
+   - `nvim .`
+3. Set breakpoint(s):
+   - `<leader>db`
+4. Start/continue debugger:
+   - `<leader>dc`
+   - command form: `:lua require("dap").continue()`
+5. When prompted, choose a real binary file like:
+   - `target/debug/<your-crate-name>`
+   - not `target/debug/` (directory)
+6. The debugger now stops on entry. Press `<leader>do` to step line-by-line, or `<leader>dn` to continue to the next breakpoint.
+
+#### See debugger state while paused
+- Variables/scopes/call stack:
+  - opens automatically with `nvim-dap-ui` after debugger starts
+  - toggle manually anytime: `<leader>du`
+- Step controls:
+  - `<leader>do` step over
+  - `<leader>di` step into
+  - `<leader>dO` step out
+- Open DAP REPL:
+  - `<leader>dr`
+- Inspect expression under cursor:
+  - `<leader>de`
+- Stop session:
+  - `<leader>dx`
+
+#### How to see variable values (quick)
+1. Start debug and pause on a breakpoint (`<leader>db`, then `<leader>dc`).
+2. Check left DAP UI panels:
+   - `Scopes` shows locals/arguments for current frame
+   - `Stacks` lets you switch call frames (variables update per frame)
+3. For one-off value under cursor:
+   - place cursor on variable and run `:lua require("dapui").eval()`
+4. For custom expressions in current context:
+   - `:lua require("dap").repl.open()`
+   - type expressions like `my_var`, `my_struct.field`, `vec.len()`
+5. If value is `<optimized out>` or missing:
+   - rebuild with debug info and lower optimization:
+   - `swift build`
+   - prefer dev profile / avoid release while debugging
+
+#### Add breakpoints
+- Move cursor to the line you want to pause on.
+- Press `<leader>db` to toggle a breakpoint on that line.
+- Press `<leader>db` again on the same line to remove it.
+- To stop on an assignment statement, put the cursor exactly on that assignment line and press `<leader>db` before `<leader>dc`.
+
+#### Debug line-by-line vs step into functions
+- `<leader>dc` - Continue execution (or start debugger). Runs until next breakpoint.
+- `<leader>dn` - Jump from current breakpoint to next breakpoint without stepping through library code.
+- `<leader>do` - Step over current line. Use this for normal line-by-line debugging in your app code.
+- `<leader>di` - Step into function call on current line. This can enter dependency/library code.
+- `<leader>dO` - Step out of current function and return to caller.
+- If debugger goes inside `std`, `core`, `alloc`, `tokio`, etc.:
+  - press `<leader>dO` to leave that function
+  - then continue line-by-line with `<leader>do`
+  - avoid `<leader>di` unless you really want to inspect that function
+- LLDB is configured to avoid common Swift/library frames while stepping, but step-into can still enter libraries when source/debug info is available.
+
+#### Typical debug flow
+1. Set 1-3 breakpoints with `<leader>db`.
+2. Start/continue with `<leader>dc`.
+3. At a breakpoint:
+   - Use `<leader>do` for line-by-line in current function.
+   - Use `<leader>dn` to jump directly to the next breakpoint.
+   - Use `<leader>di` when a called function is suspicious.
+   - Use `<leader>dO` to return back quickly if you entered a library or helper function.
+4. Continue to next breakpoint with `<leader>dn` or `<leader>dc`.
+
+#### Minimal run and debug example
+1. `swift build`
+2. In Neovim open `src/main.rs`
+3. Put cursor on a target line and press `<leader>db`
+4. Press `<leader>dc`
+5. Select `target/debug/<your-binary-name>`
+6. Use `<leader>do` / `<leader>di` while paused
+
+### 5) Package.swift Productivity
+1. Open `Package.swift`
+2. Use completion for crate names/versions
+3. Use LSP + completion to keep dependencies tidy quickly
+
+---
+
+## LSP Navigation Tips
+- If completion is not shown, press `<C-Space>` in insert mode.
+- Confirm selected completion with `<CR>`.
+- Use `Tab`/`Shift-Tab` to cycle completion items/snippet jumps.
+- Prefer `<leader>ca` before manual edits for:
+  - Missing imports
+  - Derive suggestions
+  - Boilerplate assists (when available from SourceKit)
+
+---
+
+## Termux Troubleshooting
+
+### `SourceKit` not working (`gd` / `K` do nothing)
+- **Keymap mix-up:** `<leader>gd` = Git diff (Gitsigns). For LSP jump use `gd` or `<leader>ld`.
+- Verify install:
+  - `pkg install rust`
+  - `rustup component add SourceKit`
+- In Neovim:
+  - `:Mason` and ensure `rust_analyzer` is present (auto-installed on startup when online)
+  - `:LspInfo` — should show `rust_analyzer` attached to `.rs` buffers
+  - `:checkhealth vim.lsp` for startup errors
+- Project root:
+  - Open a file **inside** a crate (`Package.swift` folder), or a parent folder with child crates (`1/`, `2/`)
+  - If filetype is wrong, use `<leader>fts` to set Swift
+- Two sibling workspaces in one parent folder (`1/`, `2/`):
+  - `gd` needs `linkedProjects`; this config sets them from the parent directory automatically
+  - After opening the second crate, run `:LspRestart` if cross-crate `gd` still fails
+- Proc macros / cross-crate defs also need: `NVIM_VIM_FORCE=1 nvim .`
+- Wait a few seconds after opening a file — `SourceKit` indexes before `gd` / `K` return docs
+- `gd` hanging or timing out on big projects:
+  - SourceKit may still be indexing — run `:LspIndexing` to check
+  - On timeout, config auto-opens Telescope grep for the symbol (`:GrepWord` / `<leader>gw`)
+  - Open the **crate root** (`Package.swift` folder), not a parent `super/` with many children
+  - Low-memory mode: `NVIM_LIGHT=1 nvim .` (single crate, no inlay hints, lighter checks)
+  - Cross-crate `gd` in a monorepo needs siblings linked: `(not applicable for Swift)` (uses more RAM)
+  - Close Cursor/VS Code on the same folder — `NVIM_VIM_ONLY=2 nvim .` blocks their indexing
+  - This config cancels stuck LSP requests after 12s instead of freezing the UI
+  - If you see a timeout warning, wait for indexing or run `:LspRestart`
+
+### Formatter not running
+- Check `SourceKit format`:
+  - `rustup component add SourceKit format`
+- Manual trigger:
+  - `<leader>fm`
+
+### Live grep finds nothing
+- Ensure `ripgrep` exists:
+  - `pkg install ripgrep`
+- Run Neovim from the **project/crate root** you want to search
+- On huge repos use `<leader>sg` (Swift/TOML only) or `<leader>fc` (current file)
+- `fg` / `fA` skip `target/` automatically — rebuild artifacts won't clutter results
+
+### Debugger fails to launch
+- Ensure binary is built:
+  - `swift build`
+- If error says "not a valid executable", you selected a folder path.
+  - Pick exact binary file: `target/debug/<your-binary-name>`
+- Confirm adapter binary:
+  - `which lldb-dap || which codelldb`
+- Run platform installer if missing:
+  - `./scripts/install-debug-adapter-macos.sh`
+  - `./scripts/install-debug-adapter-linux.sh`
+  - `./scripts/install-debug-adapter-termux.sh`
+
+### Icons not rendering
+- Use a Nerd Font in your terminal app.
+- In GUI clients, fallback is configured to JetBrains Mono Nerd Font.
+
+---
+
+## Quick Reference Cards
+
+### Motions
+- `w` next word, `b` previous word, `e` end of word
+- `0` line start, `^` first non-blank, `$` line end
+- `gg` top of file, `G` bottom of file
+- `%` jump matching bracket/paren
+
+### Editing
+- `ciw` change inner word
+- `di(` delete inside parentheses
+- `yy` yank line, `<leader>yf` yank full file, `<leader>pf` paste full file, `<leader>xf` cut full file, `p` or `<leader>p` paste after
+- `u` undo, `<C-r>` redo
+- `.` repeat last change
+
+### Searching
+- `/pattern` forward search, `?pattern` backward search
+- `n` next match, `N` previous match
+- `*` search word under cursor forward
+- `#` search word under cursor backward
+
+---
+
+## Useful Commands
+- `:LspInfo` - show active LSP clients
+- `:Mason` - manage/install language servers and tools
+- `:Telescope` - browse pickers
+- `:checkhealth` - global Neovim health checks
+- `./scripts/check-worktree.sh` - verify `git worktree` support
+- `./scripts/remove-vendor.sh` - remove local vendored plugin repos
+- `./scripts/uninstall-deps.sh` - remove config-managed debug adapter files
+
+---
+
+## Offline / Vendor Plugins — Step by Step
+
+Vendoring copies `lazy.nvim` and every plugin repo into this config so Neovim can start **offline** or in **corporate mode** without downloading from GitHub.
+
+| Path | Contents |
+| --- | --- |
+| `vendor/lazy/lazy.nvim` | Plugin manager |
+| `vendor/plugins/<name>/` | One git clone per plugin |
+| `lazy-lock.json` | Pinned commit per plugin (used by `--locked`) |
+
+This config prefers `vendor/` automatically when those folders exist (`lua/config/lazy.lua`).
+
+### Prerequisites (one-time, online machine)
+
+1. Install **git** and **python3** (required for locked vendoring).
+2. Clone or open this config:
+   - `cd ~/.config/nvim`
+3. Ensure you can reach GitHub (or use a mirror that can clone `github.com/*` repos).
+
+### Step 1 — First-time vendor (recommended: locked)
+
+Use **locked** mode in normal workflows. It checks out the exact commits in `lazy-lock.json` (reviewed, reproducible).
+
 ```bash
-mkdir MyApp && cd MyApp
-swift package init --type executable --name MyApp
-swift build && swift run
-nvim .
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh
+# same as:
+bash ./scripts/vendor-plugins.sh --locked
 ```
-- In Neovim: `:SwiftNewProject` — show these steps.
-- In config: see top of `init.lua` and `lua/config/swift-project.lua`.
 
-## Telescope
-| Key | Action |
-|-----|--------|
-| `<leader>ff` | Find files |
-| `<leader>fg` | Live grep |
-| `<leader>fb` | Buffers |
-| `<leader>fh` | Help tags |
+What the script does:
 
-## LSP (SourceKit)
-| Key | Action |
-|-----|--------|
-| `gd` | Go to definition |
-| `gr` | References |
-| `K` | Hover |
-| `<C-k>` | Signature help |
-| `<leader>ca` | Code actions |
-| `<leader>rn` | Rename |
-| `<leader>fm` | Format buffer |
+1. Clones/updates `folke/lazy.nvim` → `vendor/lazy/lazy.nvim`
+2. Clones/updates each plugin in `scripts/vendor-plugins.sh` → `vendor/plugins/<name>/`
+3. Pins each repo to the commit in `lazy-lock.json`
+4. Tries to install a debug adapter (`lldb-dap` / `codelldb`)
+5. Runs `./scripts/check-worktree.sh`
 
-## Swift PM (split terminal)
-| Key | Command |
-|-----|---------|
-| `<leader>tb` | `swift build` |
-| `<leader>tr` | `swift run` |
-| `<leader>ta` | `swift test` |
-| `<leader>tt` | `swift test` or `--filter <cword>` |
-| `<leader>to` | `swift test -v` |
-| `<leader>ts` | `swift test --parallel` |
-| `<leader>tc` | `swift package resolve` |
+Expected end of output:
 
-## Debug (LLDB)
-| Key | Action |
-|-----|--------|
-| `<leader>db` | Toggle breakpoint |
-| `<leader>dc` | Continue / start |
-| `<leader>do` / `<leader>di` / `<leader>dO` | Step over / into / out |
-| `<leader>du` | DAP UI |
-| `<leader>dx` | Terminate |
+```text
+Vendoring complete.
+You can now run Neovim offline with local plugin sources.
+```
 
-Build first: `swift build`. Launch config defaults to `.build/debug/<foldername>`; adjust to match your product in `Package.swift`.
+### Step 2 — Verify vendoring worked
 
-## Git
-Same as before: `<leader>gs` status, `<leader>gl` log, `<leader>gb` branches, worktree keys, etc. (see `lua/config/keymaps.lua`).
+```bash
+ls vendor/lazy/lazy.nvim
+ls vendor/plugins/nvim-cmp
+nvim .          # should start without lazy download errors
+:Lazy           # all plugins should show local/vendor source
+```
 
-## UI
-- `<leader>ub` — theme  
-- `<leader>ut` — transparency  
-- `<leader>uh` — inlay hints  
+Disconnect network (or use `NVIM_CORPORATE_MODE=1 nvim .`) and confirm Neovim still starts.
 
-## Useful
-- `:LspInfo` — clients  
-- `:checkhealth`  
-- SourceKit: ensure `xcrun sourcekit-lsp` (mac) or `sourcekit-lsp` on `PATH` (Linux).  
+### Step 3 — Add a **new** plugin to vendors
+
+Do this when you add a plugin to `lua/plugins/init.lua` and want it available offline.
+
+1. **Add the plugin spec** in `lua/plugins/init.lua` (example):
+   ```lua
+   { "author/new-plugin.nvim", opts = {} },
+   ```
+2. **Install once online** so `lazy-lock.json` gets a commit pin:
+   ```bash
+   NVIM_VIM_FORCE=1 nvim .
+   ```
+   In Neovim:
+   - `:Lazy sync` (or open Neovim and wait for lazy to install missing plugins)
+   - Confirm `:Lazy` shows the new plugin as installed
+3. **Confirm `lazy-lock.json`** has an entry for the plugin name (folder name, e.g. `"new-plugin.nvim"`).
+4. **Register the repo** in `scripts/vendor-plugins.sh` — add one line to the `repos=( ... )` array:
+   ```bash
+   "author/new-plugin.nvim"
+   ```
+   Use the GitHub path `owner/repo` (no `.git`). The script stores it as `vendor/plugins/new-plugin.nvim/`.
+5. **Vendor the new plugin** (locked):
+   ```bash
+   cd ~/.config/nvim
+   bash ./scripts/vendor-plugins.sh --locked
+   ```
+6. **Verify**:
+   ```bash
+   ls vendor/plugins/new-plugin.nvim
+   nvim .
+   :Lazy
+   ```
+
+### Step 4 — Refresh vendors after `lazy-lock.json` changes
+
+When `lazy-lock.json` changes (you merged an update, or ran `:Lazy update` online), re-vendor with locked pins:
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/vendor-plugins.sh --locked
+```
+
+Commit both `lazy-lock.json` and the updated `vendor/` trees (or re-run vendoring on each machine from the same lock file).
+
+### Step 5 — Upgrade plugins to latest (review window only)
+
+Use **`--latest`** only during an intentional plugin review — it pulls the newest default branch instead of `lazy-lock.json` commits.
+
+```bash
+cd ~/.config/nvim
+NVIM_VIM_FORCE=1 nvim .
+# in Neovim: :Lazy update
+bash ./scripts/vendor-plugins.sh --latest
+# review diffs, test, then commit updated lazy-lock.json + vendor trees
+```
+
+Do **not** use `--latest` for routine corporate/offline refreshes; use `--locked`.
+
+### Step 6 — Corporate / air-gapped usage
+
+After Step 1 (locked vendoring) on a connected machine:
+
+1. Copy the whole config (including `vendor/` and `lazy-lock.json`) to the air-gapped host.
+2. Start Neovim:
+   ```bash
+   NVIM_CORPORATE_MODE=1 nvim .
+   ```
+3. Corporate mode **requires** vendored `lazy.nvim` and plugins; it will not download missing plugins.
+4. For rust proc macros in corporate mode:
+   ```bash
+   NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .
+   ```
+
+### Step 7 — Remove vendored plugins
+
+```bash
+cd ~/.config/nvim
+bash ./scripts/remove-vendor.sh
+# or non-interactive:
+bash ./scripts/remove-vendor.sh --yes
+```
+
+Neovim will need internet (or existing `~/.local/share/nvim/lazy/`) until you vendor again.
+
+### Vendor troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| `Missing lock file: lazy-lock.json` | Run `NVIM_VIM_FORCE=1 nvim .` and `:Lazy sync` online first |
+| `python3 is required for locked vendoring` | Install python3 |
+| `Corporate mode: missing vendored plugin X` | Add repo to `vendor-plugins.sh`, run `--locked`, or disable plugin |
+| Plugin works online but not offline | Re-run `bash ./scripts/vendor-plugins.sh --locked` |
+| New plugin not in vendor dir | Add repo to `repos=(...)` in `vendor-plugins.sh`, then re-vendor |
+| Want to reset everything | `remove-vendor.sh --yes`, then `vendor-plugins.sh --locked` |
+
+---
+
+## Enterprise Defaults (`NVIM_VIM_FORCE`)
+- Default: `nvim .` (enterprise-safe; no external read/write integrations)
+- Opt in to clipboard, path/crate completions, plugin downloads, proc macros:
+  - `NVIM_VIM_FORCE=1 nvim .`
+- Without force mode:
+  - No Linux clipboard (`wl-clipboard` / `xclip` / `xsel`) or `+` register maps
+  - No `cmp-path` or `crates.nvim` completion
+  - No `lazy.nvim` missing-plugin download or luarocks
+  - No `SourceKit` proc macros / check-on-save
+  - No `codelldb` network download in `install-debug-adapter-linux.sh`
+
+## Neovim-Only Workspace (default)
+- Plain `nvim .` does not change IDE/LLM settings — set `NVIM_VIM_ONLY` when you want to mark or unmark
+- Mark workspace and stash `.vscode` / `.cursor` / ignore files while Neovim runs: `NVIM_VIM_ONLY=1 nvim .`
+- Restore IDE indexing for a project: `NVIM_VIM_ONLY=0 nvim .`
+- Commands: `:VimOnlyMark`, `:VimOnlyReset`
+
+## Corporate Mode
+- Start locked-down mode: `NVIM_CORPORATE_MODE=1 nvim .`
+- Requires reviewed vendored plugins; missing plugins are not downloaded automatically.
+- Swift proc macros and check-on-save need force mode and an explicit trust flag:
+  - `NVIM_VIM_FORCE=1 NVIM_CORPORATE_MODE=1 NVIM_TRUST_RUST_PROJECT=1 nvim .`
+- Vendor reviewed plugin commits from `lazy-lock.json`:
+  - `bash ./scripts/vendor-plugins.sh --locked`
+- Update to latest plugin commits only during review:
+  - `bash ./scripts/vendor-plugins.sh --latest`
+
+## Environment Variables
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `NVIM_VIM_FORCE` | off | Enable clipboard, external completions, downloads, proc macros |
+| `NVIM_VIM_ONLY` | off (no change) | `1` = mark; `0` = unmark; `2` = enhanced block |
+| `NVIM_CORPORATE_MODE` | off | Require vendored plugins; block lazy downloads |
+| `NVIM_LIGHT` | off | Low-memory SourceKit + faster grep (single crate) |
+| `NVIM_RA_LINK_ALL` | off | Load all sibling crates for cross-crate `gd` (more RAM) |
+| `NVIM_TRUST_RUST_PROJECT` | off | Allow rust proc macros when corporate + force mode |
+

@@ -10,7 +10,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 vim.api.nvim_create_autocmd("VimEnter", {
   group = group,
   callback = function()
-    require("config.theme").apply("coral")
+    require("config.theme").apply_default()
   end,
 })
 

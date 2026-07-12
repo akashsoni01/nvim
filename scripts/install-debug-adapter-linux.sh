@@ -12,6 +12,8 @@ set -euo pipefail
 
 BIN_DIR="${HOME}/.config/nvim/bin"
 CODELLDB_DIR="${HOME}/.local/share/codelldb"
+CORPORATE_MODE="${NVIM_CORPORATE_MODE:-0}"
+FORCE_MODE="${NVIM_VIM_FORCE:-0}"
 
 have() {
   command -v "$1" >/dev/null 2>&1
@@ -35,6 +37,21 @@ maybe_sudo() {
     fi
     sudo "$@"
   fi
+}
+
+sha256_file() {
+  local file="$1"
+  if have sha256sum; then
+    sha256sum "$file" | awk '{print $1}'
+    return 0
+  fi
+  if have shasum; then
+    shasum -a 256 "$file" | awk '{print $1}'
+    return 0
+  fi
+
+  echo "Missing dependency: sha256sum or shasum" >&2
+  return 1
 }
 
 echo "Checking existing debug adapter..."
@@ -69,16 +86,39 @@ if have lldb-dap; then
 fi
 
 echo "lldb-dap still missing. Falling back to codelldb binary install..."
+if [[ "$FORCE_MODE" != "1" && "$FORCE_MODE" != "true" ]]; then
+  echo "Set NVIM_VIM_FORCE=1 to allow downloading codelldb from the network."
+  exit 1
+fi
 need_cmd curl
 need_cmd unzip
 need_cmd file
+need_cmd rg
 
 mkdir -p "$CODELLDB_DIR" "$BIN_DIR"
 TMP_ZIP="$(mktemp -t codelldb-linux.XXXXXX.zip)"
 
 URL="${CODELLDB_URL:-https://github.com/vadimcn/codelldb/releases/latest/download/codelldb-linux-x64.vsix}"
+if [[ "$CORPORATE_MODE" == "1" || "$CORPORATE_MODE" == "true" ]]; then
+  if [[ -z "${CODELLDB_URL:-}" || -z "${CODELLDB_SHA256:-}" ]]; then
+    echo "Corporate mode requires CODELLDB_URL and CODELLDB_SHA256 for fallback binary download."
+    exit 1
+  fi
+fi
+
 echo "Downloading: $URL"
 curl -fL "$URL" -o "$TMP_ZIP"
+
+if [[ -n "${CODELLDB_SHA256:-}" ]]; then
+  actual_sha="$(sha256_file "$TMP_ZIP")"
+  if [[ "$actual_sha" != "$CODELLDB_SHA256" ]]; then
+    echo "SHA256 mismatch for downloaded codelldb archive."
+    echo "Expected: $CODELLDB_SHA256"
+    echo "Actual:   $actual_sha"
+    rm -f "$TMP_ZIP"
+    exit 1
+  fi
+fi
 
 if ! file "$TMP_ZIP" | rg -q "Zip archive data"; then
   echo "Downloaded file is not a valid VSIX/ZIP archive."
