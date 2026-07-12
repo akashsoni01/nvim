@@ -1,3 +1,10 @@
+local security = require("config.security")
+local lsp = require("config.lsp")
+
+lsp.setup_handlers()
+lsp.setup_autocmds()
+lsp.setup_commands()
+
 return {
   {
     "nvim-tree/nvim-web-devicons",
@@ -14,7 +21,6 @@ return {
       indent = { enable = true },
     },
     config = function(_, opts)
-      -- Support both old and new nvim-treesitter module layouts.
       local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
       if ok_configs then
         configs.setup(opts)
@@ -26,34 +32,37 @@ return {
 
   {
     "williamboman/mason.nvim",
+    lazy = false,
+    priority = 100,
     cmd = "Mason",
     opts = {
-      ensure_installed = {
-        "jdtls",
-        "java-debug-adapter",
-        "java-test",
-      },
+      ensure_installed = { "jdtls", "java-debug-adapter", "java-test" },
     },
+    config = function(_, opts)
+      require("mason").setup(opts)
+    end,
   },
   {
     "williamboman/mason-lspconfig.nvim",
+    lazy = false,
     dependencies = { "williamboman/mason.nvim" },
-    config = function()
-      require("mason-lspconfig").setup({
-        ensure_installed = { "jdtls" },
-        automatic_installation = true,
-      })
+    opts = {
+      ensure_installed = { "jdtls" },
+    },
+    config = function(_, opts)
+      require("mason-lspconfig").setup(opts)
     end,
   },
   {
     "neovim/nvim-lspconfig",
+    lazy = false,
     dependencies = {
       "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
       "SmiteshP/nvim-navic",
     },
     config = function()
-      -- jdtls is started from ftplugin/java.lua via nvim-jdtls.
+      -- jdtls starts from ftplugin/java.lua via config.jdtls
     end,
   },
 
@@ -67,15 +76,25 @@ return {
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
-    dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
-      "L3MON4D3/LuaSnip",
-    },
+    dependencies = vim.tbl_extend(
+      "keep",
+      {
+        "hrsh7th/cmp-nvim-lsp",
+        "hrsh7th/cmp-buffer",
+        "L3MON4D3/LuaSnip",
+      },
+      security.allow_external_completion() and { "hrsh7th/cmp-path" } or {}
+    ),
     config = function()
       local cmp = require("cmp")
       local luasnip = require("luasnip")
+      local sources = {
+        { name = "nvim_lsp" },
+        { name = "buffer" },
+      }
+      if security.allow_external_completion() then
+        table.insert(sources, { name = "path" })
+      end
 
       cmp.setup({
         snippet = {
@@ -105,11 +124,7 @@ return {
             end
           end, { "i", "s" }),
         }),
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-          { name = "buffer" },
-          { name = "path" },
-        }),
+        sources = cmp.config.sources(sources),
       })
     end,
   },
@@ -117,36 +132,25 @@ return {
   {
     "nvim-telescope/telescope.nvim",
     cmd = "Telescope",
+    module = "telescope",
+    keys = {
+      {
+        "<leader>ul",
+        function()
+          require("config.theme").pick()
+        end,
+        desc = "Select theme",
+      },
+    },
     dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      local telescope = require("telescope")
-      local has_fd = vim.fn.executable("fd") == 1
-      local has_fdfind = vim.fn.executable("fdfind") == 1
-      local has_rg = vim.fn.executable("rg") == 1
-
-      local find_command = { "find", ".", "-type", "f" }
-      if has_fd then
-        find_command = { "fd", "--type", "f", "--hidden", "--exclude", ".git" }
-      elseif has_fdfind then
-        find_command = { "fdfind", "--type", "f", "--hidden", "--exclude", ".git" }
-      elseif has_rg then
-        find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" }
-      end
-
-      telescope.setup({
-        defaults = {
-          layout_strategy = "horizontal",
-          sorting_strategy = "ascending",
-          prompt_prefix = "   ",
-          selection_caret = " ",
-        },
-        pickers = {
-          find_files = {
-            find_command = find_command,
-            hidden = true,
-          },
-        },
-      })
+    opts = {
+      defaults = {
+        layout_strategy = "horizontal",
+        sorting_strategy = "ascending",
+      },
+    },
+    config = function(_, opts)
+      require("telescope").setup(opts)
     end,
   },
 
@@ -161,6 +165,8 @@ return {
     event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
+      local identity = require("config.identity")
+
       local function lsp_name()
         local clients = vim.lsp.get_clients({ bufnr = 0 })
         if #clients == 0 then
@@ -182,7 +188,7 @@ return {
           lualine_c = { lsp_name },
           lualine_x = { "diagnostics" },
           lualine_y = { "filetype" },
-          lualine_z = { "location", "progress" },
+          lualine_z = { identity.format_chrome_copyright_label(os.date("%Y")), "location", "progress" },
         },
       })
     end,
@@ -207,7 +213,6 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
-      -- jdtls registers the "java" adapter when java-debug-adapter is bundled in ftplugin.
       dap.configurations.java = dap.configurations.java or {}
       vim.list_extend(dap.configurations.java, {
         {
@@ -247,10 +252,7 @@ return {
   {
     "rcasia/neotest-java",
     ft = "java",
-    dependencies = {
-      "mfussenegger/nvim-jdtls",
-      "mfussenegger/nvim-dap",
-    },
+    dependencies = { "mfussenegger/nvim-jdtls", "mfussenegger/nvim-dap" },
   },
   {
     "nvim-neotest/neotest",
@@ -301,7 +303,7 @@ return {
     priority = 1000,
     config = function()
       vim.cmd.colorscheme("tokyonight-moon")
-      require("config.theme").apply("coral")
+      require("config.theme").apply_default()
     end,
   },
 }

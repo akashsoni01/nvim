@@ -1,16 +1,17 @@
+local security = require("config.security")
+local telescope_grep = require("config.telescope_grep")
 local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
-  local builtin = require("telescope.builtin")
-  if vim.fn.executable("rg") == 1 then
-    builtin.live_grep()
-  else
-    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
-    builtin.current_buffer_fuzzy_find()
+  if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
+    require("telescope.builtin").current_buffer_fuzzy_find()
   end
 end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
+map("n", "<leader>fc", function()
+  require("telescope.builtin").current_buffer_fuzzy_find()
+end, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", vim.tbl_extend("force", opts, { desc = "Buffers" }))
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", vim.tbl_extend("force", opts, { desc = "Help tags" }))
 
@@ -19,23 +20,163 @@ vim.api.nvim_create_user_command("FF", function()
 end, { desc = "Telescope find files" })
 
 vim.api.nvim_create_user_command("FG", function()
-  local builtin = require("telescope.builtin")
-  if vim.fn.executable("rg") == 1 then
-    builtin.live_grep()
-  else
-    vim.notify("ripgrep (rg) not found. Using current buffer fuzzy search.", vim.log.levels.WARN)
-    builtin.current_buffer_fuzzy_find()
+  if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
+    require("telescope.builtin").current_buffer_fuzzy_find()
   end
 end, { desc = "Telescope live grep" })
 
-map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
-map("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
-map("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover docs" }))
+vim.api.nvim_create_user_command("FC", function()
+  require("telescope.builtin").current_buffer_fuzzy_find()
+end, { desc = "Telescope search current buffer" })
+
+local function go_to_line()
+  vim.ui.input({
+    prompt = "Go to line: ",
+    default = tostring(vim.fn.line(".")),
+  }, function(line)
+    if not line or line == "" then
+      return
+    end
+
+    local num = tonumber(line)
+    if not num or num < 1 then
+      vim.notify("Invalid line number: " .. line, vim.log.levels.WARN)
+      return
+    end
+
+    num = math.min(num, vim.api.nvim_buf_line_count(0))
+    vim.api.nvim_win_set_cursor(0, { num, 0 })
+    vim.cmd("normal! zz")
+  end)
+end
+
+vim.api.nvim_create_user_command("GoToLine", go_to_line, { desc = "Go to line number" })
+
+local lsp = require("config.lsp")
+
+map(
+  "n",
+  "gd",
+  lsp.lsp_action(lsp.jump_definition, "Jump to definition"),
+  vim.tbl_extend("force", opts, { desc = "Jump to definition" })
+)
+map(
+  "n",
+  "gpd",
+  lsp.lsp_action(lsp.show_definition, "Show definition"),
+  vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
+)
+map(
+  "n",
+  "<leader>ld",
+  lsp.lsp_action(lsp.jump_definition, "Jump to definition"),
+  vim.tbl_extend("force", opts, { desc = "Jump to definition" })
+)
+map(
+  "n",
+  "<leader>lD",
+  lsp.lsp_action(lsp.show_definition, "Show definition"),
+  vim.tbl_extend("force", opts, { desc = "Show definition (peek)" })
+)
+map("n", "<leader>ln", go_to_line, vim.tbl_extend("force", opts, { desc = "Go to line number" }))
+map(
+  "n",
+  "gr",
+  lsp.lsp_action(vim.lsp.buf.references, "Find references"),
+  vim.tbl_extend("force", opts, { desc = "References" })
+)
+map(
+  "n",
+  "K",
+  lsp.lsp_action(function()
+    vim.lsp.buf.hover({ border = "rounded", focusable = false })
+  end, "Hover docs"),
+  vim.tbl_extend("force", opts, { desc = "Hover docs" })
+)
 map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
 map("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
 map("n", "<leader>fm", function()
   vim.lsp.buf.format({ async = true })
 end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
+
+local severity = vim.diagnostic.severity
+local diagnostic_nav = require("config.diagnostic_nav")
+
+local function jump_diagnostic(direction, min_severity, max_severity)
+  local jump_opts = {
+    count = direction * vim.v.count1,
+    severity = { min = min_severity, max = max_severity or min_severity },
+    wrap = true,
+  }
+
+  if vim.diagnostic.jump then
+    vim.diagnostic.jump(jump_opts)
+    return
+  end
+
+  local goto_opts = { wrap = true, severity = jump_opts.severity }
+  for _ = 1, vim.v.count1 do
+    if direction > 0 then
+      vim.diagnostic.goto_next(goto_opts)
+    else
+      vim.diagnostic.goto_prev(goto_opts)
+    end
+  end
+end
+
+map("n", "<leader>len", function()
+  diagnostic_nav.jump_issue(1, "error")
+end, vim.tbl_extend("force", opts, { desc = "Next compile error" }))
+map("n", "<leader>lep", function()
+  diagnostic_nav.jump_issue(-1, "error")
+end, vim.tbl_extend("force", opts, { desc = "Previous compile error" }))
+map("n", "<leader>lE", function()
+  jump_diagnostic(-1, severity.ERROR, severity.ERROR)
+end, vim.tbl_extend("force", opts, { desc = "Previous compile error" }))
+map("n", "<leader>lwn", function()
+  diagnostic_nav.jump_issue(1, "warning")
+end, vim.tbl_extend("force", opts, { desc = "Next warning" }))
+map("n", "<leader>lwp", function()
+  diagnostic_nav.jump_issue(-1, "warning")
+end, vim.tbl_extend("force", opts, { desc = "Previous warning" }))
+map("n", "<leader>lW", function()
+  jump_diagnostic(-1, severity.WARN, severity.WARN)
+end, vim.tbl_extend("force", opts, { desc = "Previous warning" }))
+
+map("n", "<leader>lfe", function()
+  diagnostic_nav.telescope_compile_issues("error")
+end, vim.tbl_extend("force", opts, { desc = "List compile errors (Telescope)" }))
+map("n", "<leader>lee", function()
+  diagnostic_nav.telescope_lsp_issues("error")
+end, vim.tbl_extend("force", opts, { desc = "List current LSP errors (Telescope)" }))
+map("n", "<leader>lfE", function()
+  diagnostic_nav.jump_file(-1, "error")
+end, vim.tbl_extend("force", opts, { desc = "Previous error file" }))
+map("n", "<leader>lfw", function()
+  diagnostic_nav.telescope_compile_issues("warning")
+end, vim.tbl_extend("force", opts, { desc = "List warnings (Telescope)" }))
+map("n", "<leader>lww", function()
+  diagnostic_nav.telescope_lsp_issues("warning")
+end, vim.tbl_extend("force", opts, { desc = "List current LSP warnings (Telescope)" }))
+map("n", "<leader>lfW", function()
+  diagnostic_nav.jump_file(-1, "warning")
+end, vim.tbl_extend("force", opts, { desc = "Previous warning file" }))
+
+vim.api.nvim_create_user_command("JavaErrors", function()
+  diagnostic_nav.telescope_compile_issues("error")
+end, { desc = "Telescope: Maven/Gradle/LSP errors" })
+
+vim.api.nvim_create_user_command("JavaWarnings", function()
+  diagnostic_nav.telescope_compile_issues("warning")
+end, { desc = "Telescope: Maven/Gradle/LSP warnings" })
+
+vim.api.nvim_create_user_command("LspErrors", function()
+  diagnostic_nav.telescope_lsp_issues("error")
+end, { desc = "Telescope: current LSP errors without cargo check" })
+
+vim.api.nvim_create_user_command("LspWarnings", function()
+  diagnostic_nav.telescope_lsp_issues("warning")
+end, { desc = "Telescope: current LSP warnings without cargo check" })
 
 map("n", "<leader>db", function()
   require("dap").toggle_breakpoint()
@@ -74,22 +215,24 @@ map("n", "<leader>dx", function()
   require("dap").terminate()
 end, vim.tbl_extend("force", opts, { desc = "Debug terminate" }))
 
+local java_build = require("config.java_build")
+
 map("n", "<leader>tt", function()
   local ok, neotest = pcall(require, "neotest")
   if ok then
     neotest.run.run()
     return
   end
-  vim.cmd("split | terminal " .. require("config.java_build").shell_test_terminal())
-end, vim.tbl_extend("force", opts, { desc = "Run test under cursor" }))
+  vim.cmd("split | terminal " .. java_build.shell_test_terminal())
+end, vim.tbl_extend("force", opts, { desc = "Run test under cursor (neotest-java)" }))
 map("n", "<leader>ta", function()
   local ok, neotest = pcall(require, "neotest")
   if ok then
     neotest.run.run(vim.fn.getcwd())
     return
   end
-  vim.cmd("split | terminal " .. require("config.java_build").shell_test_terminal())
-end, vim.tbl_extend("force", opts, { desc = "Run all tests" }))
+  vim.cmd("split | terminal " .. java_build.shell_test_terminal())
+end, vim.tbl_extend("force", opts, { desc = "Run all tests (neotest-java)" }))
 map("n", "<leader>to", function()
   local ok, neotest = pcall(require, "neotest")
   if ok then
@@ -103,17 +246,17 @@ map("n", "<leader>ts", function()
   end
 end, vim.tbl_extend("force", opts, { desc = "Toggle test summary" }))
 map("n", "<leader>tc", function()
-  local cmd = require("config.java_build").shell_check()
-  vim.cmd("split | terminal " .. cmd)
+  vim.cmd("split | terminal " .. java_build.shell_check())
 end, vim.tbl_extend("force", opts, { desc = "Maven verify / Gradle check" }))
+map("n", "<leader>tf", function()
+  vim.lsp.buf.format({ async = false })
+end, vim.tbl_extend("force", opts, { desc = "Format buffer (jdtls)" }))
 map("n", "<leader>tb", function()
-  local cmd = require("config.java_build").shell_compile()
-  vim.cmd("split | terminal " .. cmd)
+  vim.cmd("split | terminal " .. java_build.shell_compile())
 end, vim.tbl_extend("force", opts, { desc = "Compile (Maven/Gradle, skip tests)" }))
 map("n", "<leader>tr", function()
-  local cmd = require("config.java_build").shell_run()
-  vim.cmd("split | terminal " .. cmd)
-end, vim.tbl_extend("force", opts, { desc = "Run app (Gradle run / spring-boot:run / package)" }))
+  vim.cmd("split | terminal " .. java_build.shell_run())
+end, vim.tbl_extend("force", opts, { desc = "Run app (Gradle run / spring-boot:run)" }))
 map("n", "<leader>oi", function()
   if vim.bo.filetype == "java" then
     pcall(function()
@@ -134,6 +277,9 @@ map("n", "<leader>df", function()
 end, vim.tbl_extend("force", opts, { desc = "JDTLS: run test class" }))
 
 map("n", "<leader>gs", "<cmd>Telescope git_status<cr>", vim.tbl_extend("force", opts, { desc = "Git status" }))
+map("n", "<leader>gw", function()
+  telescope_grep.grep_word()
+end, vim.tbl_extend("force", opts, { desc = "Grep word under cursor" }))
 map("n", "<leader>gl", "<cmd>Telescope git_commits<cr>", vim.tbl_extend("force", opts, { desc = "Git log" }))
 map("n", "<leader>gd", "<cmd>Gitsigns diffthis<cr>", vim.tbl_extend("force", opts, { desc = "Git diff" }))
 map("n", "<leader>gb", "<cmd>Telescope git_branches<cr>", vim.tbl_extend("force", opts, { desc = "Git branches" }))
@@ -233,6 +379,9 @@ end, vim.tbl_extend("force", opts, { desc = "Git stash include untracked" }))
 map("n", "<leader>gL", function()
   git_terminal("stash list")
 end, vim.tbl_extend("force", opts, { desc = "Git stash list" }))
+map("n", "<leader>ga", function()
+  require("config.git_workflow").save_fmt_stage()
+end, vim.tbl_extend("force", opts, { desc = "Save all, format Java, git add ." }))
 map("n", "<leader>gA", function()
   git_terminal("stash apply")
 end, vim.tbl_extend("force", opts, { desc = "Git stash apply latest" }))
@@ -395,18 +544,54 @@ vim.api.nvim_create_user_command("GitStashList", function()
   git_terminal("stash list")
 end, { desc = "List git stashes" })
 
+if security.allow_system_clipboard() then
+  map("n", "<leader>yf", "<cmd>%yank +<cr>", vim.tbl_extend("force", opts, { desc = "Yank full file" }))
+  map("n", "<leader>pf", function()
+    local clip = vim.fn.getreg("+")
+    if clip == "" then
+      vim.notify("System clipboard is empty.", vim.log.levels.WARN)
+      return
+    end
+
+    local lines = vim.split(clip, "\n", { plain = true })
+    if clip:sub(-1) == "\n" and lines[#lines] == "" then
+      table.remove(lines)
+    end
+
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    vim.cmd("normal! gg")
+  end, vim.tbl_extend("force", opts, { desc = "Paste full file from clipboard" }))
+  map("n", "<leader>xf", function()
+    vim.cmd("%yank +")
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
+    vim.cmd("normal! gg")
+  end, vim.tbl_extend("force", opts, { desc = "Cut full file to clipboard" }))
+  map({ "n", "v" }, "<leader>p", '"+p', vim.tbl_extend("force", opts, { desc = "Paste from clipboard" }))
+  map({ "n", "v" }, "<leader>P", '"+P', vim.tbl_extend("force", opts, { desc = "Paste from clipboard before cursor" }))
+end
+
 map("n", "<leader>sv", "<cmd>vsplit<cr>", vim.tbl_extend("force", opts, { desc = "Vertical split" }))
 map("n", "<leader>sh", "<cmd>split<cr>", vim.tbl_extend("force", opts, { desc = "Horizontal split" }))
 map("n", "<leader>se", "<C-w>=", vim.tbl_extend("force", opts, { desc = "Equalize splits" }))
 map("n", "<leader>sx", "<cmd>close<cr>", vim.tbl_extend("force", opts, { desc = "Close split" }))
+
+local comments = require("config.comments")
+map("x", "/", comments.toggle_block, vim.tbl_extend("force", opts, { desc = "Toggle block comment /* */" }))
+
+local clipboard = require("config.clipboard")
+
+map("x", "c", clipboard.copy_visual, vim.tbl_extend("force", opts, { desc = "Copy selection" }))
+map("x", "x", clipboard.cut_visual, vim.tbl_extend("force", opts, { desc = "Cut selection" }))
+map("x", "p", clipboard.paste_visual, vim.tbl_extend("force", opts, { desc = "Paste over selection" }))
+
 map("n", "<leader>qa", "<cmd>wqa<cr>", vim.tbl_extend("force", opts, { desc = "Save all and quit" }))
 map("n", "<leader>qQ", "<cmd>qa!<cr>", vim.tbl_extend("force", opts, { desc = "Quit all without saving" }))
 map("n", "<leader>th", "<cmd>split | terminal<cr>", vim.tbl_extend("force", opts, { desc = "Terminal horizontal" }))
 map("n", "<leader>tv", "<cmd>vsplit | terminal<cr>", vim.tbl_extend("force", opts, { desc = "Terminal vertical" }))
 
-map("n", "<leader>ub", function()
-  require("config.theme").toggle()
-end, vim.tbl_extend("force", opts, { desc = "Toggle Coral/Light theme" }))
+map("n", "<leader>ul", function()
+  require("config.theme").pick()
+end, vim.tbl_extend("force", opts, { desc = "Select theme (Telescope)" }))
 map("n", "<leader>ut", function()
   require("config.theme").toggle_transparency()
 end, vim.tbl_extend("force", opts, { desc = "Toggle transparency" }))
@@ -430,3 +615,23 @@ end, vim.tbl_extend("force", opts, { desc = "Set filetype: YAML" }))
 map("n", "<leader>ftj", function()
   vim.bo.filetype = "java"
 end, vim.tbl_extend("force", opts, { desc = "Set filetype: Java" }))
+
+local project_search = require("config.project_search")
+map("n", "<leader>sr", function()
+  project_search.replace_in_buffer()
+end, vim.tbl_extend("force", opts, { desc = "Find & replace in current buffer (any file)" }))
+map("n", "<leader>sf", function()
+  project_search.replace_in_file()
+end, vim.tbl_extend("force", opts, { desc = "Find & replace in file (.java / build files)" }))
+map("n", "<leader>sg", function()
+  project_search.find_in_project()
+end, vim.tbl_extend("force", opts, { desc = "Grep in Java project" }))
+map("n", "<leader>sR", function()
+  project_search.replace_in_project()
+end, vim.tbl_extend("force", opts, { desc = "Find & replace in Java project" }))
+map("n", "<leader>fA", function()
+  project_search.find_in_project_all()
+end, vim.tbl_extend("force", opts, { desc = "Grep in project (all file types)" }))
+map("n", "<leader>sA", function()
+  project_search.replace_in_project_all()
+end, vim.tbl_extend("force", opts, { desc = "Find & replace in all files in project" }))
