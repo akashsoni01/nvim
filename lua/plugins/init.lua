@@ -204,6 +204,11 @@ return {
     cmd = "Telescope",
     module = "telescope",
     keys = {
+      { "<leader>ff", desc = "Find files" },
+      { "<leader>fg", desc = "Live grep" },
+      { "<leader>fb", desc = "Buffers" },
+      { "<leader>fh", desc = "Help tags" },
+      { "<leader>fc", desc = "Search buffer" },
       {
         "<leader>ul",
         function()
@@ -220,6 +225,13 @@ return {
       },
     },
     config = function(_, opts)
+      local tg = require("config.telescope_grep")
+      local vimgrep = tg.vimgrep_arguments()
+      if vimgrep then
+        opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
+          vimgrep_arguments = vimgrep,
+        })
+      end
       require("telescope").setup(opts)
     end,
   },
