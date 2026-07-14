@@ -341,12 +341,12 @@ bash ~/.config/nvim/scripts/vendor-plugins.sh --locked
 | Find in `*.rs` / `*.toml` | `<leader>sg` | Telescope `live_grep` with `rg` globs | Project search only in Rust and TOML files (needs `rg`) |
 | Find in any file in project | `<leader>fA` or `<leader>fg` | Telescope `live_grep` (no ext filter) | Same behavior; all text files (needs `rg`; respects `.gitignore`) |
 | Find word in project | `<leader>fW` or `:FW` | Normal: word under cursor in project; Visual: selection in current buffer only |
-| Rename selection (visual) | `<leader>fr` | Replace selection in current buffer; search pre-filled, prompts new name only |
-| Rename selection in project (visual) | `<leader>fR` | Literal replace selection across project; confirms affected files |
-| Replace in any file in project | `<leader>sA` | Literal string replace in every file `rg` lists | All matching files under cwd; needs `rg`; reload buffers; use with care |
-| Find & replace in **one** file (any) | `<leader>sr` | Literal `:%s/.../.../gc` with confirm | Current buffer only; any normal file; not terminal/readonly |
-| Replace in `*.rs` / `*.toml` (buffer) | `<leader>sf` | Same as `sr`, scoped to Rust/TOML buffers only | Use `sr` for other file types |
-| Replace in `*.rs` / `*.toml` (project) | `<leader>sR` | Literal replace on disk in all matches | All matching files from cwd; needs `rg`; reload buffers after |
+| Rename selection (visual) | `<leader>fr` | Replace selection in current buffer; search pre-filled; **case-sensitive** literal match |
+| Rename selection in project (visual) | `<leader>fR` | Literal replace selection across project; **case-sensitive**; confirms affected files |
+| Replace in `*.rs` / `*.toml` (project) | `<leader>sR` | Literal replace on disk in all matches; **case-sensitive** | All matching files from cwd; needs `rg`; reload buffers after |
+| Replace in any file in project | `<leader>sA` | Literal string replace in every file `rg` lists; **case-sensitive** | All matching files under cwd; needs `rg`; reload buffers; use with care |
+| Find & replace in **one** file (any) | `<leader>sr` | Literal `:%s/.../.../gc` with confirm; **case-sensitive** | Current buffer only; any normal file; not terminal/readonly |
+| Replace in `*.rs` / `*.toml` (buffer) | `<leader>sf` | Same as `sr`, scoped to Rust/TOML buffers only; **case-sensitive** | Use `sr` for other file types |
 | Buffers | `<leader>fb` | List open buffers | Quick file switching |
 | Help Search | `<leader>fh` | Search help docs | Learn Neovim interactively |
 | Vertical Split | `<leader>sv` | Open vertical split | Compare files side-by-side |

@@ -11,6 +11,8 @@
 | Telescope | `<leader>fg` or `:FG` | Live grep in project (skips `target/`) |
 | Telescope | `<leader>fA` | Same as `fg` — all file types |
 | Telescope | `<leader>fW` or `:FW` | Normal: find word in project; Visual: find selection in **current buffer** |
+| Telescope | `<leader>fr` (visual) | Rename selection in buffer (**case-sensitive** literal match) |
+| Telescope | `<leader>fR` (visual) | Rename selection in project (**case-sensitive** literal match) |
 | Telescope | `<leader>sg` | Grep `*.rs` + `*.toml` only (faster on big repos) |
 | Telescope | `<leader>gw` or `:GrepWord` | Same as `fW` — grep word under cursor (gd fallback) |
 | Telescope | `<leader>fc` | Search current buffer only (fastest) |
@@ -120,8 +122,8 @@
 - `<leader>fg` or `:FG` - Live grep in project (ripgrep; skips `target/`, `node_modules/`)
 - `<leader>fA` - Same as `fg` (all files)
 - `<leader>fW` or `:FW` - Normal: find word under cursor in project (all files). **Visual: find selection in current buffer only**
-- **Visual:** `<leader>fr` - Rename selection in **current buffer** (search pre-filled from selection; prompts replace only; `:%s` with confirm)
-- **Visual:** `<leader>fR` - Rename selection in **project** (all files; confirms file list before writing)
+- **Visual:** `<leader>fr` - Rename selection in **current buffer** (search pre-filled from selection; prompts replace only; `:%s` with confirm). **Case-sensitive** — `foo` does not match `Foo`.
+- **Visual:** `<leader>fR` - Rename selection in **project** (all files; confirms file list before writing). **Case-sensitive** literal match via `rg -F`.
 - `<leader>sg` - Grep only `*.rs` and `*.toml` (faster on big Rust workspaces)
 - `<leader>gw` or `:GrepWord` - Same as `fW` (use when `gd` times out)
 - `<leader>fc` - Fuzzy search in **current buffer** only (instant; no project scan)
@@ -162,6 +164,8 @@ Use when a buffer is plain text or the wrong syntax (extensionless scratch buffe
 - `<leader>ftr` - Set filetype back to Rust (after testing another `ft*` on a `.rs` buffer, or to fix detection)
 
 ### Find & replace in one file
+All **literal** replace shortcuts (`sr`, `sf`, `fr`, `sR`, `sA`, `fR`) are **case-sensitive**: `MyStruct` and `mystruct` are different strings. Matches respect exact capitalization (not regex; not `ignorecase`).
+
 - **`<leader>sr`** (current buffer, **any** file) — Literal find & replace in **this file only**; runs `:%s/.../.../gc` (confirm each change with `y`/`n`). Use in normal editable buffers, not the terminal. **Readonly** buffers are blocked.
 
 - **`<leader>sf`** (Rust / TOML only) — Same flow as `sr`, but only if the buffer is **`.rs` / `Cargo.toml` / other `.toml`** (or `rust` / `toml` filetype).
