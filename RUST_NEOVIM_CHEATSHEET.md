@@ -120,6 +120,8 @@
 - `<leader>fg` or `:FG` - Live grep in project (ripgrep; skips `target/`, `node_modules/`)
 - `<leader>fA` - Same as `fg` (all files)
 - `<leader>fW` or `:FW` - Normal: find word under cursor in project (all files). **Visual: find selection in current buffer only**
+- **Visual:** `<leader>fr` - Rename selection in **current buffer** (search pre-filled from selection; prompts replace only; `:%s` with confirm)
+- **Visual:** `<leader>fR` - Rename selection in **project** (all files; confirms file list before writing)
 - `<leader>sg` - Grep only `*.rs` and `*.toml` (faster on big Rust workspaces)
 - `<leader>gw` or `:GrepWord` - Same as `fW` (use when `gd` times out)
 - `<leader>fc` - Fuzzy search in **current buffer** only (instant; no project scan)

@@ -243,6 +243,22 @@ return {
         mode = { "n", "v" },
       },
       {
+        "<leader>fr",
+        function()
+          require("config.rust_toml_search").rename_selection("buffer")
+        end,
+        desc = "Rename selection in buffer (visual)",
+        mode = "v",
+      },
+      {
+        "<leader>fR",
+        function()
+          require("config.rust_toml_search").rename_selection("project")
+        end,
+        desc = "Rename selection in project (visual)",
+        mode = "v",
+      },
+      {
         "<leader>fA",
         function()
           require("config.telescope_grep").live_grep({ prompt_title = "Live grep (project, all files)" })

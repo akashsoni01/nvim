@@ -89,16 +89,55 @@ function M.find_in_project_all()
   telescope_grep.live_grep({ prompt_title = "Live grep (project, all files)" })
 end
 
+local function normalize_selection(search)
+  search = (search or ""):gsub("\n", " "):gsub("^%s+", ""):gsub("%s+$", "")
+  return search
+end
+
+local function rg_paths_literal(search, glob_args)
+  local vimgrep = telescope_grep.vimgrep_arguments()
+  if not vimgrep then
+    return nil, "ripgrep (rg) not found"
+  end
+
+  local args = { vimgrep[1], "-F", "-l", "--no-ignore-dot" }
+  vim.list_extend(args, telescope_grep.fast_grep_args())
+  if glob_args then
+    vim.list_extend(args, glob_args)
+  end
+  vim.list_extend(args, { "--", search, "." })
+
+  local result = vim.system(args, { cwd = telescope_grep.project_cwd(), text = true }):wait()
+  if result.code ~= 0 and (result.stdout or "") == "" then
+    return nil, (result.stderr or "rg failed"):gsub("%s+$", "")
+  end
+
+  local paths = {}
+  for line in vim.gsplit(result.stdout or "", "\n", { plain = true }) do
+    if line ~= "" then
+      paths[#paths + 1] = line
+    end
+  end
+  return paths
+end
+
+local function substitute_buffer_literal(search, repl)
+  local s = escape_very_no_magic(search)
+  local p = escape_very_no_magic(repl)
+  vim.cmd("%s" .. delim .. [[\V]] .. s .. delim .. p .. delim .. "gc")
+end
+
 local function replace_in_paths(paths, search, repl, file_desc)
   if #paths == 0 then
     vim.notify("No files contain that text.", vim.log.levels.WARN)
     return
   end
   local total_r, file_r = 0, 0
+  local root = telescope_grep.project_cwd()
   for _, f in ipairs(paths) do
     local p = f
     if vim.fn.filereadable(p) ~= 1 then
-      p = vim.fn.fnamemodify(vim.fn.getcwd() .. "/" .. f, ":p")
+      p = vim.fn.fnamemodify(root .. "/" .. f, ":p")
     end
     if vim.fn.filereadable(p) ~= 1 then
       goto continue
@@ -124,6 +163,93 @@ local function replace_in_paths(paths, search, repl, file_desc)
   end
 end
 
+--- Visual selection → replace in current buffer (`<leader>fr`).
+function M.replace_selection_in_buffer(search)
+  search = normalize_selection(search)
+  if search == "" then
+    vim.notify("Selection is empty.", vim.log.levels.WARN)
+    return false
+  end
+
+  local bt = vim.bo.buftype
+  if bt == "terminal" or bt == "prompt" then
+    vim.notify("Find/replace: not in terminal/prompt buffers.", vim.log.levels.WARN)
+    return false
+  end
+  if vim.bo.readonly then
+    vim.notify("Find/replace: buffer is readonly.", vim.log.levels.WARN)
+    return false
+  end
+
+  vim.ui.input({ prompt = "Replace selection with: ", default = search }, function(repl)
+    if repl == nil then
+      return
+    end
+    substitute_buffer_literal(search, repl)
+  end)
+  return true
+end
+
+--- Visual selection → replace in project (`<leader>fR`).
+function M.replace_selection_in_project(search)
+  search = normalize_selection(search)
+  if search == "" then
+    vim.notify("Selection is empty.", vim.log.levels.WARN)
+    return false
+  end
+
+  local paths, err = rg_paths_literal(search)
+  if not paths then
+    vim.notify(err, vim.log.levels.ERROR)
+    return false
+  end
+  if #paths == 0 then
+    vim.notify("No project files contain that text.", vim.log.levels.WARN)
+    return false
+  end
+
+  vim.ui.input({ prompt = "Replace selection with: ", default = search }, function(repl)
+    if repl == nil then
+      return
+    end
+
+    local preview = table.concat(paths, "\n", 1, math.min(5, #paths))
+    if #paths > 5 then
+      preview = preview .. "\n..."
+    end
+    local ok = vim.fn.confirm(
+      string.format("Replace %q → %q in %d file(s)?\n\n%s", search, repl, #paths, preview),
+      "&Yes\n&No",
+      2
+    )
+    if ok ~= 1 then
+      return
+    end
+
+    replace_in_paths(paths, search, repl, " (project)")
+    vim.notify("Reload changed buffers with :checktime if files were open.", vim.log.levels.INFO)
+  end)
+  return true
+end
+
+--- Visual mode: rename selection in buffer (`fr`) or project (`fR`).
+function M.rename_selection(scope)
+  local search = telescope_grep.extract_visual_selection()
+  if not search or search == "" then
+    vim.notify("Select text in visual mode first (v / V / Ctrl-v).", vim.log.levels.WARN)
+    return false
+  end
+
+  vim.schedule(function()
+    if scope == "project" then
+      M.replace_selection_in_project(search)
+    else
+      M.replace_selection_in_buffer(search)
+    end
+  end)
+  return true
+end
+
 function M.replace_in_project()
   if vim.fn.executable("rg") ~= 1 then
     vim.notify("ripgrep (rg) required for project replace.", vim.log.levels.ERROR)
@@ -137,20 +263,9 @@ function M.replace_in_project()
       if repl == nil then
         return
       end
-      local paths = vim.fn.systemlist({
-        "rg",
-        "-F",
-        "-l",
-        "-g",
-        "*.rs",
-        "-g",
-        "*.toml",
-        "--",
-        search,
-        ".",
-      })
-      if vim.v.shell_error ~= 0 and #paths == 0 then
-        vim.notify("rg failed. Run from the project root (or fix ripgrep).", vim.log.levels.WARN)
+      local paths, err = rg_paths_literal(search, { "-g", "*.rs", "-g", "*.toml" })
+      if not paths then
+        vim.notify(err or "rg failed.", vim.log.levels.WARN)
         return
       end
       replace_in_paths(paths, search, repl, " (*.rs / *.toml)")
@@ -172,9 +287,9 @@ function M.replace_in_project_all()
       if repl == nil then
         return
       end
-      local paths = vim.fn.systemlist({ "rg", "-F", "-l", "--", search, "." })
-      if vim.v.shell_error ~= 0 and #paths == 0 then
-        vim.notify("rg failed. Run from the project root (or fix ripgrep).", vim.log.levels.WARN)
+      local paths, err = rg_paths_literal(search)
+      if not paths then
+        vim.notify(err or "rg failed.", vim.log.levels.WARN)
         return
       end
       replace_in_paths(paths, search, repl, " (all matching files)")
