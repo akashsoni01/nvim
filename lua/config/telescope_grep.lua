@@ -83,7 +83,7 @@ local function rg_supports_sort_path()
     return false
   end
 
-  local result = system({ rg, "--sort", "path", "--files", "." }, {
+  local result = system({ rg, "--sort", "path", "--no-ignore-dot", "--files", "." }, {
     cwd = M.project_cwd(),
     text = true,
   })
@@ -94,12 +94,13 @@ end
 local function bootstrap_telescope_setup()
   local setup_opts = {
     defaults = {
-      layout_strategy = "horizontal",
+      layout_strategy = "vertical",
       sorting_strategy = "ascending",
+      path_display = { "filename", "tail" },
       layout_config = {
         height = 0.95,
         width = 0.95,
-        preview_cutoff = 20,
+        preview_cutoff = 1,
       },
     },
   }
@@ -107,6 +108,11 @@ local function bootstrap_telescope_setup()
   local vimgrep = M.vimgrep_arguments()
   if vimgrep then
     setup_opts.defaults.vimgrep_arguments = vimgrep
+  end
+
+  local find_command = M.find_command()
+  if find_command then
+    setup_opts.defaults.find_command = find_command
   end
 
   require("telescope").setup(setup_opts)
@@ -161,11 +167,13 @@ function M.buffer_picker_opts(extra)
     bufnr = 0,
     prompt_title = "Search current buffer",
     sorting_strategy = "ascending",
-    layout_strategy = "horizontal",
+    path_display = { "filename" },
+    previewer = false,
+    layout_strategy = "vertical",
     layout_config = {
       height = 0.95,
       width = 0.95,
-      preview_cutoff = 20,
+      preview_cutoff = 1,
     },
   }, extra or {})
 end
@@ -209,7 +217,15 @@ function M.find_files(extra)
     return false
   end
 
-  local ok, picker_err = pcall(builtin.find_files, extra or {})
+  local opts = vim.tbl_extend("force", {
+    cwd = M.project_cwd(),
+  }, extra or {})
+  local find_command = M.find_command()
+  if find_command then
+    opts.find_command = find_command
+  end
+
+  local ok, picker_err = pcall(builtin.find_files, opts)
   if not ok then
     vim.notify("Find files failed: " .. tostring(picker_err), vim.log.levels.ERROR)
     return false
@@ -248,6 +264,7 @@ function M.vimgrep_arguments()
     "--line-number",
     "--column",
     "--smart-case",
+    "--no-ignore-dot",
   }
 
   if rg_supports_sort_path() then
@@ -258,18 +275,58 @@ function M.vimgrep_arguments()
   return args
 end
 
+--- Grep/live_grep UI: filename in results, no preview pane.
+function M.grep_picker_opts()
+  return {
+    path_display = { "filename", "tail" },
+    previewer = false,
+    layout_strategy = "vertical",
+    layout_config = {
+      height = 0.95,
+      width = 0.95,
+      preview_cutoff = 1,
+    },
+  }
+end
+
 --- Keep live_grep / grep_string results in ripgrep path order (stable across runs).
 function M.stable_grep_picker_opts()
-  return {
+  return vim.tbl_extend("force", M.grep_picker_opts(), {
     sorting_strategy = "ascending",
     tiebreak = function(_, _, _)
       return false
     end,
-  }
+  })
 end
 
 function M.project_cwd()
-  return vim.fs.root(uv.cwd(), ".git") or uv.cwd()
+  local cwd = uv.cwd()
+  local git_root = vim.fs.root(cwd, ".git")
+  if git_root then
+    return git_root
+  end
+
+  local cargo_root = vim.fs.root(cwd, "Cargo.toml")
+  if cargo_root then
+    return cargo_root
+  end
+
+  -- Parent folder opened with `nvim .` (e.g. testing/ with child crates in files/)
+  local ok, rust_test = pcall(require, "config.rust_test")
+  if ok and #rust_test.child_cargo_roots(cwd) > 0 then
+    return cwd
+  end
+
+  return cwd
+end
+
+--- Ripgrep --files command for Telescope find_files (skips IDE .ignore blockers).
+function M.find_command()
+  local rg = rg_binary()
+  if not rg then
+    return nil
+  end
+  return { rg, "--files", "--color", "never", "--no-ignore-dot" }
 end
 
 function M.live_grep_opts(extra)
@@ -396,13 +453,33 @@ function M.self_test()
     return false, "rg not found (pkg install ripgrep on Termux)"
   end
 
-  local args = vim.list_extend(M.vimgrep_arguments(), vim.list_extend(M.fast_grep_args(), { "--", "telescope", "." }))
-  local result = system(args, { cwd = M.project_cwd(), text = true })
-  if result.code ~= 0 then
-    return false, (result.stderr or result.stdout or "rg failed"):gsub("%s+$", "")
+  local result, probe, match_count
+  for _, word in ipairs({ "telescope", "fn", "def", "import", "return", "the" }) do
+    local args = vim.list_extend(M.vimgrep_arguments(), vim.list_extend(M.fast_grep_args(), { "--", word, "." }))
+    local attempt = system(args, { cwd = M.project_cwd(), text = true })
+    if attempt.code == 0 then
+      local lines = vim.split(attempt.stdout or "", "\n", { plain = true })
+      local n = 0
+      for _, line in ipairs(lines) do
+        if line ~= "" then
+          n = n + 1
+        end
+      end
+      if n > 0 then
+        result = attempt
+        probe = word
+        match_count = n
+        break
+      end
+    end
+  end
+
+  if not result then
+    return false, "rg returned no matches for probe queries in " .. M.project_cwd()
   end
 
   if rg_supports_sort_path() then
+    local args = vim.list_extend(M.vimgrep_arguments(), vim.list_extend(M.fast_grep_args(), { "--", probe, "." }))
     local result2 = system(args, { cwd = M.project_cwd(), text = true })
     if result2.code ~= 0 then
       return false, "rg stability check failed"
@@ -410,11 +487,6 @@ function M.self_test()
     if result.stdout ~= result2.stdout then
       return false, "rg output order not stable (add --sort path)"
     end
-  end
-
-  local lines = vim.split(result.stdout or "", "\n", { plain = true })
-  if #lines == 0 or (lines[1] == "" and #lines == 1) then
-    return false, "rg returned no matches for probe query 'telescope'"
   end
 
   local builtin, err = ensure_telescope()
@@ -427,7 +499,7 @@ function M.self_test()
   end
 
   local sort_note = rg_supports_sort_path() and "sorted" or "unsorted-rg"
-  return true, string.format("ok (buffer+grep, %d matches, rg=%s, %s)", #lines, rg, sort_note)
+  return true, string.format("ok (buffer+grep, %d matches, probe=%s, rg=%s, %s)", match_count, probe, rg, sort_note)
 end
 
 return M

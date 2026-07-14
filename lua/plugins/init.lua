@@ -221,8 +221,9 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       defaults = {
-        layout_strategy = "horizontal",
+        layout_strategy = "vertical",
         sorting_strategy = "ascending",
+        path_display = { "filename", "tail" },
       },
     },
     config = function(_, opts)
@@ -231,6 +232,12 @@ return {
       if vimgrep then
         opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
           vimgrep_arguments = vimgrep,
+        })
+      end
+      local find_command = tg.find_command()
+      if find_command then
+        opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
+          find_command = find_command,
         })
       end
       opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {

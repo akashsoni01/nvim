@@ -569,6 +569,7 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - Run Neovim from the **project/crate root** you want to search
 - On huge repos use `<leader>sg` (Rust/TOML only) or `<leader>fc` (current file)
 - `fg` / `fA` skip `target/` automatically — rebuild artifacts won't clutter results
+- **Vim-only `.ignore` files** (from `NVIM_VIM_ONLY=1`) block Cursor/VS Code ripgrep with `*` — Neovim grep uses `--no-ignore-dot` so your project files still appear in `<leader>fg` / `<leader>ff`
 
 ### `<leader>fc` / `<leader>c` buffer search not working
 - Buffer search needs **Telescope only** (no LSP, no `rg`)

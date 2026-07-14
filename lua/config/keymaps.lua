@@ -9,7 +9,9 @@ local function search_current_buffer()
   end
 end
 
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
+map("n", "<leader>ff", function()
+  telescope_grep.find_files({ prompt_title = "Find files" })
+end, vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
   if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
     search_current_buffer()
