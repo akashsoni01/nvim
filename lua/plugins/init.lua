@@ -204,12 +204,36 @@ return {
     cmd = "Telescope",
     module = "telescope",
     keys = {
-      { "<leader>ff", desc = "Find files" },
-      { "<leader>fg", desc = "Live grep" },
+      {
+        "<leader>ff",
+        function()
+          require("config.telescope_grep").find_files({ prompt_title = "Find files" })
+        end,
+        desc = "Find files",
+      },
+      {
+        "<leader>fg",
+        function()
+          require("config.telescope_grep").live_grep({ prompt_title = "Live grep (project)" })
+        end,
+        desc = "Live grep",
+      },
       { "<leader>fb", desc = "Buffers" },
       { "<leader>fh", desc = "Help tags" },
-      { "<leader>fc", desc = "Search buffer" },
-      { "<leader>c", desc = "Search buffer" },
+      {
+        "<leader>fc",
+        function()
+          require("config.telescope_grep").current_buffer_fuzzy_find({ prompt_title = "Search current buffer" })
+        end,
+        desc = "Search buffer",
+      },
+      {
+        "<leader>c",
+        function()
+          require("config.telescope_grep").current_buffer_fuzzy_find({ prompt_title = "Search current buffer" })
+        end,
+        desc = "Search buffer",
+      },
       {
         "<leader>ul",
         function()
@@ -220,11 +244,9 @@ return {
     },
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
-      defaults = {
-        layout_strategy = "vertical",
+      defaults = vim.tbl_extend("force", require("config.telescope_grep").list_picker_opts(), {
         sorting_strategy = "ascending",
-        path_display = { "filename", "tail" },
-      },
+      }),
     },
     config = function(_, opts)
       local tg = require("config.telescope_grep")
@@ -236,15 +258,16 @@ return {
       end
       local find_command = tg.find_command()
       if find_command then
-        opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
-          find_command = find_command,
-        })
+        opts.defaults.find_command = function()
+          return tg.find_command()
+        end
       end
       opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
         layout_config = {
-          height = 0.95,
-          width = 0.95,
-          preview_cutoff = 20,
+          height = 0.9,
+          width = 0.92,
+          anchor = "N",
+          prompt_position = "top",
         },
       })
       require("telescope").setup(opts)

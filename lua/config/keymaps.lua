@@ -9,16 +9,11 @@ local function search_current_buffer()
   end
 end
 
-map("n", "<leader>ff", function()
-  telescope_grep.find_files({ prompt_title = "Find files" })
-end, vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
   if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
     search_current_buffer()
   end
 end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
-map("n", "<leader>fc", search_current_buffer, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
-map("n", "<leader>c", search_current_buffer, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", vim.tbl_extend("force", opts, { desc = "Buffers" }))
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", vim.tbl_extend("force", opts, { desc = "Help tags" }))
 

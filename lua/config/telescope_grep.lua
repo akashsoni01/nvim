@@ -93,16 +93,9 @@ end
 
 local function bootstrap_telescope_setup()
   local setup_opts = {
-    defaults = {
-      layout_strategy = "vertical",
+    defaults = vim.tbl_extend("force", M.list_picker_opts(), {
       sorting_strategy = "ascending",
-      path_display = { "filename", "tail" },
-      layout_config = {
-        height = 0.95,
-        width = 0.95,
-        preview_cutoff = 1,
-      },
-    },
+    }),
   }
 
   local vimgrep = M.vimgrep_arguments()
@@ -162,20 +155,54 @@ function M.builtin()
   return builtin
 end
 
-function M.buffer_picker_opts(extra)
+function M.list_picker_opts(extra)
   return vim.tbl_extend("force", {
-    bufnr = 0,
-    prompt_title = "Search current buffer",
-    sorting_strategy = "ascending",
-    path_display = { "filename" },
+    path_display = { "filename", "tail" },
     previewer = false,
-    layout_strategy = "vertical",
+    layout_strategy = "center",
     layout_config = {
-      height = 0.95,
-      width = 0.95,
-      preview_cutoff = 1,
+      height = 0.9,
+      width = 0.92,
+      anchor = "N",
+      prompt_position = "top",
     },
   }, extra or {})
+end
+
+function M.buffer_picker_opts(extra)
+  return M.list_picker_opts(vim.tbl_extend("force", {
+    bufnr = 0,
+    prompt_title = "Search current buffer",
+    path_display = { "filename" },
+    sorting_strategy = "ascending",
+  }, extra or {}))
+end
+
+function M.find_files_picker_opts(extra)
+  return M.list_picker_opts(vim.tbl_extend("force", {
+    prompt_title = "Find files",
+    hidden = true,
+    file_ignore_patterns = {},
+    sorting_strategy = "ascending",
+  }, extra or {}))
+end
+
+local function buffer_has_searchable_text(bufnr)
+  bufnr = bufnr or 0
+  local bt = vim.bo[bufnr].buftype
+  if bt ~= "" then
+    return false
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  if #lines == 0 then
+    return false
+  end
+  if #lines == 1 and (lines[1] == nil or lines[1] == "") then
+    return false
+  end
+
+  return true
 end
 
 function M.fallback_buffer_search()
@@ -195,6 +222,14 @@ function M.fallback_buffer_search()
 end
 
 function M.current_buffer_fuzzy_find(extra)
+  if not buffer_has_searchable_text(0) then
+    vim.notify(
+      "No file open — use <leader>ff to find files in the project.",
+      vim.log.levels.INFO
+    )
+    return M.find_files(vim.tbl_extend("force", { prompt_title = "Find files" }, extra or {}))
+  end
+
   local builtin, err = ensure_telescope()
   if not builtin then
     vim.notify(err .. " Falling back to / search.", vim.log.levels.WARN)
@@ -217,9 +252,10 @@ function M.find_files(extra)
     return false
   end
 
-  local opts = vim.tbl_extend("force", {
+  local opts = M.find_files_picker_opts(vim.tbl_extend("force", {
     cwd = M.project_cwd(),
-  }, extra or {})
+  }, extra or {}))
+
   local find_command = M.find_command()
   if find_command then
     opts.find_command = find_command
@@ -277,16 +313,15 @@ end
 
 --- Grep/live_grep UI: filename in results, no preview pane.
 function M.grep_picker_opts()
-  return {
-    path_display = { "filename", "tail" },
-    previewer = false,
-    layout_strategy = "vertical",
+  return M.list_picker_opts({
+    sorting_strategy = "ascending",
     layout_config = {
-      height = 0.95,
-      width = 0.95,
-      preview_cutoff = 1,
+      height = 0.9,
+      width = 0.92,
+      anchor = "N",
+      prompt_position = "top",
     },
-  }
+  })
 end
 
 --- Keep live_grep / grep_string results in ripgrep path order (stable across runs).
@@ -326,7 +361,7 @@ function M.find_command()
   if not rg then
     return nil
   end
-  return { rg, "--files", "--color", "never", "--no-ignore-dot" }
+  return { rg, "--files", "--color", "never", "--no-ignore-dot", "." }
 end
 
 function M.live_grep_opts(extra)
