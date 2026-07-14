@@ -420,7 +420,19 @@ function M.live_grep(extra)
 end
 
 function M.grep_word(word, opts)
-  word = (word or vim.fn.expand("<cword>")):gsub("^%s+", ""):gsub("%s+$", "")
+  opts = opts or {}
+
+  if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
+    local saved_reg = vim.fn.getreg("v")
+    vim.cmd([[noautocmd sil norm! "vy]])
+    word = vim.fn.getreg("v")
+    vim.fn.setreg("v", saved_reg)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+  else
+    word = word or vim.fn.expand("<cword>")
+  end
+
+  word = (word or ""):gsub("^%s+", ""):gsub("%s+$", "")
   if word == "" then
     vim.notify("No word under cursor to search.", vim.log.levels.WARN)
     return false

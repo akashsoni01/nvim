@@ -39,6 +39,10 @@ end, { desc = "Verify <leader>fc buffer search (no rg/LSP needed)" })
 
 vim.api.nvim_create_user_command("FC", search_current_buffer, { desc = "Telescope search current buffer" })
 
+vim.api.nvim_create_user_command("FW", function()
+  telescope_grep.grep_word(nil, { prompt_title = "Find word in project (all files)" })
+end, { desc = "Find word under cursor in project (all files)" })
+
 local function go_to_line()
   vim.ui.input({
     prompt = "Go to line: ",
@@ -614,6 +618,12 @@ end, vim.tbl_extend("force", opts, { desc = "Find & replace in all *.rs + *.toml
 map("n", "<leader>fA", function()
   telescope_grep.live_grep({ prompt_title = "Live grep (project, all files)" })
 end, vim.tbl_extend("force", opts, { desc = "Grep in project (all file types)" }))
+map("n", "<leader>fW", function()
+  telescope_grep.grep_word(nil, { prompt_title = "Find word in project (all files)" })
+end, vim.tbl_extend("force", opts, { desc = "Find word under cursor in project" }))
+map("v", "<leader>fW", function()
+  telescope_grep.grep_word(nil, { prompt_title = "Find selection in project (all files)" })
+end, vim.tbl_extend("force", opts, { desc = "Find visual selection in project" }))
 map("n", "<leader>sA", function()
   rs_toml.replace_in_project_all()
 end, vim.tbl_extend("force", opts, { desc = "Find & replace in all files in project" }))

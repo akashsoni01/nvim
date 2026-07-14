@@ -235,6 +235,20 @@ return {
         desc = "Search buffer",
       },
       {
+        "<leader>fW",
+        function()
+          require("config.telescope_grep").grep_word(nil, { prompt_title = "Find word in project (all files)" })
+        end,
+        desc = "Find word in project",
+      },
+      {
+        "<leader>fA",
+        function()
+          require("config.telescope_grep").live_grep({ prompt_title = "Live grep (project, all files)" })
+        end,
+        desc = "Grep all files in project",
+      },
+      {
         "<leader>ul",
         function()
           require("config.theme").pick()
