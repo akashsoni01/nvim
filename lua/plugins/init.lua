@@ -237,9 +237,10 @@ return {
       {
         "<leader>fW",
         function()
-          require("config.telescope_grep").grep_word(nil, { prompt_title = "Find word in project (all files)" })
+          require("config.telescope_grep").find_word()
         end,
-        desc = "Find word in project",
+        desc = "Find word (visual: buffer, normal: project)",
+        mode = { "n", "v" },
       },
       {
         "<leader>fA",

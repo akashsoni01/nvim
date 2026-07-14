@@ -222,32 +222,121 @@ function M.fallback_buffer_search()
 end
 
 function M.extract_visual_selection()
-  local mode = vim.fn.mode()
-  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then
+  local mode = vim.fn.visualmode()
+  if mode == "" then
     return nil
   end
 
-  local saved_reg = vim.fn.getreg("v")
-  vim.cmd([[noautocmd sil norm! "vy]])
-  local text = vim.fn.getreg("v")
-  vim.fn.setreg("v", saved_reg)
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-  return text
+  if mode == "\22" then
+    local saved_reg = vim.fn.getreg("v")
+    vim.cmd([[noautocmd sil norm! "vy]])
+    local text = vim.fn.getreg("v")
+    vim.fn.setreg("v", saved_reg)
+    return text
+  end
+
+  local start_pos = vim.fn.getpos("v")
+  local end_pos = vim.fn.getpos(".")
+  local s_row, s_col = start_pos[2], start_pos[3]
+  local e_row, e_col = end_pos[2], end_pos[3]
+
+  if s_row > e_row or (s_row == e_row and s_col > e_col) then
+    s_row, e_row = e_row, s_row
+    s_col, e_col = e_col, s_col
+  end
+
+  if mode == "V" then
+    local lines = vim.api.nvim_buf_get_lines(0, s_row - 1, e_row, false)
+    return table.concat(lines, "\n")
+  end
+
+  if s_row == e_row then
+    local line = vim.api.nvim_buf_get_lines(0, s_row - 1, s_row, false)[1] or ""
+    return line:sub(s_col, e_col)
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(0, s_row - 1, e_row, false)
+  if #lines == 0 then
+    return ""
+  end
+  lines[1] = (lines[1] or ""):sub(s_col)
+  lines[#lines] = (lines[#lines] or ""):sub(1, e_col)
+  return table.concat(lines, "\n")
 end
 
---- Search word/selection in the current buffer only (visual + fW).
+--- Search selection in current buffer (visual + fW).
 function M.current_buffer_grep(word, extra)
-  word = word or M.extract_visual_selection() or vim.fn.expand("<cword>")
-  word = (word or ""):gsub("\n", " "):gsub("^%s+", ""):gsub("%s+$", "")
-  if word == "" then
-    vim.notify("Select text or put cursor on a word first.", vim.log.levels.WARN)
+  extra = extra or {}
+  word = word or M.extract_visual_selection()
+  if not word or word == "" then
+    vim.notify("Select text in visual mode first (v / V / Ctrl-v).", vim.log.levels.WARN)
     return false
   end
 
-  return M.current_buffer_fuzzy_find(vim.tbl_extend("force", {
-    default_text = word,
+  word = word:gsub("\n", " "):gsub("^%s+", ""):gsub("%s+$", "")
+  if word == "" then
+    vim.notify("Selection is empty.", vim.log.levels.WARN)
+    return false
+  end
+
+  local bufnr = extra.bufnr or 0
+  local fname = vim.api.nvim_buf_get_name(bufnr)
+  if fname == "" then
+    vim.notify("Buffer has no file path — save the file first.", vim.log.levels.WARN)
+    return false
+  end
+
+  fname = vim.fs.normalize(fname)
+  local cwd = vim.fs.dirname(fname)
+
+  local rg = rg_binary()
+  if not rg then
+    vim.notify("ripgrep (rg) not found.", vim.log.levels.ERROR)
+    return false
+  end
+
+  local builtin, err = ensure_telescope()
+  if not builtin then
+    vim.notify(err, vim.log.levels.ERROR)
+    return false
+  end
+
+  local sorters = require("telescope.sorters")
+  local ok, picker_err = pcall(builtin.grep_string, vim.tbl_extend("force", M.stable_grep_picker_opts(), {
+    cwd = cwd,
+    search = word,
+    search_dirs = { fname },
     prompt_title = "In buffer: " .. word,
-  }, extra or {}))
+    vimgrep_arguments = M.vimgrep_arguments(),
+    sorter = sorters.get_substr_matcher(),
+    additional_args = function()
+      return {}
+    end,
+  }, extra))
+
+  if not ok then
+    vim.notify("Buffer grep failed: " .. tostring(picker_err), vim.log.levels.ERROR)
+    return false
+  end
+
+  return true
+end
+
+--- Normal: project-wide word grep. Visual: current-buffer selection grep.
+function M.find_word(opts)
+  opts = opts or {}
+  local visual = vim.fn.visualmode()
+  if visual ~= "" then
+    local word = M.extract_visual_selection()
+    vim.schedule(function()
+      M.current_buffer_grep(word, opts)
+    end)
+    return true
+  end
+  return M.grep_word(
+    nil,
+    vim.tbl_extend("force", { prompt_title = "Find word in project (all files)" }, opts)
+  )
 end
 
 function M.current_buffer_fuzzy_find(extra)
