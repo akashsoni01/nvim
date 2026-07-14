@@ -4,7 +4,9 @@ local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 local function search_current_buffer()
-  telescope_grep.current_buffer_fuzzy_find({ prompt_title = "Search current buffer" })
+  if not telescope_grep.current_buffer_fuzzy_find({ prompt_title = "Search current buffer" }) then
+    vim.notify("Buffer search unavailable.", vim.log.levels.ERROR)
+  end
 end
 
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
@@ -31,7 +33,12 @@ end, { desc = "Telescope live grep" })
 vim.api.nvim_create_user_command("GrepSelfTest", function()
   local ok, msg = require("config.telescope_grep").self_test()
   vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, { title = "GrepSelfTest" })
-end, { desc = "Verify ripgrep + Telescope live_grep wiring" })
+end, { desc = "Verify buffer search + ripgrep + Telescope wiring" })
+
+vim.api.nvim_create_user_command("BufferSearchSelfTest", function()
+  local ok, msg = require("config.telescope_grep").buffer_search_self_test()
+  vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, { title = "BufferSearchSelfTest" })
+end, { desc = "Verify <leader>fc buffer search (no rg/LSP needed)" })
 
 vim.api.nvim_create_user_command("FC", search_current_buffer, { desc = "Telescope search current buffer" })
 

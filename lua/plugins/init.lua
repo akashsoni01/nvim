@@ -233,6 +233,13 @@ return {
           vimgrep_arguments = vimgrep,
         })
       end
+      opts.defaults = vim.tbl_extend("force", opts.defaults or {}, {
+        layout_config = {
+          height = 0.95,
+          width = 0.95,
+          preview_cutoff = 20,
+        },
+      })
       require("telescope").setup(opts)
     end,
   },

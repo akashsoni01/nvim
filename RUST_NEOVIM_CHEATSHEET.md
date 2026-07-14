@@ -570,6 +570,15 @@ The following are scoped to **`.rs`** and **`.toml`** (including `Cargo.toml`) f
 - On huge repos use `<leader>sg` (Rust/TOML only) or `<leader>fc` (current file)
 - `fg` / `fA` skip `target/` automatically — rebuild artifacts won't clutter results
 
+### `<leader>fc` / `<leader>c` buffer search not working
+- Buffer search needs **Telescope only** (no LSP, no `rg`)
+- Verify vendored plugins: run `bash scripts/vendor-plugins.sh` on the device
+- In Neovim:
+  - `:BufferSearchSelfTest` — should report `buffer search ok`
+  - `:GrepSelfTest` — full buffer + project grep check
+- If Telescope fails to load, config falls back to plain `/` search (`vim.fn.input`)
+- Restart Neovim after vendoring; first `<leader>fc` may take a second while Telescope loads
+
 ### Debugger fails to launch
 - Ensure binary is built:
   - `cargo build`
