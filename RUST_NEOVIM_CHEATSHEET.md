@@ -10,7 +10,7 @@
 | Telescope | `<leader>ff` | Find files |
 | Telescope | `<leader>fg` or `:FG` | Live grep in project (skips `target/`) |
 | Telescope | `<leader>fA` | Same as `fg` — all file types |
-| Telescope | `<leader>fW` or `:FW` | Find word under cursor in project (all files) |
+| Telescope | `<leader>fW` or `:FW` | Normal: find word in project; Visual: find selection in **current buffer** |
 | Telescope | `<leader>sg` | Grep `*.rs` + `*.toml` only (faster on big repos) |
 | Telescope | `<leader>gw` or `:GrepWord` | Same as `fW` — grep word under cursor (gd fallback) |
 | Telescope | `<leader>fc` | Search current buffer only (fastest) |
@@ -119,7 +119,7 @@
 - `<leader>ff` - Find files
 - `<leader>fg` or `:FG` - Live grep in project (ripgrep; skips `target/`, `node_modules/`)
 - `<leader>fA` - Same as `fg` (all files)
-- `<leader>fW` or `:FW` - Find word under cursor in project (all files; same scope as `fA`)
+- `<leader>fW` or `:FW` - Normal: find word under cursor in project (all files). **Visual: find selection in current buffer only**
 - `<leader>sg` - Grep only `*.rs` and `*.toml` (faster on big Rust workspaces)
 - `<leader>gw` or `:GrepWord` - Same as `fW` (use when `gd` times out)
 - `<leader>fc` - Fuzzy search in **current buffer** only (instant; no project scan)

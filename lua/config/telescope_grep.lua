@@ -221,6 +221,35 @@ function M.fallback_buffer_search()
   return true
 end
 
+function M.extract_visual_selection()
+  local mode = vim.fn.mode()
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then
+    return nil
+  end
+
+  local saved_reg = vim.fn.getreg("v")
+  vim.cmd([[noautocmd sil norm! "vy]])
+  local text = vim.fn.getreg("v")
+  vim.fn.setreg("v", saved_reg)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+  return text
+end
+
+--- Search word/selection in the current buffer only (visual + fW).
+function M.current_buffer_grep(word, extra)
+  word = word or M.extract_visual_selection() or vim.fn.expand("<cword>")
+  word = (word or ""):gsub("\n", " "):gsub("^%s+", ""):gsub("%s+$", "")
+  if word == "" then
+    vim.notify("Select text or put cursor on a word first.", vim.log.levels.WARN)
+    return false
+  end
+
+  return M.current_buffer_fuzzy_find(vim.tbl_extend("force", {
+    default_text = word,
+    prompt_title = "In buffer: " .. word,
+  }, extra or {}))
+end
+
 function M.current_buffer_fuzzy_find(extra)
   if not buffer_has_searchable_text(0) then
     vim.notify(
@@ -420,19 +449,7 @@ function M.live_grep(extra)
 end
 
 function M.grep_word(word, opts)
-  opts = opts or {}
-
-  if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
-    local saved_reg = vim.fn.getreg("v")
-    vim.cmd([[noautocmd sil norm! "vy]])
-    word = vim.fn.getreg("v")
-    vim.fn.setreg("v", saved_reg)
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-  else
-    word = word or vim.fn.expand("<cword>")
-  end
-
-  word = (word or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  word = (word or vim.fn.expand("<cword>")):gsub("^%s+", ""):gsub("%s+$", "")
   if word == "" then
     vim.notify("No word under cursor to search.", vim.log.levels.WARN)
     return false
