@@ -78,29 +78,15 @@ function M.replace_in_buffer()
 end
 
 function M.find_in_project()
-  if vim.fn.executable("rg") ~= 1 then
-    vim.notify("ripgrep (rg) required. Scoped to *.rs and *.toml.", vim.log.levels.ERROR)
-    return
-  end
-  require("telescope.builtin").live_grep(
-    telescope_grep.live_grep_opts({
-      prompt_title = "Grep in *.rs and *.toml",
-      additional_args = { "-g", "*.rs", "-g", "*.toml" },
-    })
-  )
+  telescope_grep.live_grep({
+    prompt_title = "Grep in *.rs and *.toml",
+    additional_args = { "-g", "*.rs", "-g", "*.toml" },
+  })
 end
 
 --- Live grep across the whole project (any file `rg` searches; honors .gitignore).
 function M.find_in_project_all()
-  if vim.fn.executable("rg") ~= 1 then
-    vim.notify("ripgrep (rg) required for project search.", vim.log.levels.ERROR)
-    return
-  end
-  require("telescope.builtin").live_grep(
-    telescope_grep.live_grep_opts({
-      prompt_title = "Grep in project (all files)",
-    })
-  )
+  telescope_grep.live_grep({ prompt_title = "Grep in project (all files)" })
 end
 
 local function replace_in_paths(paths, search, repl, file_desc)

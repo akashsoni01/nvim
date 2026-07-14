@@ -26,6 +26,20 @@ local function ensure_telescope()
   return require("telescope.builtin")
 end
 
+function M.builtin()
+  return ensure_telescope()
+end
+
+function M.current_buffer_fuzzy_find(extra)
+  M.builtin().current_buffer_fuzzy_find(extra or {})
+  return true
+end
+
+function M.find_files(extra)
+  M.builtin().find_files(extra or {})
+  return true
+end
+
 --- Ripgrep args that keep big workspaces fast (skip build artifacts).
 function M.fast_grep_args()
   return {
@@ -161,6 +175,15 @@ function M.self_test()
 
   if type(builtin.live_grep) ~= "function" then
     return false, "telescope.builtin.live_grep missing"
+  end
+
+  if type(builtin.current_buffer_fuzzy_find) ~= "function" then
+    return false, "telescope.builtin.current_buffer_fuzzy_find missing"
+  end
+
+  local cfg = require("telescope.config").values
+  if not cfg or not cfg.layout_strategy then
+    return false, "telescope.setup() not run (layout_strategy missing)"
   end
 
   return true, string.format("ok (%d matches, rg=%s)", #lines, rg)

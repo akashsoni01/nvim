@@ -3,25 +3,28 @@ local telescope_grep = require("config.telescope_grep")
 local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
+local function search_current_buffer()
+  telescope_grep.current_buffer_fuzzy_find({ prompt_title = "Search current buffer" })
+end
+
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", vim.tbl_extend("force", opts, { desc = "Find files" }))
 map("n", "<leader>fg", function()
   if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
-    require("telescope.builtin").current_buffer_fuzzy_find()
+    search_current_buffer()
   end
 end, vim.tbl_extend("force", opts, { desc = "Live grep" }))
-map("n", "<leader>fc", function()
-  require("telescope.builtin").current_buffer_fuzzy_find()
-end, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
+map("n", "<leader>fc", search_current_buffer, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
+map("n", "<leader>c", search_current_buffer, vim.tbl_extend("force", opts, { desc = "Search current buffer" }))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", vim.tbl_extend("force", opts, { desc = "Buffers" }))
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", vim.tbl_extend("force", opts, { desc = "Help tags" }))
 
 vim.api.nvim_create_user_command("FF", function()
-  require("telescope.builtin").find_files()
+  telescope_grep.find_files()
 end, { desc = "Telescope find files" })
 
 vim.api.nvim_create_user_command("FG", function()
   if not telescope_grep.live_grep({ prompt_title = "Live grep (project)" }) then
-    require("telescope.builtin").current_buffer_fuzzy_find()
+    search_current_buffer()
   end
 end, { desc = "Telescope live grep" })
 
@@ -30,9 +33,7 @@ vim.api.nvim_create_user_command("GrepSelfTest", function()
   vim.notify(msg, ok and vim.log.levels.INFO or vim.log.levels.ERROR, { title = "GrepSelfTest" })
 end, { desc = "Verify ripgrep + Telescope live_grep wiring" })
 
-vim.api.nvim_create_user_command("FC", function()
-  require("telescope.builtin").current_buffer_fuzzy_find()
-end, { desc = "Telescope search current buffer" })
+vim.api.nvim_create_user_command("FC", search_current_buffer, { desc = "Telescope search current buffer" })
 
 local function go_to_line()
   vim.ui.input({

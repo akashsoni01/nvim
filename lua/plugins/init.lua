@@ -209,6 +209,7 @@ return {
       { "<leader>fb", desc = "Buffers" },
       { "<leader>fh", desc = "Help tags" },
       { "<leader>fc", desc = "Search buffer" },
+      { "<leader>c", desc = "Search buffer" },
       {
         "<leader>ul",
         function()
