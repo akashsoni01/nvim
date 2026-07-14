@@ -86,7 +86,7 @@ end
 
 --- Live grep across the whole project (any file `rg` searches; honors .gitignore).
 function M.find_in_project_all()
-  telescope_grep.live_grep({ prompt_title = "Grep in project (all files)" })
+  telescope_grep.live_grep({ prompt_title = "Live grep (project, all files)" })
 end
 
 local function replace_in_paths(paths, search, repl, file_desc)

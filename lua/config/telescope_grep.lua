@@ -69,6 +69,18 @@ function M.vimgrep_arguments()
     "--line-number",
     "--column",
     "--smart-case",
+    "--sort",
+    "path",
+  }
+end
+
+--- Keep live_grep / grep_string results in ripgrep path order (stable across runs).
+function M.stable_grep_picker_opts()
+  return {
+    sorting_strategy = "ascending",
+    tiebreak = function(_, _, _)
+      return false
+    end,
   }
 end
 
@@ -92,7 +104,7 @@ function M.live_grep_opts(extra)
 
   local merged_args = vim.list_extend(vim.deepcopy(fast_args), user_args)
 
-  return vim.tbl_extend("force", {
+  return vim.tbl_extend("force", M.stable_grep_picker_opts(), {
     cwd = M.project_cwd(),
     vimgrep_arguments = M.vimgrep_arguments(),
     additional_args = function()
@@ -136,12 +148,14 @@ function M.grep_word(word, opts)
 
   opts = opts or {}
   local builtin = ensure_telescope()
+  local sorters = require("telescope.sorters")
   builtin.grep_string(
-    vim.tbl_extend("force", {
+    vim.tbl_extend("force", M.stable_grep_picker_opts(), {
       cwd = M.project_cwd(),
       search = word,
       prompt_title = "Grep: " .. word,
       vimgrep_arguments = M.vimgrep_arguments(),
+      sorter = sorters.get_substr_matcher(),
       additional_args = function()
         return M.fast_grep_args()
       end,
@@ -161,6 +175,14 @@ function M.self_test()
   local result = vim.system(args, { cwd = M.project_cwd(), text = true }):wait()
   if result.code ~= 0 then
     return false, (result.stderr or result.stdout or "rg failed"):gsub("%s+$", "")
+  end
+
+  local result2 = vim.system(args, { cwd = M.project_cwd(), text = true }):wait()
+  if result2.code ~= 0 then
+    return false, "rg stability check failed"
+  end
+  if result.stdout ~= result2.stdout then
+    return false, "rg output order not stable (add --sort path)"
   end
 
   local lines = vim.split(result.stdout or "", "\n", { plain = true })
